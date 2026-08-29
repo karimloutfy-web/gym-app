@@ -217,17 +217,21 @@
   .rec-row .rr-date { color: var(--text-faint); font-size: 11.5px; }
 
   /* home screen */
-  .home-hero { padding: 18px 0 4px; }
+  .home-hero { padding: 14px 0 4px; }
   .home-hero .h-eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .13em; font-weight: 700; color: var(--accent-ink); }
-  .home-hero h2.title { font-size: 34px; margin: 4px 0 2px; }
-  .home-hero .h-next { color: var(--text-muted); font-size: 14px; font-family: "IBM Plex Mono", monospace; margin-bottom: 22px; }
+  .home-hero h2.title { font-size: 30px; margin: 4px 0 14px; }
   .home-hero .lead { margin-bottom: 22px; }
   .btn.btn-lg { height: 58px; font-size: 17px; }
   .home-links { display: flex; gap: 9px; margin-top: 10px; }
   .home-links .btn { flex: 1; }
-  .home-foot { margin-top: 26px; text-align: center; }
+  .home-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .home-stat { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 11px 13px; width: 100%; }
+  .home-stat .hs-k { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); font-weight: 700; }
+  .home-stat .hs-v { display: block; font-family: "Barlow Condensed"; font-weight: 700; font-size: 20px; margin-top: 4px; line-height: 1; }
+  .home-stat .hs-v small { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .home-stat .hs-sub { display: block; font-size: 11px; color: var(--text-faint); font-family: "IBM Plex Mono", monospace; margin-top: 4px; }
+  .home-foot { margin-top: 22px; text-align: center; }
   .home-foot button { color: var(--text-faint); font-size: 12.5px; text-decoration: underline; text-underline-offset: 2px; }
-  .home-last { margin-top: 14px; font-size: 12.5px; color: var(--text-faint); font-family: "IBM Plex Mono", monospace; }
 
   /* pick-your-workout screen */
   .pick-card { position: relative; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px; margin-bottom: 12px; }
@@ -1112,21 +1116,45 @@
 
     var t = tplById(db.active.templateId);
     var res = resolveSession(t, db.active, eq());
+    var lb = latestBody();
 
     var html = '<div class="home-hero">' +
       '<div class="h-eyebrow">' + esc(t.name) + '</div>' +
-      '<h2 class="title">Week ' + (db.active.weekIndex + 1) + '</h2>' +
-      '<p class="h-next">Next up · ' + esc(sessionLabel(res)) + '</p>' +
-      '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-start">Start working out</button></div>' +
+      '<h2 class="title">Week ' + (db.active.weekIndex + 1) + '</h2>';
+
+    // next-workout summary
+    html += '<div class="next-card"><div class="nc-eye">Next up · ' + esc(sessionLabel(res)) + '</div>';
+    res.exercises.forEach(function (x) {
+      var setStr = x.workSets.length + "×" + x.target + (x.assist && x.workSets[0].amrap ? "+" : "");
+      html += '<div class="nc-ex"><span class="nx-name">' + esc(x.name) + '</span>' +
+        '<span>' + (x.assist
+          ? '<span class="nx-set">' + setStr + '</span>'
+          : '<span class="nx-set">' + setStr + '</span>&nbsp;&nbsp;<span class="nx-w">' + fmt(x.weight) + ' ' + U() + '</span>') +
+        '</span></div>';
+    });
+    html += '</div>';
+
+    html += '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-start">Start working out</button></div>' +
       '<div class="home-links">' +
         '<button class="btn btn-ghost" data-go="progress">Progress</button>' +
         '<button class="btn btn-ghost" data-go="body">Body</button>' +
       '</div>';
 
-    if (db.sessions.length) {
-      var last = db.sessions[db.sessions.length - 1];
-      html += '<div class="home-last">Last · ' + esc(last.dayLabel && !/^[A-Z]$/.test(last.dayLabel) ? cap(last.dayLabel) + " day" : "Workout " + last.dayLabel) + ' · ' + relDate(last.date) + '</div>';
-    }
+    // quick stats
+    var last = db.sessions.length ? db.sessions[db.sessions.length - 1] : null;
+    var lastLbl = last ? (/^[A-Z]$/.test(last.dayLabel) ? "Workout " + last.dayLabel : cap(last.dayLabel) + " day") : null;
+    html += '<div class="home-stats">' +
+      '<button class="home-stat" data-go="body">' +
+        '<span class="hs-k">Bodyweight</span>' +
+        '<span class="hs-v">' + (lb && lb.bw != null ? fmt(lb.bw) + ' <small>' + U() + '</small>' : '<small>—</small>') + '</span>' +
+        '<span class="hs-sub">' + (lb && lb.bw != null ? relDate(lb.date) : 'tap to log') + '</span>' +
+      '</button>' +
+      '<button class="home-stat" data-go="progress">' +
+        '<span class="hs-k">Last workout</span>' +
+        '<span class="hs-v">' + (last ? esc(lastLbl) : '<small>—</small>') + '</span>' +
+        '<span class="hs-sub">' + (last ? relDate(last.date) : 'none yet') + '</span>' +
+      '</button>' +
+    '</div>';
 
     html += '<div class="home-foot"><button id="h-change">Change program</button></div>' +
     '</div>';
