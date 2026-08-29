@@ -1,0 +1,1378 @@
+<title>Iron Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  /* ============ TOKENS ============ */
+  :root {
+    /* light — "chalk & paper": the worn training notebook */
+    --bg: #efeeea;
+    --surface: #ffffff;
+    --surface-2: #f6f5f1;
+    --line: #ddd9d0;
+    --line-strong: #c9c4b8;
+    --text: #1b1b1e;
+    --text-muted: #66646b;
+    --text-faint: #9a978f;
+    --accent: #cf4a17;          /* molten forge orange */
+    --accent-soft: #cf4a1718;
+    --accent-text: #ffffff;
+    --gain: #2f7d54;
+    --hold: #9a6f26;
+    --miss: #bd3f2c;
+    --radius: 13px;
+    --radius-sm: 9px;
+    --shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 30px rgba(30,20,10,.06);
+    --shadow-sheet: 0 -8px 40px rgba(20,14,8,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      /* dark — "iron & spark": cast plate, knurled steel, hot metal */
+      --bg: #151518;
+      --surface: #1f1f25;
+      --surface-2: #26262d;
+      --line: #32323b;
+      --line-strong: #43434f;
+      --text: #eae8e3;
+      --text-muted: #9e9ca4;
+      --text-faint: #6d6c76;
+      --accent: #ec6532;
+      --accent-soft: #ec653222;
+      --accent-text: #1c1103;
+      --gain: #55ab7b;
+      --hold: #cf9d47;
+      --miss: #dd5f49;
+      --shadow: 0 1px 2px rgba(0,0,0,.5), 0 14px 36px rgba(0,0,0,.34);
+      --shadow-sheet: 0 -10px 44px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151518;
+    --surface: #1f1f25;
+    --surface-2: #26262d;
+    --line: #32323b;
+    --line-strong: #43434f;
+    --text: #eae8e3;
+    --text-muted: #9e9ca4;
+    --text-faint: #6d6c76;
+    --accent: #ec6532;
+    --accent-soft: #ec653222;
+    --accent-text: #1c1103;
+    --gain: #55ab7b;
+    --hold: #cf9d47;
+    --miss: #dd5f49;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 14px 36px rgba(0,0,0,.34);
+    --shadow-sheet: 0 -10px 44px rgba(0,0,0,.5);
+  }
+
+  /* ============ BASE ============ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+  button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+  input { font: inherit; color: inherit; }
+  h1, h2, h3 { font-family: "Barlow Condensed", "Archivo Narrow", sans-serif; font-weight: 600; line-height: 1.05; text-wrap: balance; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .app {
+    max-width: 540px;
+    margin: 0 auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  /* ============ HEADER ============ */
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(12px);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+  }
+  .top-row { display: flex; align-items: center; gap: 10px; }
+  .brand {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 21px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .brand b { color: var(--accent); font-weight: 700; }
+  .brand .mark {
+    display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .spacer { flex: 1; }
+
+  .timer {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+    transition: color .2s, border-color .2s, background .2s;
+    white-space: nowrap;
+  }
+  .timer .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .timer.resting { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line-strong)); }
+  .timer.ready { color: var(--gain); border-color: color-mix(in srgb, var(--gain) 45%, var(--line-strong)); background: color-mix(in srgb, var(--gain) 10%, transparent); }
+  .timer.idle { opacity: .55; }
+
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: grid; place-items: center;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+  .icon-btn svg { width: 19px; height: 19px; }
+
+  /* segmented nav */
+  .seg {
+    margin-top: 11px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 3px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+  }
+  .seg button {
+    padding: 7px 4px 6px;
+    border-radius: 8px;
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    transition: background .15s, color .15s, box-shadow .15s;
+  }
+  .seg button[aria-selected="true"] {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+
+  /* ============ MAIN ============ */
+  main { flex: 1; padding: 16px 16px 120px; }
+  .view { display: none; animation: rise .28s ease both; }
+  .view.active { display: block; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .view, .sheet, .sheet-wrap, .card { animation: none !important; transition: none !important; }
+  }
+
+  .dayhead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+  .dayhead h2 { font-size: 27px; letter-spacing: .01em; }
+  .dayhead .sub { color: var(--text-faint); font-size: 12.5px; text-transform: uppercase; letter-spacing: .1em; font-weight: 500; }
+
+  .statbar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 14px 0 18px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 10px 11px 9px;
+  }
+  .stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em; color: var(--text-faint); font-weight: 600; }
+  .stat .v { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 23px; margin-top: 2px; line-height: 1; }
+  .stat .v small { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-left: 2px; }
+  .stat.hot .v { color: var(--accent); }
+
+  /* ============ EXERCISE CARD ============ */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 13px 13px 12px;
+    margin-bottom: 12px;
+  }
+  .card-h { display: flex; align-items: center; gap: 8px; }
+  .card-h h3 { font-size: 19px; letter-spacing: .01em; flex: 1; }
+  .card-h .cat { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); font-weight: 600; border: 1px solid var(--line); border-radius: 999px; padding: 2px 7px; }
+  .ghost { font-size: 12.5px; color: var(--text-faint); margin-top: 5px; }
+  .ghost .mono { color: var(--text-muted); }
+
+  .sets { list-style: none; margin: 10px 0 4px; display: flex; flex-direction: column; gap: 1px; }
+  .set {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 6px 7px 2px;
+    border-radius: 7px;
+    border-bottom: 1px solid var(--line);
+  }
+  .set:last-child { border-bottom: none; }
+  .set:hover { background: var(--surface-2); }
+  .set .si { font-size: 11px; color: var(--text-faint); font-weight: 600; text-align: center; }
+  .set .sv { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; font-size: 14.5px; letter-spacing: -.01em; }
+  .set .sv b { font-weight: 500; }
+  .set .sv em { font-style: normal; color: var(--text-faint); font-size: 11.5px; }
+  .set .sv .x { color: var(--text-faint); margin: 0 3px; }
+  .set .meta { display: flex; align-items: center; gap: 7px; }
+  .set .e1 { font-size: 11px; color: var(--text-faint); font-family: "IBM Plex Mono", monospace; }
+  .set .rpe { font-size: 10px; color: var(--hold); border: 1px solid color-mix(in srgb, var(--hold) 35%, var(--line)); border-radius: 4px; padding: 1px 4px; font-weight: 600; }
+  .pr-tag {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: .1em;
+    color: var(--accent-text);
+    background: var(--accent);
+    border-radius: 4px;
+    padding: 2px 5px 1px;
+  }
+  @keyframes prpulse { 0% { box-shadow: 0 0 0 0 var(--accent-soft); } 100% { box-shadow: 0 0 0 16px transparent; } }
+  .set.fresh { animation: prpulse .9s ease-out; }
+
+  .addrow { display: flex; align-items: stretch; gap: 7px; margin-top: 9px; }
+  .stepper {
+    display: grid;
+    grid-template-columns: 34px 1fr 34px;
+    align-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+  }
+  .stepper button { height: 42px; font-size: 19px; color: var(--text-muted); font-family: "Barlow Condensed", sans-serif; }
+  .stepper button:active { background: var(--accent-soft); color: var(--accent); }
+  .stepper input {
+    width: 100%; height: 42px; text-align: center; border: none; background: transparent;
+    font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums;
+    font-size: 15px; font-weight: 500;
+    -moz-appearance: textfield;
+  }
+  .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper .cap { position: absolute; }
+  .field-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .field-wrap .lab { font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-faint); font-weight: 700; padding-left: 3px; }
+
+  .add-btn {
+    background: var(--accent);
+    color: var(--accent-text);
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+    padding: 0 15px;
+    align-self: flex-end;
+    height: 42px;
+    white-space: nowrap;
+  }
+  .add-btn:active { transform: translateY(1px); }
+  .add-btn.ghost-btn { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--line-strong); }
+
+  .platehint { font-size: 11px; color: var(--text-faint); margin-top: 8px; font-family: "IBM Plex Mono", monospace; display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .platehint .pl { background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; color: var(--text-muted); }
+  .platehint .lbl { text-transform: uppercase; letter-spacing: .08em; font-family: "Archivo"; font-weight: 700; font-size: 9.5px; }
+
+  .rpe-quick { display: flex; gap: 5px; margin-top: 9px; align-items: center; }
+  .rpe-quick .lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-faint); font-weight: 700; }
+  .rpe-quick button {
+    width: 30px; height: 26px; border-radius: 6px; border: 1px solid var(--line-strong);
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-muted); background: var(--surface-2);
+  }
+  .rpe-quick button[aria-pressed="true"] { background: var(--hold); border-color: var(--hold); color: #fff; }
+
+  /* add-exercise / primary buttons */
+  .bigadd {
+    width: 100%;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--radius);
+    padding: 15px;
+    color: var(--text-muted);
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .bigadd:hover { border-color: var(--accent); color: var(--accent); }
+  .bigadd svg { width: 17px; height: 17px; }
+
+  /* empty states */
+  .empty { text-align: center; padding: 44px 20px; }
+  .empty .em-ic { font-size: 30px; opacity: .5; }
+  .empty h3 { font-size: 20px; margin: 12px 0 5px; }
+  .empty p { color: var(--text-muted); font-size: 13.5px; max-width: 34ch; margin: 0 auto 18px; }
+
+  /* ============ LIFTS VIEW ============ */
+  .liftrow {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 12px 13px;
+    margin-bottom: 9px;
+    text-align: left;
+  }
+  .liftrow:hover { border-color: var(--line-strong); }
+  .liftrow h3 { font-size: 17px; }
+  .liftrow .l-sub { font-size: 11.5px; color: var(--text-faint); margin-top: 3px; font-family: "IBM Plex Mono", monospace; }
+  .liftrow .l-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .liftrow .l-1rm { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 19px; line-height: 1; }
+  .liftrow .l-1rm small { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  svg.spark { width: 92px; height: 30px; display: block; }
+
+  /* ============ HISTORY VIEW ============ */
+  .sesh {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    margin-bottom: 9px;
+    overflow: hidden;
+  }
+  .sesh-h { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 13px; text-align: left; }
+  .sesh-h .date { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 16px; letter-spacing: .02em; min-width: 92px; }
+  .sesh-h .date span { display: block; font-family: "Archivo"; font-weight: 500; font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .09em; }
+  .sesh-h .sh-sum { flex: 1; font-size: 12px; color: var(--text-muted); font-family: "IBM Plex Mono", monospace; }
+  .sesh-h .chev { color: var(--text-faint); transition: transform .2s; }
+  .sesh[open] .sesh-h .chev { transform: rotate(90deg); }
+  .sesh-body { padding: 0 13px 12px; border-top: 1px solid var(--line); }
+  .sesh-ex { margin-top: 11px; }
+  .sesh-ex h4 { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  .sesh-ex .line { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--text); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .sesh-ex .line .miss2 { color: var(--text-faint); }
+  .sesh-ex .line .prd { color: var(--accent); font-weight: 500; }
+
+  .mini-pr { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 10px; letter-spacing: .09em; color: var(--accent-text); background: var(--accent); border-radius: 3px; padding: 1px 4px; }
+
+  /* ============ SHEET ============ */
+  .sheet-wrap {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(10,8,6,.5);
+    display: flex; align-items: flex-end; justify-content: center;
+    animation: fade .2s ease both;
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .sheet {
+    background: var(--surface);
+    width: 100%; max-width: 540px;
+    max-height: 88vh;
+    border-radius: 18px 18px 0 0;
+    box-shadow: var(--shadow-sheet);
+    padding: 8px 16px max(18px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    animation: slideup .26s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
+  .grab { width: 36px; height: 4px; border-radius: 999px; background: var(--line-strong); margin: 6px auto 12px; }
+  .sheet h2 { font-size: 21px; margin-bottom: 3px; }
+  .sheet .sh-lead { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }
+
+  .search {
+    width: 100%; height: 44px; padding: 0 13px;
+    border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+    background: var(--surface-2); font-size: 15px;
+    margin-bottom: 12px;
+  }
+  .lib-group { margin-bottom: 14px; }
+  .lib-group .gh { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
+  .lib-item {
+    width: 100%; text-align: left; padding: 11px 12px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--surface);
+    font-size: 14.5px; margin-bottom: 5px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .lib-item:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .lib-item .add-ic { color: var(--accent); font-family: "Barlow Condensed"; font-weight: 700; }
+  .lib-item.dim { opacity: .45; }
+  .lib-item.create { border-style: dashed; }
+
+  .rowbtns { display: flex; gap: 8px; margin-top: 6px; }
+  .rowbtns button { flex: 1; height: 46px; border-radius: var(--radius-sm); font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+  .btn-primary { background: var(--accent); color: var(--accent-text); }
+  .btn-ghost { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--line-strong); }
+  .btn-danger { background: transparent; color: var(--miss); border: 1px solid color-mix(in srgb, var(--miss) 40%, var(--line)); }
+
+  .set-list-full { margin: 6px 0 14px; }
+  .sfrow { display: grid; grid-template-columns: 80px 1fr auto; gap: 8px; padding: 8px 4px; border-bottom: 1px solid var(--line); font-family: "IBM Plex Mono", monospace; font-size: 13px; align-items: center; }
+  .sfrow .d { color: var(--text-faint); font-size: 11.5px; }
+  .sfrow .pr-tag { font-family: "Barlow Condensed", sans-serif; }
+
+  .setng { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+  .setng h2 { margin-bottom: 8px; }
+  .srow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .srow .s-k { font-size: 14px; }
+  .srow .s-k p { font-size: 11.5px; color: var(--text-faint); margin-top: 1px; }
+  .toggle-group { display: flex; gap: 3px; padding: 3px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; }
+  .toggle-group button { padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); font-family: "Barlow Condensed"; letter-spacing: .06em; text-transform: uppercase; }
+  .toggle-group button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .mini-stepper { display: flex; align-items: center; gap: 0; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .mini-stepper button { width: 34px; height: 34px; font-size: 16px; color: var(--text-muted); }
+  .mini-stepper input { width: 52px; height: 34px; text-align: center; border: none; background: var(--surface-2); font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+  .mini-stepper input::-webkit-outer-spin-button, .mini-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .big-num-edit { display: flex; gap: 10px; margin: 14px 0; }
+  .big-num-edit .bne { flex: 1; }
+  .big-num-edit .bne .lab { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-faint); font-weight: 700; margin-bottom: 5px; text-align: center; }
+
+  .note { font-size: 12px; color: var(--text-faint); line-height: 1.5; margin-top: 6px; }
+  .kbd { font-family: "IBM Plex Mono", monospace; background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 11px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg);
+    padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 500;
+    z-index: 90; opacity: 0; transition: opacity .22s, transform .22s; pointer-events: none;
+    box-shadow: var(--shadow); max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .fabhint { text-align: center; color: var(--text-faint); font-size: 11.5px; margin-top: 20px; }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="top-row">
+      <div class="brand"><span class="mark"></span>Iron<b>Log</b></div>
+      <div class="spacer"></div>
+      <button class="timer idle" id="timer" title="Rest since last set — tap to reset">
+        <span class="dot"></span><span id="timer-val">0:00</span>
+      </button>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+    <nav class="seg" role="tablist">
+      <button role="tab" aria-selected="true" data-view="today">Today</button>
+      <button role="tab" aria-selected="false" data-view="lifts">Lifts</button>
+      <button role="tab" aria-selected="false" data-view="history">History</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active" id="view-today"></section>
+    <section class="view" id="view-lifts"></section>
+    <section class="view" id="view-history"></section>
+  </main>
+</div>
+
+<div id="sheet-root"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- home-screen meta ---------- */
+  [["viewport", "width=device-width, initial-scale=1, viewport-fit=cover"],
+   ["apple-mobile-web-app-capable", "yes"],
+   ["mobile-web-app-capable", "yes"],
+   ["apple-mobile-web-app-title", "Iron Log"],
+   ["apple-mobile-web-app-status-bar-style", "black-translucent"]].forEach(function (p) {
+    var m = document.createElement("meta"); m.name = p[0]; m.content = p[1]; document.head.appendChild(m);
+  });
+
+  /* ---------- constants ---------- */
+  var KEY = "ironlog.v1";
+  var LIBRARY = [
+    ["Barbell", ["Back Squat", "Front Squat", "Bench Press", "Overhead Press", "Deadlift", "Romanian Deadlift", "Barbell Row", "Hip Thrust", "Incline Bench Press", "Power Clean"]],
+    ["Dumbbell", ["DB Bench Press", "DB Shoulder Press", "DB Row", "DB Incline Press", "DB Curl", "DB Lunge", "DB Romanian Deadlift", "Lateral Raise"]],
+    ["Machine & Cable", ["Lat Pulldown", "Seated Cable Row", "Leg Press", "Leg Curl", "Leg Extension", "Cable Fly", "Tricep Pushdown", "Face Pull", "Pec Deck", "Cable Curl"]],
+    ["Bodyweight", ["Pull-up", "Chin-up", "Dip", "Push-up", "Hanging Leg Raise", "Back Extension"]]
+  ];
+  var CAT_OF = {};
+  LIBRARY.forEach(function (g) { g[1].forEach(function (n) { CAT_OF[n] = g[0]; }); });
+
+  /* ---------- state ---------- */
+  function defaults() {
+    return {
+      version: 1,
+      settings: { unit: "kg", bar: 20, theme: "system" },
+      exercises: {},   // id -> {id,name,cat,created}
+      sessions: []      // {id,date,order:[exId],sets:[{id,exerciseId,weight,reps,rpe,unit,ts}]}
+    };
+  }
+  var db;
+  try {
+    db = JSON.parse(localStorage.getItem(KEY)) || defaults();
+  } catch (e) { db = defaults(); }
+  db.settings = Object.assign({ unit: "kg", bar: 20, theme: "system" }, db.settings || {});
+  db.exercises = db.exercises || {};
+  db.sessions = Array.isArray(db.sessions) ? db.sessions : [];
+
+  var mem = { view: "today", lastInput: {}, warnedSave: false }; // lastInput: exId -> {weight,reps,rpe}
+  var saveTimer = null;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(KEY, JSON.stringify(db)); }
+      catch (e) {
+        if (!mem.warnedSave) { mem.warnedSave = true; toast("Can't save on this device — use Export to keep a backup"); }
+      }
+    }, 180);
+  }
+
+  /* ---------- helpers ---------- */
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function todayKey(d) { d = d || new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function parseKey(k) { var p = k.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function fmt(n) {
+    if (n == null || isNaN(n)) return "0";
+    var r = Math.round(n * 100) / 100;
+    return (Number.isInteger(r) ? r.toString() : r.toFixed(2).replace(/0+$/, "").replace(/\.$/, ""));
+  }
+  function e1rm(w, r) { return (r > 0 && w > 0) ? w * (1 + r / 30) : 0; }
+  function unitStep(unit) { return unit === "lb" ? 5 : 2.5; }
+
+  function fullDate(d) {
+    return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  }
+  function shortDate(d) {
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function relDay(k) {
+    var t = todayKey();
+    if (k === t) return "Today";
+    var y = new Date(); y.setDate(y.getDate() - 1);
+    if (k === todayKey(y)) return "Yesterday";
+    var diff = Math.round((parseKey(t) - parseKey(k)) / 86400000);
+    if (diff > 1 && diff < 7) return diff + " days ago";
+    return null;
+  }
+
+  function getSession(dateKey, create) {
+    var s = null;
+    for (var i = 0; i < db.sessions.length; i++) if (db.sessions[i].date === dateKey) { s = db.sessions[i]; break; }
+    if (!s && create) { s = { id: uid(), date: dateKey, order: [], sets: [] }; db.sessions.push(s); }
+    return s;
+  }
+  function today(create) { return getSession(todayKey(), create); }
+
+  function exName(id) { return db.exercises[id] ? db.exercises[id].name : "—"; }
+
+  function ensureExercise(name) {
+    name = name.trim();
+    var lc = name.toLowerCase();
+    for (var id in db.exercises) if (db.exercises[id].name.toLowerCase() === lc) return id;
+    var nid = uid();
+    db.exercises[nid] = { id: nid, name: name, cat: CAT_OF[name] || "Custom", created: Date.now() };
+    return nid;
+  }
+
+  function setsFor(exId, beforeTs) {
+    var out = [];
+    db.sessions.forEach(function (s) {
+      s.sets.forEach(function (st) {
+        if (st.exerciseId === exId && (beforeTs == null || st.ts < beforeTs)) out.push(st);
+      });
+    });
+    out.sort(function (a, b) { return a.ts - b.ts; });
+    return out;
+  }
+
+  // running PR detection across ALL history -> Set of set ids that were a PR when logged
+  function computePRs() {
+    var all = [];
+    db.sessions.forEach(function (s) { s.sets.forEach(function (st) { all.push(st); }); });
+    all.sort(function (a, b) { return a.ts - b.ts; });
+    var bestE = {}, bestRep = {}, prs = {};
+    all.forEach(function (st) {
+      var cur = e1rm(st.weight, st.reps);
+      var pe = bestE[st.exerciseId] || 0;
+      var brep = bestRep[st.exerciseId] || (bestRep[st.exerciseId] = {});
+      var pw = brep[st.reps] || 0;
+      var is = false;
+      if (pe > 0 && cur > pe + 1e-9) is = true;
+      if (pw > 0 && st.weight > pw + 1e-9) is = true;
+      if (is) prs[st.id] = true;
+      if (cur > pe) bestE[st.exerciseId] = cur;
+      if (st.weight > pw) brep[st.reps] = st.weight;
+    });
+    return prs;
+  }
+
+  function lastPerf(exId, excludeDate) {
+    // most recent session (before today / excludeDate) that has this exercise
+    var cand = null;
+    db.sessions.forEach(function (s) {
+      if (s.date === excludeDate) return;
+      var has = s.sets.some(function (st) { return st.exerciseId === exId; });
+      if (has && (!cand || parseKey(s.date) > parseKey(cand.date))) cand = s;
+    });
+    if (!cand) return null;
+    var ss = cand.sets.filter(function (st) { return st.exerciseId === exId; });
+    return { date: cand.date, sets: ss };
+  }
+
+  function plates(target, bar, unit) {
+    var per = (target - bar) / 2;
+    if (!(per > 0)) return [];
+    var sizes = unit === "lb" ? [45, 35, 25, 10, 5, 2.5] : [25, 20, 15, 10, 5, 2.5, 1.25];
+    var out = [];
+    sizes.forEach(function (p) { while (per >= p - 1e-9) { out.push(p); per -= p; } });
+    return out;
+  }
+
+  /* ---------- rest timer ---------- */
+  var timerEl = document.getElementById("timer");
+  var timerVal = document.getElementById("timer-val");
+  var lastSetTs = null;
+  (function initTimer() {
+    var s = today(false);
+    if (s && s.sets.length) lastSetTs = Math.max.apply(null, s.sets.map(function (x) { return x.ts; }));
+  })();
+  function tickTimer() {
+    if (!lastSetTs) { timerEl.className = "timer idle"; timerVal.textContent = "0:00"; return; }
+    var sec = Math.floor((Date.now() - lastSetTs) / 1000);
+    var m = Math.floor(sec / 60);
+    timerVal.textContent = m + ":" + pad(sec % 60);
+    timerEl.className = "timer " + (sec < 90 ? "resting" : sec < 300 ? "ready" : "idle");
+  }
+  setInterval(tickTimer, 1000); tickTimer();
+  timerEl.addEventListener("click", function () {
+    if (!lastSetTs) return;
+    lastSetTs = Date.now(); tickTimer();
+  });
+
+  /* ---------- toast ---------- */
+  var toastEl = document.getElementById("toast"), toastT = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { toastEl.classList.remove("show"); }, 2400);
+  }
+
+  /* ---------- theme ---------- */
+  function applyTheme() {
+    var t = db.settings.theme;
+    if (t === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", t);
+  }
+  applyTheme();
+
+  /* ---------- rendering ---------- */
+  var views = {
+    today: document.getElementById("view-today"),
+    lifts: document.getElementById("view-lifts"),
+    history: document.getElementById("view-history")
+  };
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function setLine(st, prs) {
+    var u = st.unit || db.settings.unit;
+    var pr = prs[st.id] ? ' <span class="pr-tag">PR</span>' : "";
+    var rpe = st.rpe ? ' <span class="rpe">@' + fmt(st.rpe) + "</span>" : "";
+    return '<li class="set" data-set="' + st.id + '">' +
+      '<span class="si">' + "" + '</span>' +
+      '<span class="sv"><b>' + fmt(st.weight) + '</b><em> ' + u + '</em><span class="x">×</span><b>' + st.reps + '</b></span>' +
+      '<span class="meta"><span class="e1">' + (e1rm(st.weight, st.reps) ? "e1RM " + fmt(e1rm(st.weight, st.reps)) : "") + '</span>' + rpe + pr + '</span>' +
+      '</li>';
+  }
+
+  function renderToday() {
+    var s = today(false);
+    var d = new Date();
+    var prs = computePRs();
+    var order = s ? s.order.slice() : [];
+    // include any exercise that has sets today but isn't in order (safety)
+    if (s) s.sets.forEach(function (st) { if (order.indexOf(st.exerciseId) < 0) order.push(st.exerciseId); });
+
+    var totalVol = 0, totalSets = 0, prCount = 0, topE = 0, topEx = "";
+    if (s) s.sets.forEach(function (st) {
+      totalVol += st.weight * st.reps; totalSets++;
+      if (prs[st.id]) prCount++;
+      var e = e1rm(st.weight, st.reps);
+      if (e > topE) { topE = e; topEx = exName(st.exerciseId); }
+    });
+
+    var html = '<div class="dayhead"><h2>' + fullDate(d) + '</h2></div>' +
+      '<div class="sub" style="color:var(--text-faint);font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:600">' +
+      (order.length ? order.length + (order.length === 1 ? " lift" : " lifts") + " today" : "Rest day so far") + '</div>';
+
+    html += '<div class="statbar">' +
+      '<div class="stat"><div class="k">Volume</div><div class="v">' + fmt(totalVol) + '<small>' + db.settings.unit + '</small></div></div>' +
+      '<div class="stat"><div class="k">Work sets</div><div class="v">' + totalSets + '</div></div>' +
+      '<div class="stat ' + (prCount ? "hot" : "") + '"><div class="k">PRs</div><div class="v">' + prCount + '</div></div>' +
+      '</div>';
+
+    if (!order.length) {
+      html += '<div class="empty">' +
+        '<div class="em-ic">🏋️</div>' +
+        '<h3>Nothing logged yet</h3>' +
+        '<p>Add a lift to start today’s session. Your numbers, PRs and rest timer all track from here.</p>' +
+        '<button class="bigadd" data-act="pick-ex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add your first lift</button>' +
+        '</div>';
+      views.today.innerHTML = html;
+      return;
+    }
+
+    order.forEach(function (exId) {
+      var ex = db.exercises[exId]; if (!ex) return;
+      var todays = s.sets.filter(function (st) { return st.exerciseId === exId; }).sort(function (a, b) { return a.ts - b.ts; });
+      var li = mem.lastInput[exId] || {};
+      var prev = lastPerf(exId, todayKey());
+      var step = unitStep(db.settings.unit);
+
+      // default weight: last input -> last today set -> last session best -> bar
+      var defW = li.weight != null ? li.weight
+        : todays.length ? todays[todays.length - 1].weight
+        : prev && prev.sets.length ? prev.sets[prev.sets.length - 1].weight
+        : db.settings.bar;
+      var defR = li.reps != null ? li.reps
+        : todays.length ? todays[todays.length - 1].reps
+        : prev && prev.sets.length ? prev.sets[prev.sets.length - 1].reps
+        : 5;
+
+      var ghost = "";
+      if (prev) {
+        var pd = relDay(prev.date) || shortDate(parseKey(prev.date));
+        ghost = '<p class="ghost">Last · ' + pd + ' — <span class="mono">' +
+          prev.sets.map(function (x) { return fmt(x.weight) + "×" + x.reps; }).join(", ") + '</span></p>';
+      } else if (!todays.length) {
+        ghost = '<p class="ghost">First time logging this lift</p>';
+      }
+
+      var setsHtml = todays.map(function (st, i) {
+        return setLine(st, prs).replace('<span class="si"></span>', '<span class="si">' + (i + 1) + '</span>');
+      }).join("");
+
+      var pls = plates(+defW, db.settings.bar, db.settings.unit);
+      var plateHtml = "";
+      if (pls.length) {
+        plateHtml = '<div class="platehint"><span class="lbl">Per side</span>' +
+          pls.map(function (p) { return '<span class="pl">' + fmt(p) + "</span>"; }).join("") + '</div>';
+      } else if (+defW > db.settings.bar) {
+        plateHtml = '<div class="platehint"><span class="lbl">Per side</span><span class="pl">—</span></div>';
+      }
+
+      html += '<article class="card" data-ex="' + exId + '">' +
+        '<div class="card-h"><h3>' + esc(ex.name) + '</h3>' +
+        '<span class="cat">' + esc(ex.cat) + '</span>' +
+        '<button class="icon-btn" data-act="ex-menu" aria-label="Lift options">' +
+        '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></div>' +
+        ghost +
+        (setsHtml ? '<ol class="sets">' + setsHtml + '</ol>' : "") +
+        '<div class="addrow">' +
+          '<div class="field-wrap"><span class="lab">Weight · ' + db.settings.unit + '</span>' +
+            '<div class="stepper"><button data-act="stp" data-f="w" data-d="-1">–</button>' +
+            '<input class="mono" data-f="w" inputmode="decimal" value="' + fmt(defW) + '" aria-label="Weight">' +
+            '<button data-act="stp" data-f="w" data-d="1">+</button></div></div>' +
+          '<div class="field-wrap" style="max-width:118px"><span class="lab">Reps</span>' +
+            '<div class="stepper"><button data-act="stp" data-f="r" data-d="-1">–</button>' +
+            '<input class="mono" data-f="r" inputmode="numeric" value="' + defR + '" aria-label="Reps">' +
+            '<button data-act="stp" data-f="r" data-d="1">+</button></div></div>' +
+          '<button class="add-btn" data-act="log-set">Add</button>' +
+        '</div>' +
+        '<div class="rpe-quick"><span class="lbl">RPE</span>' +
+          [7, 7.5, 8, 8.5, 9, 10].map(function (v) {
+            return '<button data-act="rpe" data-v="' + v + '" aria-pressed="' + (li.rpe == v ? "true" : "false") + '">' + fmt(v) + '</button>';
+          }).join("") +
+        '</div>' +
+        plateHtml +
+      '</article>';
+    });
+
+    html += '<button class="bigadd" data-act="pick-ex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add lift</button>';
+    html += '<p class="fabhint">Tap a logged set to edit or delete it</p>';
+    views.today.innerHTML = html;
+  }
+
+  function sparkline(pts) {
+    var w = 92, h = 30;
+    if (pts.length < 2) return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true"></svg>';
+    var vs = pts.map(function (p) { return p.v; });
+    var mn = Math.min.apply(null, vs), mx = Math.max.apply(null, vs), rng = (mx - mn) || 1;
+    var step = w / (pts.length - 1);
+    var xy = pts.map(function (p, i) { return [i * step, h - 3 - ((p.v - mn) / rng) * (h - 6)]; });
+    var d = xy.map(function (c, i) { return (i ? "L" : "M") + c[0].toFixed(1) + " " + c[1].toFixed(1); }).join(" ");
+    var area = d + " L " + w + " " + h + " L 0 " + h + " Z";
+    var last = xy[xy.length - 1];
+    return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true">' +
+      '<path d="' + area + '" fill="var(--accent)" fill-opacity="0.12"/>' +
+      '<path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="2.6" fill="var(--accent)"/></svg>';
+  }
+
+  function exerciseStats(exId) {
+    // per-session max e1rm timeline + best e1rm + last date + best set
+    var byDate = {};
+    db.sessions.forEach(function (s) {
+      s.sets.forEach(function (st) {
+        if (st.exerciseId !== exId) return;
+        var e = e1rm(st.weight, st.reps);
+        if (!byDate[s.date] || e > byDate[s.date]) byDate[s.date] = e;
+      });
+    });
+    var keys = Object.keys(byDate).sort();
+    var pts = keys.map(function (k) { return { t: k, v: byDate[k] }; });
+    var bestE = 0, bestSet = null, lastDate = keys[keys.length - 1] || null;
+    db.sessions.forEach(function (s) {
+      s.sets.forEach(function (st) {
+        if (st.exerciseId !== exId) return;
+        var e = e1rm(st.weight, st.reps);
+        if (e > bestE) { bestE = e; bestSet = st; }
+      });
+    });
+    return { pts: pts, bestE: bestE, bestSet: bestSet, lastDate: lastDate, sessions: keys.length };
+  }
+
+  function renderLifts() {
+    var ids = Object.keys(db.exercises);
+    if (!ids.length) {
+      views.lifts.innerHTML = '<div class="empty"><div class="em-ic">📈</div><h3>No lifts tracked yet</h3>' +
+        '<p>Once you log a few sessions, every lift gets its own history and an estimated 1RM trend.</p></div>';
+      return;
+    }
+    var rows = ids.map(function (id) {
+      var st = exerciseStats(id);
+      return { id: id, st: st };
+    }).sort(function (a, b) {
+      var da = a.st.lastDate || "0", dbb = b.st.lastDate || "0";
+      return dbb.localeCompare(da);
+    });
+
+    var html = '<div class="dayhead"><h2>Lifts</h2><span class="sub">' + ids.length + ' tracked</span></div><div style="height:14px"></div>';
+    rows.forEach(function (r) {
+      var ex = db.exercises[r.id], st = r.st;
+      var ld = st.lastDate ? (relDay(st.lastDate) || shortDate(parseKey(st.lastDate))) : "never";
+      var bs = st.bestSet;
+      html += '<button class="liftrow" data-act="lift-detail" data-ex="' + r.id + '">' +
+        '<div><h3>' + esc(ex.name) + '</h3>' +
+        '<div class="l-sub">' + (bs ? "best " + fmt(bs.weight) + (bs.unit || db.settings.unit) + "×" + bs.reps : "no sets") +
+        '  ·  ' + ld + '</div></div>' +
+        '<div class="l-right">' + sparkline(st.pts) +
+        '<div class="l-1rm">' + (st.bestE ? fmt(st.bestE) : "–") + ' <small>e1RM</small></div></div>' +
+        '</button>';
+    });
+    views.lifts.innerHTML = html;
+  }
+
+  function renderHistory() {
+    var prs = computePRs();
+    var sessions = db.sessions.slice().filter(function (s) { return s.sets.length; })
+      .sort(function (a, b) { return b.date.localeCompare(a.date); });
+    if (!sessions.length) {
+      views.history.innerHTML = '<div class="empty"><div class="em-ic">📓</div><h3>No sessions logged</h3>' +
+        '<p>Completed workouts show up here — volume, sets and any PRs from each day.</p></div>';
+      return;
+    }
+    var html = '<div class="dayhead"><h2>History</h2><span class="sub">' + sessions.length + ' session' + (sessions.length === 1 ? '' : 's') + '</span></div><div style="height:14px"></div>';
+    sessions.forEach(function (s) {
+      var d = parseKey(s.date);
+      var exIds = [];
+      s.sets.forEach(function (st) { if (exIds.indexOf(st.exerciseId) < 0) exIds.push(st.exerciseId); });
+      var vol = 0, prc = 0;
+      s.sets.forEach(function (st) { vol += st.weight * st.reps; if (prs[st.id]) prc++; });
+      var open = s.date === todayKey() ? " open" : "";
+      var body = exIds.map(function (exId) {
+        var ss = s.sets.filter(function (st) { return st.exerciseId === exId; }).sort(function (a, b) { return a.ts - b.ts; });
+        return '<div class="sesh-ex"><h4>' + esc(exName(exId)) + '</h4><div class="line">' +
+          ss.map(function (st) {
+            return '<span class="' + (prs[st.id] ? "prd" : "") + '">' + fmt(st.weight) + "×" + st.reps +
+              (prs[st.id] ? " ★" : "") + '</span>';
+          }).join("") + '</div></div>';
+      }).join("");
+      html += '<details class="sesh"' + open + '><summary class="sesh-h">' +
+        '<div class="date">' + shortDate(d) + '<span>' + d.toLocaleDateString(undefined, d.getFullYear() === new Date().getFullYear() ? { weekday: "long" } : { weekday: "short", year: "numeric" }) + '</span></div>' +
+        '<div class="sh-sum">' + exIds.length + " lift" + (exIds.length === 1 ? "" : "s") + " · " + s.sets.length + " sets · " + fmt(vol) + db.settings.unit +
+        (prc ? '  <span class="mini-pr">' + prc + " PR" + (prc === 1 ? "" : "s") + '</span>' : "") + '</div>' +
+        '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>' +
+        '</summary><div class="sesh-body">' + body + '</div></details>';
+    });
+    views.history.innerHTML = html;
+  }
+
+  function renderAll() {
+    if (mem.view === "today") renderToday();
+    else if (mem.view === "lifts") renderLifts();
+    else renderHistory();
+  }
+
+  /* ---------- view switching ---------- */
+  document.querySelector(".seg").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-view]"); if (!b) return;
+    mem.view = b.dataset.view;
+    document.querySelectorAll(".seg button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+    Object.keys(views).forEach(function (k) { views[k].classList.toggle("active", k === mem.view); });
+    renderAll();
+  });
+
+  /* ---------- today interactions ---------- */
+  views.today.addEventListener("click", function (e) {
+    var t = e.target;
+    var pick = t.closest('[data-act="pick-ex"]');
+    if (pick) { openPicker(); return; }
+
+    var card = t.closest(".card");
+    if (!card) return;
+    var exId = card.dataset.ex;
+
+    var stp = t.closest('[data-act="stp"]');
+    if (stp) {
+      var f = stp.dataset.f, dir = +stp.dataset.d;
+      var input = card.querySelector('input[data-f="' + f + '"]');
+      var cur = parseFloat(input.value) || 0;
+      var step = f === "w" ? unitStep(db.settings.unit) : 1;
+      var nv = Math.max(f === "r" ? 1 : 0, cur + dir * step);
+      input.value = fmt(nv);
+      stashInput(card, exId);
+      if (f === "w") refreshPlateHint(card);
+      return;
+    }
+
+    var rpe = t.closest('[data-act="rpe"]');
+    if (rpe) {
+      var v = +rpe.dataset.v;
+      var li = mem.lastInput[exId] || (mem.lastInput[exId] = {});
+      li.rpe = (li.rpe == v) ? null : v;
+      card.querySelectorAll('[data-act="rpe"]').forEach(function (x) {
+        x.setAttribute("aria-pressed", (+x.dataset.v === li.rpe) ? "true" : "false");
+      });
+      return;
+    }
+
+    var logb = t.closest('[data-act="log-set"]');
+    if (logb) { logSet(card, exId); return; }
+
+    var exmenu = t.closest('[data-act="ex-menu"]');
+    if (exmenu) { openExMenu(exId); return; }
+
+    var setli = t.closest(".set");
+    if (setli) { openSetEditor(setli.dataset.set); return; }
+  });
+
+  views.today.addEventListener("input", function (e) {
+    var card = e.target.closest(".card"); if (!card) return;
+    stashInput(card, card.dataset.ex);
+    if (e.target.dataset.f === "w") refreshPlateHint(card);
+  });
+
+  function stashInput(card, exId) {
+    var w = parseFloat(card.querySelector('input[data-f="w"]').value);
+    var r = parseInt(card.querySelector('input[data-f="r"]').value, 10);
+    var li = mem.lastInput[exId] || (mem.lastInput[exId] = {});
+    if (!isNaN(w)) li.weight = w;
+    if (!isNaN(r)) li.reps = r;
+  }
+
+  function refreshPlateHint(card) {
+    var w = parseFloat(card.querySelector('input[data-f="w"]').value) || 0;
+    var pls = plates(w, db.settings.bar, db.settings.unit);
+    var hint = card.querySelector(".platehint");
+    var htmlInner = '<span class="lbl">Per side</span>' +
+      (pls.length ? pls.map(function (p) { return '<span class="pl">' + fmt(p) + "</span>"; }).join("")
+        : '<span class="pl">' + (w > db.settings.bar ? "—" : "bar only") + '</span>');
+    if (hint) hint.innerHTML = htmlInner;
+    else {
+      var h = document.createElement("div"); h.className = "platehint"; h.innerHTML = htmlInner;
+      card.appendChild(h);
+    }
+  }
+
+  function logSet(card, exId) {
+    var w = parseFloat(card.querySelector('input[data-f="w"]').value);
+    var r = parseInt(card.querySelector('input[data-f="r"]').value, 10);
+    if (isNaN(w) || w < 0) { toast("Enter a weight"); return; }
+    if (isNaN(r) || r < 1) { toast("Enter reps"); return; }
+    var li = mem.lastInput[exId] || {};
+    var s = today(true);
+    if (s.order.indexOf(exId) < 0) s.order.push(exId);
+    var ts = Date.now();
+    var prevPRs = computePRs();
+    var st = { id: uid(), exerciseId: exId, weight: w, reps: r, rpe: li.rpe || null, unit: db.settings.unit, ts: ts };
+    s.sets.push(st);
+    mem.lastInput[exId] = { weight: w, reps: r, rpe: li.rpe || null };
+    lastSetTs = ts;
+    save();
+    var newPRs = computePRs();
+    renderToday(); tickTimer();
+    // fresh pulse + PR toast
+    var el = views.today.querySelector('.set[data-set="' + st.id + '"]');
+    if (el) { el.classList.add("fresh"); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+    if (newPRs[st.id] && !prevPRs[st.id]) {
+      toast("🔥 New PR on " + exName(exId) + " — " + fmt(w) + db.settings.unit + " × " + r);
+    }
+  }
+
+  /* ---------- sheets ---------- */
+  var sheetRoot = document.getElementById("sheet-root");
+  function closeSheet() { sheetRoot.innerHTML = ""; }
+  function openSheet(inner) {
+    sheetRoot.innerHTML = '<div class="sheet-wrap"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>' + inner + '</div></div>';
+    var wrap = sheetRoot.querySelector(".sheet-wrap");
+    wrap.addEventListener("click", function (e) { if (e.target === wrap) closeSheet(); });
+  }
+
+  function openPicker() {
+    var s = today(false);
+    var have = s ? s.order.slice() : [];
+    render("");
+    function render(q) {
+      var ql = q.trim().toLowerCase();
+      var groups = "";
+      LIBRARY.forEach(function (g) {
+        var items = g[1].filter(function (n) { return !ql || n.toLowerCase().indexOf(ql) >= 0; });
+        if (!items.length) return;
+        groups += '<div class="lib-group"><div class="gh">' + g[0] + '</div>' +
+          items.map(function (n) {
+            var added = have.some(function (id) { return db.exercises[id] && db.exercises[id].name === n; });
+            return '<button class="lib-item ' + (added ? "dim" : "") + '" data-name="' + esc(n) + '">' +
+              '<span>' + esc(n) + '</span><span class="add-ic">' + (added ? "✓" : "+") + '</span></button>';
+          }).join("") + '</div>';
+      });
+      // custom exercises already created
+      var customs = Object.keys(db.exercises).map(function (id) { return db.exercises[id]; })
+        .filter(function (x) { return !CAT_OF[x.name] && (!ql || x.name.toLowerCase().indexOf(ql) >= 0); });
+      if (customs.length) {
+        groups += '<div class="lib-group"><div class="gh">Your lifts</div>' +
+          customs.map(function (x) {
+            var added = have.indexOf(x.id) >= 0;
+            return '<button class="lib-item ' + (added ? "dim" : "") + '" data-name="' + esc(x.name) + '">' +
+              '<span>' + esc(x.name) + '</span><span class="add-ic">' + (added ? "✓" : "+") + '</span></button>';
+          }).join("") + '</div>';
+      }
+      var exact = q.trim() && !findByName(q);
+      var createBtn = exact ? '<button class="lib-item create" data-create="' + esc(q.trim()) + '">' +
+        '<span>Create “' + esc(q.trim()) + '”</span><span class="add-ic">+</span></button>' : "";
+
+      openSheet('<h2>Add a lift</h2><p class="sh-lead">Pick from the library or type your own.</p>' +
+        '<input class="search" id="lib-search" placeholder="Search or name a lift…" value="' + esc(q) + '" autocomplete="off">' +
+        createBtn + (groups || '<p class="note">No matches. Type a name and tap Create.</p>'));
+
+      var si = document.getElementById("lib-search");
+      si.focus();
+      si.setSelectionRange(si.value.length, si.value.length);
+      si.addEventListener("input", function () { render(si.value); });
+      sheetRoot.querySelectorAll(".lib-item").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var name = b.dataset.create || b.dataset.name;
+          addExerciseToday(name);
+        });
+      });
+    }
+    function findByName(q) {
+      var lc = q.trim().toLowerCase();
+      if (CAT_OF[q.trim()]) return true;
+      return Object.keys(db.exercises).some(function (id) { return db.exercises[id].name.toLowerCase() === lc; });
+    }
+  }
+
+  function addExerciseToday(name) {
+    var exId = ensureExercise(name);
+    var s = today(true);
+    if (s.order.indexOf(exId) < 0) s.order.push(exId);
+    save();
+    closeSheet();
+    renderToday();
+    var card = views.today.querySelector('.card[data-ex="' + exId + '"]');
+    if (card) card.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+
+  function openExMenu(exId) {
+    var ex = db.exercises[exId];
+    openSheet('<h2>' + esc(ex.name) + '</h2><p class="sh-lead">' + esc(ex.cat) + '</p>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">' +
+      '<button class="lib-item" data-a="history">View full history</button>' +
+      '<button class="lib-item" data-a="remove">Remove from today</button>' +
+      '</div>' +
+      '<p class="note">Removing from today only clears sets logged today for this lift. History on other days is kept.</p>');
+    sheetRoot.querySelector('[data-a="history"]').addEventListener("click", function () { closeSheet(); openLiftDetail(exId); });
+    sheetRoot.querySelector('[data-a="remove"]').addEventListener("click", function () {
+      var s = today(true);
+      s.sets = s.sets.filter(function (st) { return st.exerciseId !== exId; });
+      s.order = s.order.filter(function (id) { return id !== exId; });
+      save(); closeSheet(); renderToday();
+    });
+  }
+
+  function openSetEditor(setId) {
+    var s = today(true);
+    var st = s.sets.filter(function (x) { return x.id === setId; })[0];
+    if (!st) return;
+    var wStep = unitStep(st.unit || db.settings.unit);
+    openSheet('<h2>Edit set</h2><p class="sh-lead">' + esc(exName(st.exerciseId)) + '</p>' +
+      '<div class="big-num-edit">' +
+      '<div class="bne"><div class="lab">Weight (' + (st.unit || db.settings.unit) + ')</div>' +
+        '<div class="stepper"><button data-e="w" data-d="-1">–</button><input class="mono" id="e-w" inputmode="decimal" value="' + fmt(st.weight) + '"><button data-e="w" data-d="1">+</button></div></div>' +
+      '<div class="bne"><div class="lab">Reps</div>' +
+        '<div class="stepper"><button data-e="r" data-d="-1">–</button><input class="mono" id="e-r" inputmode="numeric" value="' + st.reps + '"><button data-e="r" data-d="1">+</button></div></div>' +
+      '</div>' +
+      '<div class="rpe-quick" style="justify-content:center;margin-bottom:16px"><span class="lbl">RPE</span>' +
+        [7, 7.5, 8, 8.5, 9, 10].map(function (v) { return '<button data-erpe="' + v + '" aria-pressed="' + (st.rpe == v ? "true" : "false") + '">' + fmt(v) + '</button>'; }).join("") +
+        '<button data-erpe="0" aria-pressed="' + (!st.rpe ? "true" : "false") + '">–</button></div>' +
+      '<div class="rowbtns"><button class="btn-danger" data-e="del">Delete set</button><button class="btn-primary" data-e="save">Save</button></div>');
+
+    var tmpRpe = st.rpe || 0;
+    sheetRoot.querySelectorAll("[data-e]").forEach(function (b) {
+      if (!b.dataset.d) return;
+      b.addEventListener("click", function () {
+        var inp = document.getElementById(b.dataset.e === "w" ? "e-w" : "e-r");
+        var step = b.dataset.e === "w" ? wStep : 1;
+        var nv = Math.max(b.dataset.e === "r" ? 1 : 0, (parseFloat(inp.value) || 0) + (+b.dataset.d) * step);
+        inp.value = fmt(nv);
+      });
+    });
+    sheetRoot.querySelectorAll("[data-erpe]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        tmpRpe = +b.dataset.erpe;
+        sheetRoot.querySelectorAll("[data-erpe]").forEach(function (x) { x.setAttribute("aria-pressed", (+x.dataset.erpe === tmpRpe) ? "true" : "false"); });
+      });
+    });
+    sheetRoot.querySelector('[data-e="save"]').addEventListener("click", function () {
+      var w = parseFloat(document.getElementById("e-w").value);
+      var r = parseInt(document.getElementById("e-r").value, 10);
+      if (isNaN(w) || w < 0 || isNaN(r) || r < 1) { toast("Check weight and reps"); return; }
+      st.weight = w; st.reps = r; st.rpe = tmpRpe || null;
+      save(); closeSheet(); renderToday();
+    });
+    sheetRoot.querySelector('[data-e="del"]').addEventListener("click", function () {
+      s.sets = s.sets.filter(function (x) { return x.id !== setId; });
+      if (!s.sets.some(function (x) { return x.exerciseId === st.exerciseId; })) {
+        // keep exercise card via order; leave it
+      }
+      save(); closeSheet(); renderToday();
+    });
+  }
+
+  /* ---------- lift detail ---------- */
+  views.lifts.addEventListener("click", function (e) {
+    var b = e.target.closest('[data-act="lift-detail"]'); if (!b) return;
+    openLiftDetail(b.dataset.ex);
+  });
+
+  function openLiftDetail(exId) {
+    var ex = db.exercises[exId];
+    var st = exerciseStats(exId);
+    var prs = computePRs();
+    var all = setsFor(exId).slice().reverse();
+    // best per common rep counts
+    var bestByRep = {};
+    setsFor(exId).forEach(function (x) { if (!bestByRep[x.reps] || x.weight > bestByRep[x.reps]) bestByRep[x.reps] = x.weight; });
+    var repList = Object.keys(bestByRep).map(Number).sort(function (a, b) { return a - b; }).slice(0, 8);
+
+    var bigSpark = (function () {
+      var pts = st.pts; var w = 260, h = 70;
+      if (pts.length < 2) return '<p class="note">Log this lift on two or more days to see a trend.</p>';
+      var vs = pts.map(function (p) { return p.v; });
+      var mn = Math.min.apply(null, vs), mx = Math.max.apply(null, vs), rng = (mx - mn) || 1;
+      var step = w / (pts.length - 1);
+      var xy = pts.map(function (p, i) { return [i * step, h - 6 - ((p.v - mn) / rng) * (h - 12)]; });
+      var d = xy.map(function (c, i) { return (i ? "L" : "M") + c[0].toFixed(1) + " " + c[1].toFixed(1); }).join(" ");
+      var last = xy[xy.length - 1];
+      return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:80px;margin:8px 0 4px" preserveAspectRatio="none">' +
+        '<path d="' + d + ' L ' + w + ' ' + h + ' L 0 ' + h + ' Z" fill="var(--accent)" fill-opacity="0.12"/>' +
+        '<path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>' +
+        '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3" fill="var(--accent)"/></svg>';
+    })();
+
+    openSheet('<h2>' + esc(ex.name) + '</h2><p class="sh-lead">' + esc(ex.cat) + ' · ' + st.sessions + ' session' + (st.sessions === 1 ? "" : "s") + '</p>' +
+      '<div class="statbar" style="margin:6px 0 4px">' +
+      '<div class="stat hot"><div class="k">Best e1RM</div><div class="v">' + (st.bestE ? fmt(st.bestE) : "–") + '</div></div>' +
+      '<div class="stat"><div class="k">Top set</div><div class="v" style="font-size:17px">' + (st.bestSet ? fmt(st.bestSet.weight) + "×" + st.bestSet.reps : "–") + '</div></div>' +
+      '<div class="stat"><div class="k">Last</div><div class="v" style="font-size:17px">' + (st.lastDate ? shortDate(parseKey(st.lastDate)) : "–") + '</div></div>' +
+      '</div>' + bigSpark +
+      (repList.length ? '<p class="note" style="margin-top:10px"><b style="color:var(--text)">Best by reps:</b> ' +
+        repList.map(function (r) { return fmt(bestByRep[r]) + "×" + r; }).join("  ·  ") + '</p>' : "") +
+      '<h4 style="font-family:\'Barlow Condensed\';font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:18px 0 4px">All sets</h4>' +
+      '<div class="set-list-full">' +
+      all.map(function (x) {
+        return '<div class="sfrow"><span class="d">' + shortDate(parseKey(dateOfSet(x))) + '</span>' +
+          '<span>' + fmt(x.weight) + " " + (x.unit || db.settings.unit) + " × " + x.reps + (x.rpe ? "  @" + fmt(x.rpe) : "") + '</span>' +
+          '<span>' + (prs[x.id] ? '<span class="pr-tag">PR</span>' : '<span class="d">e1RM ' + fmt(e1rm(x.weight, x.reps)) + '</span>') + '</span></div>';
+      }).join("") +
+      '</div>' +
+      '<div class="rowbtns"><button class="btn-danger" data-a="del-ex">Delete lift &amp; all its history</button></div>');
+
+    sheetRoot.querySelector('[data-a="del-ex"]').addEventListener("click", function () {
+      confirmSheet("Delete " + ex.name + "?", "This removes the lift and every set you’ve ever logged for it. This can’t be undone.", function () {
+        delete db.exercises[exId];
+        db.sessions.forEach(function (s) {
+          s.sets = s.sets.filter(function (x) { return x.exerciseId !== exId; });
+          s.order = (s.order || []).filter(function (id) { return id !== exId; });
+        });
+        db.sessions = db.sessions.filter(function (s) { return s.sets.length || s.date === todayKey(); });
+        save(); closeSheet(); renderAll();
+      });
+    });
+  }
+  function dateOfSet(st) {
+    for (var i = 0; i < db.sessions.length; i++) if (db.sessions[i].sets.indexOf(st) >= 0) return db.sessions[i].date;
+    return todayKey();
+  }
+
+  /* ---------- history: nothing extra (native details) ---------- */
+
+  /* ---------- confirm sheet ---------- */
+  function confirmSheet(title, body, onYes) {
+    var prev = sheetRoot.innerHTML;
+    openSheet('<h2>' + esc(title) + '</h2><p class="sh-lead">' + esc(body) + '</p>' +
+      '<div class="rowbtns"><button class="btn-ghost" data-c="no">Cancel</button><button class="btn-danger" data-c="yes">Delete</button></div>');
+    sheetRoot.querySelector('[data-c="no"]').addEventListener("click", function () { sheetRoot.innerHTML = prev; rebindAfterRestore(); });
+    sheetRoot.querySelector('[data-c="yes"]').addEventListener("click", onYes);
+  }
+  function rebindAfterRestore() {
+    var wrap = sheetRoot.querySelector(".sheet-wrap");
+    if (wrap) wrap.addEventListener("click", function (e) { if (e.target === wrap) closeSheet(); });
+  }
+
+  /* ---------- settings ---------- */
+  document.getElementById("btn-settings").addEventListener("click", openSettings);
+
+  function openSettings() {
+    var hasSessions = db.sessions.some(function (s) { return s.sets.length; });
+    openSheet('<h2>Settings</h2><p class="sh-lead">Iron Log · stored on this device</p>' +
+      '<div class="setng">' +
+        '<div class="srow"><div class="s-k">Units<p>Applied to new sets</p></div>' +
+          '<div class="toggle-group" data-g="unit">' +
+          '<button data-v="kg" aria-selected="' + (db.settings.unit === "kg") + '">kg</button>' +
+          '<button data-v="lb" aria-selected="' + (db.settings.unit === "lb") + '">lb</button></div></div>' +
+        '<div class="srow"><div class="s-k">Bar weight<p>For plate math</p></div>' +
+          '<div class="mini-stepper"><button data-bar="-1">–</button><input class="mono" id="s-bar" inputmode="decimal" value="' + fmt(db.settings.bar) + '"><button data-bar="1">+</button></div></div>' +
+        '<div class="srow"><div class="s-k">Theme</div>' +
+          '<div class="toggle-group" data-g="theme">' +
+          '<button data-v="system" aria-selected="' + (db.settings.theme === "system") + '">Auto</button>' +
+          '<button data-v="light" aria-selected="' + (db.settings.theme === "light") + '">Light</button>' +
+          '<button data-v="dark" aria-selected="' + (db.settings.theme === "dark") + '">Dark</button></div></div>' +
+      '</div>' +
+      '<h4 style="font-family:\'Barlow Condensed\';font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:6px 0 8px">Backup</h4>' +
+      '<div class="rowbtns"><button class="btn-ghost" data-a="export">Export file</button><button class="btn-ghost" data-a="copy">Copy JSON</button></div>' +
+      '<div class="rowbtns" style="margin-top:8px"><button class="btn-ghost" data-a="import">Restore from text</button></div>' +
+      '<p class="note">Your log lives only in this browser. Export regularly — clearing Safari/Chrome site data will erase it. To move it to your home screen: Share → <span class="kbd">Add to Home Screen</span>.</p>' +
+      (hasSessions ? '<div class="rowbtns" style="margin-top:18px"><button class="btn-danger" data-a="wipe">Erase all data</button></div>' : "") +
+      '<p class="fabhint" style="margin-top:18px">Epley 1RM · e1RM = w × (1 + reps/30)</p>');
+
+    sheetRoot.querySelectorAll('[data-g] button').forEach(function (b) {
+      b.addEventListener("click", function () {
+        var g = b.closest("[data-g]").dataset.g;
+        b.parentNode.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+        if (g === "unit") { db.settings.unit = b.dataset.v; }
+        if (g === "theme") { db.settings.theme = b.dataset.v; applyTheme(); }
+        save(); renderAll();
+      });
+    });
+    sheetRoot.querySelectorAll("[data-bar]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var inp = document.getElementById("s-bar");
+        var nv = Math.max(0, (parseFloat(inp.value) || 0) + (+b.dataset.bar) * (db.settings.unit === "lb" ? 5 : 2.5));
+        inp.value = fmt(nv); db.settings.bar = nv; save(); renderAll();
+      });
+    });
+    document.getElementById("s-bar").addEventListener("change", function () {
+      var v = parseFloat(this.value); if (!isNaN(v) && v >= 0) { db.settings.bar = v; save(); renderAll(); }
+    });
+
+    sheetRoot.querySelector('[data-a="export"]').addEventListener("click", exportData);
+    sheetRoot.querySelector('[data-a="copy"]').addEventListener("click", function () {
+      var txt = JSON.stringify(db);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(function () { toast("Backup copied to clipboard"); },
+          function () { showRawBackup(txt); });
+      } else showRawBackup(txt);
+    });
+    sheetRoot.querySelector('[data-a="import"]').addEventListener("click", openImport);
+    var wipe = sheetRoot.querySelector('[data-a="wipe"]');
+    if (wipe) wipe.addEventListener("click", function () {
+      confirmSheet("Erase everything?", "All lifts, sessions and PRs will be permanently deleted from this device. Export a backup first if you might want it back.", function () {
+        db = defaults();
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        mem.lastInput = {}; lastSetTs = null;
+        applyTheme(); closeSheet(); renderAll(); tickTimer();
+        toast("All data erased");
+      });
+    });
+  }
+
+  function showRawBackup(txt) {
+    openSheet('<h2>Backup</h2><p class="sh-lead">Copy this text and keep it somewhere safe.</p>' +
+      '<textarea class="search" style="height:180px;font-family:monospace;font-size:11px;padding:10px" readonly>' + esc(txt) + '</textarea>' +
+      '<div class="rowbtns"><button class="btn-primary" data-c="ok">Done</button></div>');
+    sheetRoot.querySelector('[data-c="ok"]').addEventListener("click", openSettings);
+  }
+
+  function exportData() {
+    var name = "ironlog-backup-" + todayKey() + ".json";
+    var payload = JSON.stringify(db, null, 2);
+    (async function () {
+      try {
+        var dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
+        if (dl) { await dl.save({ filename: name, data: payload }); toast("Backup saved"); return; }
+      } catch (e) {
+        if (e && e.code === "declined") return;
+      }
+      // fallback: raw text
+      showRawBackup(JSON.stringify(db));
+    })();
+  }
+
+  function openImport() {
+    openSheet('<h2>Restore from backup</h2><p class="sh-lead">Paste a previously exported Iron Log backup. This replaces everything currently on this device.</p>' +
+      '<textarea class="search" id="imp" style="height:160px;font-family:monospace;font-size:11px;padding:10px" placeholder="Paste backup JSON here…"></textarea>' +
+      '<div class="rowbtns"><button class="btn-ghost" data-c="cancel">Cancel</button><button class="btn-primary" data-c="do">Restore</button></div>');
+    sheetRoot.querySelector('[data-c="cancel"]').addEventListener("click", openSettings);
+    sheetRoot.querySelector('[data-c="do"]').addEventListener("click", function () {
+      var raw = document.getElementById("imp").value.trim();
+      if (!raw) { toast("Paste a backup first"); return; }
+      var obj;
+      try { obj = JSON.parse(raw); } catch (e) { toast("That doesn’t look like valid backup text"); return; }
+      if (!obj || typeof obj !== "object" || !obj.exercises || !Array.isArray(obj.sessions)) {
+        toast("Not an Iron Log backup"); return;
+      }
+      confirmSheet("Restore this backup?", "Everything currently logged on this device will be replaced with the backup’s contents.", function () {
+        db = Object.assign(defaults(), obj);
+        db.settings = Object.assign(defaults().settings, obj.settings || {});
+        try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+        mem.lastInput = {};
+        var s = today(false);
+        lastSetTs = s && s.sets.length ? Math.max.apply(null, s.sets.map(function (x) { return x.ts; })) : null;
+        applyTheme(); closeSheet(); renderAll(); tickTimer();
+        toast("Backup restored");
+      });
+    });
+  }
+
+  /* ---------- keyboard: Esc closes sheet ---------- */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && sheetRoot.innerHTML) closeSheet();
+  });
+
+  /* ---------- go ---------- */
+  renderAll();
+})();
+</script>

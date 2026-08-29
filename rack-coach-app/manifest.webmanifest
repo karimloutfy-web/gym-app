@@ -1,0 +1,16 @@
+{
+  "name": "Rack Coach",
+  "short_name": "Rack Coach",
+  "description": "A personal strength-training coach that runs a proven barbell program.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#e9e6da",
+  "theme_color": "#0f8a7c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

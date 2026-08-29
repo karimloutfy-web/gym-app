@@ -1,0 +1,7 @@
+# build artifact — regenerated from rack-coach-app/
+rack-coach-app.zip
+
+# os / editor
+.DS_Store
+*.log
+Thumbs.db
