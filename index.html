@@ -217,6 +217,9 @@
   .rec-row .rr-date { color: var(--text-faint); font-size: 11.5px; }
 
   /* home screen */
+  .home-quote { border-left: 2px solid var(--accent); padding: 2px 0 2px 12px; margin: 6px 0 4px; }
+  .home-quote p { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 17px; line-height: 1.2; color: var(--text-muted); text-wrap: balance; }
+  .home-quote span { display: block; margin-top: 5px; font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--text-faint); }
   .home-hero { padding: 14px 0 4px; }
   .home-hero .h-eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .13em; font-weight: 700; color: var(--accent-ink); }
   .home-hero h2.title { font-size: 30px; margin: 4px 0 14px; }
@@ -838,6 +841,19 @@
   // human label for a resolved session ("Workout A" / "Volume day")
   function sessionLabel(res) { return res.dayType ? cap(res.dayType) + " day" : "Workout " + res.label; }
 
+  // Ronnie Coleman, rotated daily
+  var QUOTES = [
+    "Ain't nothin' to it but to do it.",
+    "Everybody wanna be a bodybuilder, but don't nobody wanna lift no heavy-ass weights.",
+    "Light weight, baby. Nothin' but a peanut.",
+    "Yeah buddy! Light weight!",
+    "Hard work and training. There's no secret formula."
+  ];
+  function quoteHtml() {
+    var q = QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length];
+    return '<div class="home-quote"><p>&ldquo;' + esc(q) + '&rdquo;</p><span>Ronnie Coleman</span></div>';
+  }
+
   function applyTheme() {
     var t = db.settings.theme;
     if (t === "system") document.documentElement.removeAttribute("data-theme");
@@ -1104,7 +1120,7 @@
     var c = screens.home;
 
     if (!db.active) {
-      c.innerHTML = '<div class="home-hero">' +
+      c.innerHTML = quoteHtml() + '<div class="home-hero">' +
         '<div class="h-eyebrow">Welcome</div>' +
         '<h2 class="title">Ready when you are</h2>' +
         '<p class="lead">Pick a proven barbell program and it runs for you — holds your weights, tells you what to lift each session, and adds load on schedule.</p>' +
@@ -1118,7 +1134,7 @@
     var res = resolveSession(t, db.active, eq());
     var lb = latestBody();
 
-    var html = '<div class="home-hero">' +
+    var html = quoteHtml() + '<div class="home-hero">' +
       '<div class="h-eyebrow">' + esc(t.name) + '</div>' +
       '<h2 class="title">Week ' + (db.active.weekIndex + 1) + '</h2>';
 
