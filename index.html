@@ -212,9 +212,32 @@
 
   .recent { margin-top: 20px; }
   .rec-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 7px; font-size: 13px; }
-  .rec-row .rr-day { font-family: "Barlow Condensed"; font-weight: 700; font-size: 15px; width: 34px; }
+  .rec-row .rr-day { font-family: "Barlow Condensed"; font-weight: 700; font-size: 14px; min-width: 30px; max-width: 82px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
   .rec-row .rr-sum { flex: 1; color: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: 12px; }
   .rec-row .rr-date { color: var(--text-faint); font-size: 11.5px; }
+
+  /* home screen */
+  .home-hero { padding: 18px 0 4px; }
+  .home-hero .h-eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .13em; font-weight: 700; color: var(--accent-ink); }
+  .home-hero h2.title { font-size: 34px; margin: 4px 0 2px; }
+  .home-hero .h-next { color: var(--text-muted); font-size: 14px; font-family: "IBM Plex Mono", monospace; margin-bottom: 22px; }
+  .home-hero .lead { margin-bottom: 22px; }
+  .btn.btn-lg { height: 58px; font-size: 17px; }
+  .home-links { display: flex; gap: 9px; margin-top: 10px; }
+  .home-links .btn { flex: 1; }
+  .home-foot { margin-top: 26px; text-align: center; }
+  .home-foot button { color: var(--text-faint); font-size: 12.5px; text-decoration: underline; text-underline-offset: 2px; }
+  .home-last { margin-top: 14px; font-size: 12.5px; color: var(--text-faint); font-family: "IBM Plex Mono", monospace; }
+
+  /* pick-your-workout screen */
+  .pick-card { position: relative; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px; margin-bottom: 12px; }
+  .pick-card:hover { border-color: var(--line-strong); }
+  .pick-card.suggested { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
+  .pick-card h3 { font-size: 21px; }
+  .pick-card .pk-badge { position: absolute; top: 13px; right: 13px; font-family: "Barlow Condensed"; font-weight: 700; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-text); background: var(--accent); border-radius: 5px; padding: 3px 7px 2px; }
+  .pick-card .pk-dtype { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); font-weight: 600; margin-top: 1px; }
+  .pick-card .pk-ex { margin-top: 10px; font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .pick-card .pk-w { font-family: "IBM Plex Mono", monospace; color: var(--text); font-size: 12px; margin-left: 2px; white-space: nowrap; }
 
   /* session player */
   .player { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; flex-direction: column; }
@@ -365,6 +388,7 @@
     <section class="screen" id="s-detail"></section>
     <section class="screen" id="s-setup"></section>
     <section class="screen" id="s-home"></section>
+    <section class="screen" id="s-pick"></section>
     <section class="screen" id="s-summary"></section>
     <section class="screen" id="s-progress"></section>
     <section class="screen" id="s-body"></section>
@@ -372,8 +396,8 @@
 
   <nav class="tabbar" id="tabbar">
     <button data-tab="home" aria-selected="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11M6.5 17.5h11M4 9v6M20 9v6M6.5 5v14M17.5 5v14"/></svg>
-      <span>Train</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5M5.5 10v9.5h13V10"/></svg>
+      <span>Home</span>
     </button>
     <button data-tab="progress" aria-selected="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6"/></svg>
@@ -661,8 +685,12 @@
       }
       lift.history.push({ t: Date.now(), w: lift.weight });
     });
-    active.cycleIndex++;
-    if (active.cycleIndex % tpl.microcycle.length === 0) active.weekIndex++;
+    // advance from the workout that was actually done (the user may have picked a
+    // different day than the one scheduled). "Next" becomes the day after it.
+    var len = tpl.microcycle.length;
+    var done = (result.cycleIndex != null) ? (result.cycleIndex % len) : (active.cycleIndex % len);
+    active.cycleIndex = done + 1;
+    if (active.cycleIndex % len === 0) active.weekIndex++;
     return notes;
   }
 
@@ -737,6 +765,14 @@
     var n0 = applyResult(SL, slS3, { dayType: null, exercises: [{ exId: "squat", done: false }] }, eq);
     A(slS3.lifts.squat.weight === 100 && slS3.lifts.squat.failCount === 0 && n0.length === 0, "skipped exercise (done:false) → no miss, no change");
 
+    // --- pick-a-workout: advancement follows the day actually done ---
+    var pk = { options: {}, cycleIndex: 5, weekIndex: 3, lifts: deriveStartingWeights(SL, { squat: { mode: "direct", weight: 100 }, bench: { mode: "direct", weight: 60 }, press: { mode: "direct", weight: 40 }, deadlift: { mode: "direct", weight: 80 }, row: { mode: "direct", weight: 40 } }, eq) };
+    applyResult(SL, pk, { dayType: null, cycleIndex: 0, exercises: [{ exId: "squat", made: true }] }, eq);
+    A(pk.cycleIndex % SL.microcycle.length === 1 && pk.weekIndex === 3, "picked day A (idx 0) → next resolves to day B (idx 1), no week bump");
+    var pk2 = { options: {}, cycleIndex: 5, weekIndex: 3, lifts: deriveStartingWeights(SL, { squat: { mode: "direct", weight: 100 }, bench: { mode: "direct", weight: 60 }, press: { mode: "direct", weight: 40 }, deadlift: { mode: "direct", weight: 80 }, row: { mode: "direct", weight: 40 } }, eq) };
+    applyResult(SL, pk2, { dayType: null, cycleIndex: 1, exercises: [{ exId: "squat", made: true }] }, eq);
+    A(pk2.cycleIndex % SL.microcycle.length === 0 && pk2.weekIndex === 4, "completed last microcycle day → weekIndex increments");
+
     var el = document.createElement("div");
     el.className = "selftest";
     el.innerHTML = "RACK COACH — SELF TEST\n" + (ok ? "<span class='pass'>ALL PASSED</span>" : "<span class='fail'>FAILURES ABOVE</span>") + "\n\n" +
@@ -794,6 +830,9 @@
     if (d < 7) return d + " days ago";
     return shortDate(t);
   }
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  // human label for a resolved session ("Workout A" / "Volume day")
+  function sessionLabel(res) { return res.dayType ? cap(res.dayType) + " day" : "Workout " + res.label; }
 
   function applyTheme() {
     var t = db.settings.theme;
@@ -815,6 +854,7 @@
     detail: document.getElementById("s-detail"),
     setup: document.getElementById("s-setup"),
     home: document.getElementById("s-home"),
+    pick: document.getElementById("s-pick"),
     summary: document.getElementById("s-summary"),
     progress: document.getElementById("s-progress"),
     body: document.getElementById("s-body")
@@ -849,7 +889,8 @@
   var renderers = {};
   renderers.choose = function () {
     var c = screens.choose;
-    var html = '<h2 class="title">Pick your program</h2>' +
+    var html = '<button class="backlink" id="ch-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
+      '<h2 class="title">' + (db.active ? "Change program" : "Pick your program") + '</h2>' +
       '<p class="lead">A proven barbell program, run for you — it holds your weights, tells you what to lift each session, and adds load on the schedule the program is built around.</p>';
     TEMPLATES.forEach(function (t) {
       var modeLabel = t.progressionMode === "linear" ? "adds weight every session" : "adds weight every week";
@@ -860,14 +901,11 @@
         '<div class="best">Best for: ' + esc(t.bestFor) + '</div>' +
       '</button>';
     });
-    if (db.active) {
-      html += '<div class="btn-row"><button class="btn btn-ghost" id="back-to-train">Back to my program</button></div>';
-    }
     c.innerHTML = html;
+    document.getElementById("ch-back").onclick = function () { go("home"); };
     c.querySelectorAll("[data-tpl]").forEach(function (b) {
       b.onclick = function () { draft = null; showDetail(b.dataset.tpl); };
     });
-    var bt = document.getElementById("back-to-train"); if (bt) bt.onclick = function () { go("home"); };
   };
 
   function showDetail(tplId) { detailId = tplId; go("detail"); }
@@ -1060,54 +1098,85 @@
 
   renderers.home = function () {
     var c = screens.home;
-    if (!db.active) { go("choose"); return; }
-    var t = tplById(db.active.templateId);
-    var res = resolveSession(t, db.active, eq());
-    var dayNo = db.sessions.length + 1;
-    var lb = latestBody();
 
-    var html = '<div class="home-head"><h2>' + esc(t.name) + '</h2>' +
-      '<span class="pos">Wk ' + (db.active.weekIndex + 1) + ' · S' + dayNo + '</span></div>';
-
-    html += '<div class="snap">' +
-      '<div class="s"><div class="k">This week</div><div class="v">' + sessionsThisWeek() + '<small>/' + t.daysPerWeek + '</small></div></div>' +
-      '<div class="s"><div class="k">Sessions</div><div class="v">' + db.sessions.length + '</div></div>' +
-      '<div class="s"><div class="k">Bodyweight</div><div class="v">' + (lb && lb.bw ? fmt(lb.bw) + '<small> ' + U() + '</small>' : '<small style="font-size:12px">—</small>') + '</div></div>' +
-    '</div>';
-
-    html += '<div class="next-card"><div class="nc-eye">Next · Workout ' + esc(res.label) + (res.dayType ? ' · ' + esc(res.dayType) + ' day' : '') + '</div>' +
-      '<h3>' + res.exercises.map(function (x) { return esc(x.name); }).join(" · ") + '</h3>';
-    res.exercises.forEach(function (x) {
-      var setStr = x.workSets.length + "×" + x.target + (x.assist && x.workSets[0].amrap ? "+" : "");
-      html += '<div class="nc-ex"><span class="nx-name">' + esc(x.name) + '</span>' +
-        '<span>' + (x.assist ? '<span class="nx-set">' + setStr + '</span>' :
-        '<span class="nx-set">' + setStr + '&nbsp;&nbsp;</span><span class="nx-w">' + fmt(x.weight) + ' ' + U() + '</span>') + '</span></div>';
-    });
-    html += '<div class="btn-row"><button class="btn btn-primary" id="tr-start">Start workout</button></div></div>';
-
-    if (db.sessions.length) {
-      html += '<div class="recent"><div class="eyebrow">Recent</div>';
-      db.sessions.slice(-4).reverse().forEach(function (s) {
-        html += '<div class="rec-row"><span class="rr-day">' + esc(s.dayLabel) + '</span>' +
-          '<span class="rr-sum">' + s.actual.filter(function (a) { return !a.assist; }).map(function (a) {
-            return fmt(a.topWeight) + "×" + a.topReps;
-          }).join("  ") + '</span>' +
-          '<span class="rr-date">' + relDate(s.date) + '</span></div>';
-      });
-      html += '</div>';
+    if (!db.active) {
+      c.innerHTML = '<div class="home-hero">' +
+        '<div class="h-eyebrow">Welcome</div>' +
+        '<h2 class="title">Ready when you are</h2>' +
+        '<p class="lead">Pick a proven barbell program and it runs for you — holds your weights, tells you what to lift each session, and adds load on schedule.</p>' +
+        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-setup">Set up your program</button></div>' +
+      '</div>';
+      document.getElementById("h-setup").onclick = function () { go("choose"); };
+      return;
     }
 
-    html += '<div class="btn-row"><button class="btn btn-ghost" id="tr-change">Change program</button></div>';
+    var t = tplById(db.active.templateId);
+    var res = resolveSession(t, db.active, eq());
+
+    var html = '<div class="home-hero">' +
+      '<div class="h-eyebrow">' + esc(t.name) + '</div>' +
+      '<h2 class="title">Week ' + (db.active.weekIndex + 1) + '</h2>' +
+      '<p class="h-next">Next up · ' + esc(sessionLabel(res)) + '</p>' +
+      '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-start">Start working out</button></div>' +
+      '<div class="home-links">' +
+        '<button class="btn btn-ghost" data-go="progress">Progress</button>' +
+        '<button class="btn btn-ghost" data-go="body">Body</button>' +
+      '</div>';
+
+    if (db.sessions.length) {
+      var last = db.sessions[db.sessions.length - 1];
+      html += '<div class="home-last">Last · ' + esc(last.dayLabel && !/^[A-Z]$/.test(last.dayLabel) ? cap(last.dayLabel) + " day" : "Workout " + last.dayLabel) + ' · ' + relDate(last.date) + '</div>';
+    }
+
+    html += '<div class="home-foot"><button id="h-change">Change program</button></div>' +
+    '</div>';
+
     c.innerHTML = html;
-    document.getElementById("tr-start").onclick = function () { startPlayer(); };
-    document.getElementById("tr-change").onclick = function () { go("choose"); };
+    document.getElementById("h-start").onclick = function () { go("pick"); };
+    document.getElementById("h-change").onclick = function () { go("choose"); };
+    c.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
+  };
+
+  /* ============================================================ PICK WORKOUT */
+  renderers.pick = function () {
+    var c = screens.pick;
+    if (!db.active) { go("home"); return; }
+    var t = tplById(db.active.templateId);
+    var nextIdx = db.active.cycleIndex % t.microcycle.length;
+
+    var html = '<button class="backlink" id="pk-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
+      '<h2 class="title">Pick your workout</h2>' +
+      '<p class="lead">' + esc(t.name) + ' · Week ' + (db.active.weekIndex + 1) + '</p>';
+
+    t.microcycle.forEach(function (day, idx) {
+      var res = resolveSession(t, { options: db.active.options, cycleIndex: idx, weekIndex: db.active.weekIndex, lifts: db.active.lifts }, eq());
+      var suggested = idx === nextIdx;
+      html += '<button class="pick-card' + (suggested ? ' suggested' : '') + '" data-idx="' + idx + '">' +
+        (suggested ? '<span class="pk-badge">Up next</span>' : '') +
+        '<h3>' + (res.dayType ? esc(cap(res.dayType) + " day") : "Workout " + esc(res.label)) + '</h3>' +
+        (res.dayType ? '' : '<div class="pk-dtype">' + res.exercises.length + ' exercises</div>') +
+        '<div class="pk-ex">' + res.exercises.map(function (x) {
+          return esc(x.name) + (x.assist ? '' : ' <span class="pk-w">' + fmt(x.weight) + U() + '</span>');
+        }).join('  ·  ') + '</div>' +
+      '</button>';
+    });
+
+    c.innerHTML = html;
+    document.getElementById("pk-back").onclick = function () { go("home"); };
+    c.querySelectorAll("[data-idx]").forEach(function (b) {
+      b.onclick = function () { startPlayer(+b.dataset.idx); };
+    });
   };
 
   /* ============================================================ SESSION PLAYER */
   var run = null;
-  function startPlayer() {
+  function startPlayer(chosenIdx) {
     var t = tplById(db.active.templateId);
-    var res = resolveSession(t, db.active, eq());
+    var len = t.microcycle.length;
+    var idx = (chosenIdx == null) ? (db.active.cycleIndex % len) : (chosenIdx % len);
+    var actForResolve = (chosenIdx == null) ? db.active
+      : { options: db.active.options, cycleIndex: idx, weekIndex: db.active.weekIndex, lifts: db.active.lifts };
+    var res = resolveSession(t, actForResolve, eq());
     // flatten to a queue of sets: warmups + work per exercise
     var queue = [];
     res.exercises.forEach(function (x, xi) {
@@ -1120,7 +1189,7 @@
           setNo: si + 1, setCount: x.workSets.length, target: x.target });
       });
     });
-    run = { t: t, res: res, queue: queue, i: 0, startedAt: Date.now(),
+    run = { t: t, res: res, queue: queue, i: 0, startedAt: Date.now(), chosenIdx: idx,
       results: res.exercises.map(function (x) {
         return { exId: x.exId, name: x.name, assist: !!x.assist, bw: !!x.bw, adhoc: !!x.adhoc,
           target: x.target, plannedWeight: x.weight || 0, sets: [] };
@@ -1401,7 +1470,7 @@
         topWeight: topW
       });
     });
-    var notes = applyResult(t, db.active, { dayType: run.res.dayType, exercises: progExercises }, eq());
+    var notes = applyResult(t, db.active, { dayType: run.res.dayType, cycleIndex: run.chosenIdx, exercises: progExercises }, eq());
 
     // snapshot of working weights after this session — for the weekly progress chart
     var snapshot = {};
@@ -1542,7 +1611,7 @@
 
   renderers.progress = function () {
     var c = screens.progress;
-    if (!db.active) { go("choose"); return; }
+    if (!db.active) { go("home"); return; }
     var t = tplById(db.active.templateId);
 
     var html = '<h2 class="title">Progress</h2>' +
@@ -1570,6 +1639,15 @@
         '<div class="stat"><div class="k">Sessions</div><div class="v">' + db.sessions.length + '</div></div>' +
         '<div class="stat"><div class="k">Per week</div><div class="v">' + t.daysPerWeek + '</div></div>' +
       '</div>';
+
+      html += '<div class="eyebrow" style="margin-top:22px">Recent sessions</div>';
+      db.sessions.slice(-6).reverse().forEach(function (s) {
+        html += '<div class="rec-row"><span class="rr-day">' + esc(s.dayLabel) + '</span>' +
+          '<span class="rr-sum">' + s.actual.filter(function (a) { return !a.assist; }).map(function (a) {
+            return fmt(a.topWeight) + "×" + a.topReps;
+          }).join("  ") + '</span>' +
+          '<span class="rr-date">' + relDate(s.date) + '</span></div>';
+      });
     }
     c.innerHTML = html;
   };
@@ -1843,7 +1921,7 @@
       db.settings = Object.assign(defaults().settings, obj.settings || {});
       try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
       applyTheme(); closeSheet();
-      go(db.active ? "home" : "choose");
+      go("home");
       toast("Backup restored");
     };
   }
@@ -1853,7 +1931,7 @@
   });
 
   /* ============================================================ BOOT */
-  go(db.active ? "home" : "choose");
+  go("home");
 })();
 </script>
 
