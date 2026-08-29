@@ -119,9 +119,10 @@
   .icon-btn svg { width: 19px; height: 19px; }
 
   main { flex: 1; padding: 18px 16px calc(92px + env(safe-area-inset-bottom)); }
-  .screen { display: none; animation: rise .26s ease both; }
-  .screen.active { display: block; }
-  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadein .13s ease both; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } }
 
   h2.title { font-size: 27px; margin-bottom: 3px; }
   .lead { color: var(--text-muted); font-size: 13.5px; margin-bottom: 18px; max-width: 46ch; }
@@ -254,7 +255,7 @@
   .pl-rail i { flex: 1; height: 4px; border-radius: 999px; background: var(--line); }
   .pl-rail i.done { background: color-mix(in srgb, var(--accent) 42%, var(--line)); }
   .pl-rail i.cur { background: var(--accent); }
-  .pl-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 20px; gap: 6px; }
+  .pl-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; padding: 20vh 20px 24px; gap: 6px; overflow-y: auto; }
   .pl-ex { font-family: "Barlow Condensed"; font-weight: 600; font-size: 20px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
   .pl-setno { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; color: var(--text-faint); font-weight: 700; }
   .pl-target { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: clamp(52px, 17vw, 88px); line-height: .95; letter-spacing: .01em; }
@@ -1310,17 +1311,35 @@
     var root = document.getElementById("player-root");
     if (!run) { root.innerHTML = ""; return; }
     if (run.i >= run.queue.length) { finishPlayer(); return; }
-    var step = run.queue[run.i];
-    var nEx = run.res.exercises.length;
 
-    var rail = run.res.exercises.map(function (x, xi) {
-      var cls = xi < step.xi ? "done" : xi === step.xi ? "cur" : "";
-      return '<i class="' + cls + '"></i>';
+    // build the shell once, then update its parts in place (no full-DOM flash between sets)
+    if (!root.querySelector(".player")) {
+      root.innerHTML =
+        '<div class="player">' +
+          '<div class="pl-top">' +
+            '<button class="icon-btn pl-x" id="pl-close" aria-label="Close">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+            '<div class="pl-rail" id="pl-rail"></div>' +
+            '<span class="pl-count" id="pl-count"></span>' +
+            '<button class="icon-btn pl-menu-btn" id="pl-menu" aria-label="Workout options">' +
+            '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></button>' +
+          '</div>' +
+          '<div class="pl-body" id="pl-body"></div>' +
+          '<div class="pl-actions" id="pl-actions"></div>' +
+        '</div>';
+      document.getElementById("pl-close").onclick = endWorkoutPrompt;
+      document.getElementById("pl-menu").onclick = function () { openPlayerMenu(run.queue[run.i]); };
+    }
+
+    var step = run.queue[run.i];
+
+    document.getElementById("pl-rail").innerHTML = run.res.exercises.map(function (x, xi) {
+      return '<i class="' + (xi < step.xi ? "done" : xi === step.xi ? "cur" : "") + '"></i>';
     }).join("");
 
     var totalWork = 0, doneWork = 0;
     run.queue.forEach(function (q, qi) { if (q.kind === "work") { totalWork++; if (qi < run.i) doneWork++; } });
-    var setNo = Math.min(doneWork + 1, totalWork);
+    document.getElementById("pl-count").textContent = "Set " + Math.min(doneWork + 1, totalWork) + " / " + totalWork;
 
     var body;
     if (step.assist) {
@@ -1335,34 +1354,20 @@
         '<div class="pl-target">' + fmt(step.weight) + '<span class="u"> ' + U() + '</span></div>' +
         '<div class="pl-x-reps">× ' + step.reps + (step.amrap ? '+' : '') + ' reps</div>' +
         (step.kind === "warm" ? '<div class="pl-tag warm">Warm-up</div>' : (step.topSet ? '<div class="pl-tag top">Top set — make it count</div>' : ''));
-      if (step.kind === "warm" && plateStr(step.weight)) body += '<div class="pl-hint">' + plateStr(step.weight) + '</div>';
-      else if (step.kind === "work" && plateStr(step.weight)) body += '<div class="pl-hint">' + plateStr(step.weight) + '</div>';
+      if ((step.kind === "warm" || step.kind === "work") && plateStr(step.weight)) body += '<div class="pl-hint">' + plateStr(step.weight) + '</div>';
     }
+    document.getElementById("pl-body").innerHTML = body;
 
     var doneLabel = step.kind === "warm" ? "Warm-up done" : "Set done";
-    root.innerHTML =
-      '<div class="player">' +
-        '<div class="pl-top"><button class="icon-btn pl-x" id="pl-close" aria-label="Close">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
-          '<div class="pl-rail">' + rail + '</div>' +
-          '<span class="pl-count">Set ' + setNo + ' / ' + totalWork + '</span>' +
-          '<button class="icon-btn pl-menu-btn" id="pl-menu" aria-label="Workout options">' +
-          '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></button>' +
-        '</div>' +
-        '<div class="pl-body">' + body + '</div>' +
-        '<div class="pl-actions">' +
-          '<button class="btn btn-primary pl-done" id="pl-done">' + doneLabel + '</button>' +
-          (!step.assist ? '<button class="btn btn-ghost pl-cw" id="pl-cw">Change weight</button>' : '') +
-          '<div class="row2">' +
-            (step.kind === "work" && !step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log different</button>' : '') +
-            (step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log reps</button>' : '') +
-            '<button class="btn btn-ghost sm" id="pl-skip">Skip set</button>' +
-          '</div>' +
-        '</div>' +
+    document.getElementById("pl-actions").innerHTML =
+      '<button class="btn btn-primary pl-done" id="pl-done">' + doneLabel + '</button>' +
+      (!step.assist ? '<button class="btn btn-ghost pl-cw" id="pl-cw">Change weight</button>' : '') +
+      '<div class="row2">' +
+        (step.kind === "work" && !step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log different</button>' : '') +
+        (step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log reps</button>' : '') +
+        '<button class="btn btn-ghost sm" id="pl-skip">Skip set</button>' +
       '</div>';
 
-    document.getElementById("pl-close").onclick = endWorkoutPrompt;
-    document.getElementById("pl-menu").onclick = function () { openPlayerMenu(step); };
     document.getElementById("pl-done").onclick = function () { recordSet(step, step.weight, step.reps, true); };
     document.getElementById("pl-skip").onclick = function () { recordSet(step, step.weight, 0, false); };
     var adj = document.getElementById("pl-adjust");
@@ -1387,29 +1392,38 @@
     document.getElementById("pm-end").onclick = function () { closeSheet(); endWorkoutPrompt(); };
   }
 
-  function openReorder() {
+  // an exercise can be reordered until you've logged a set for it
+  function firstMovableXi() {
     var curXi = run.queue[run.i].xi;
-    var tail = [];
-    for (var i = curXi + 1; i < run.res.exercises.length; i++) tail.push(i);
+    return run.results[curXi].sets.length === 0 ? curXi : curXi + 1;
+  }
+
+  function openReorder() {
+    var first = firstMovableXi();
+    var mov = [];
+    for (var i = first; i < run.res.exercises.length; i++) mov.push(i);
 
     function render() {
       var html = '<h2>Reorder exercises</h2>';
-      if (tail.length < 2) {
-        html += '<p class="sh-lead">' + (tail.length ? "Only one exercise left — nothing to reorder." : "Nothing left to reorder in this workout.") + '</p>' +
+      if (mov.length < 2) {
+        html += '<p class="sh-lead">' + (mov.length ? "Only one exercise left to reorder." : "The exercises left are already underway — nothing to reorder.") + '</p>' +
           '<div class="btn-row"><button class="btn btn-primary" id="ro-done">OK</button></div>';
         openSheet(html);
         document.getElementById("ro-done").onclick = closeSheet;
         return;
       }
-      html += '<p class="sh-lead">Order the exercises you haven’t done yet. Saved as your order for this workout going forward.</p><div class="ro-list">';
-      for (var j = 0; j <= curXi; j++) {
-        html += '<div class="ro-row done"><span>' + esc(run.res.exercises[j].name) + '</span><span class="k2">' + (j === curXi ? "now" : "done") + '</span></div>';
+      html += '<p class="sh-lead">Arrange what’s left. Anything you’ve already logged a set for stays put. Saved as your order for this workout going forward.</p><div class="ro-list">';
+      for (var j = 0; j < first; j++) {
+        var st = run.results[j].sets.length;
+        html += '<div class="ro-row done"><span>' + esc(run.res.exercises[j].name) + '</span><span class="k2">' + (st ? "logged" : "skipped") + '</span></div>';
       }
-      tail.forEach(function (xi, i) {
-        html += '<div class="ro-row"><span>' + esc(run.res.exercises[xi].name) + '</span>' +
+      var curXi = run.queue[run.i].xi;
+      mov.forEach(function (xi, i) {
+        html += '<div class="ro-row"><span>' + esc(run.res.exercises[xi].name) +
+          (xi === curXi ? ' <span class="k2" style="color:var(--accent-ink)">on now</span>' : '') + '</span>' +
           '<span class="ro-btns">' +
             '<button data-to="' + (i - 1) + '" data-j="' + i + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Move up">▲</button>' +
-            '<button data-to="' + (i + 1) + '" data-j="' + i + '"' + (i === tail.length - 1 ? ' disabled' : '') + ' aria-label="Move down">▼</button>' +
+            '<button data-to="' + (i + 1) + '" data-j="' + i + '"' + (i === mov.length - 1 ? ' disabled' : '') + ' aria-label="Move down">▼</button>' +
           '</span></div>';
       });
       html += '</div><div class="btn-row"><button class="btn btn-ghost" id="ro-cancel">Cancel</button><button class="btn btn-primary" id="ro-save">Save order</button></div>';
@@ -1417,33 +1431,43 @@
       sheetRoot.querySelectorAll("[data-j]").forEach(function (b) {
         b.onclick = function () {
           var jj = +b.dataset.j, to = +b.dataset.to;
-          if (to < 0 || to >= tail.length) return;
-          var v = tail.splice(jj, 1)[0];
-          tail.splice(to, 0, v);
+          if (to < 0 || to >= mov.length) return;
+          var v = mov.splice(jj, 1)[0];
+          mov.splice(to, 0, v);
           render();
         };
       });
       document.getElementById("ro-cancel").onclick = closeSheet;
-      document.getElementById("ro-save").onclick = function () { closeSheet(); applyReorderToRun(tail); };
+      document.getElementById("ro-save").onclick = function () { closeSheet(); applyReorderToRun(mov); };
     }
     render();
   }
 
-  // tailOrder = array of xi values (all > curXi) in the desired new order
-  function applyReorderToRun(tailOrder) {
+  // movOrder = the new order of the movable-exercise xi values (a contiguous tail)
+  function applyReorderToRun(movOrder) {
+    var first = firstMovableXi();
     var curXi = run.queue[run.i].xi;
-    var cut = run.i;
-    while (cut < run.queue.length && run.queue[cut].xi === curXi) cut++;
-    var frozen = run.queue.slice(0, cut);
+    var curMovable = curXi >= first;
 
     var newExOrder = [];
-    for (var i = 0; i <= curXi; i++) newExOrder.push(i);
-    tailOrder.forEach(function (xi) { newExOrder.push(xi); });
+    for (var i = 0; i < first; i++) newExOrder.push(i);
+    movOrder.forEach(function (xi) { newExOrder.push(xi); });
     run.res.exercises = newExOrder.map(function (o) { return run.res.exercises[o]; });
     run.results = newExOrder.map(function (o) { return run.results[o]; });
 
+    // frozen queue steps: everything belonging to exercises before `first` (old xi < first).
+    // remember how many were already passed so we can restore run.i.
+    var frozen = [], passed = 0;
+    run.queue.forEach(function (q, qi) {
+      if (q.xi >= first) return;                 // xi unchanged for 0..first-1
+      frozen.push(q);
+      if (qi < run.i) passed++;
+    });
+
+    // rebuild the movable tail fresh, in the new order
     var tail = [];
-    for (var nx = curXi + 1; nx < run.res.exercises.length; nx++) {
+    for (var m = 0; m < movOrder.length; m++) {
+      var nx = first + m;
       var x = run.res.exercises[nx];
       (x.warmups || []).forEach(function (w) {
         tail.push({ xi: nx, kind: "warm", weight: w.weight, reps: w.reps, exId: x.exId, name: x.name });
@@ -1454,7 +1478,9 @@
           setNo: si + 1, setCount: x.workSets.length, target: x.target });
       });
     }
+
     run.queue = frozen.concat(tail);
+    run.i = curMovable ? frozen.length : passed;
 
     // persist the full new order (slot-based; ad-hoc exercises are session-only)
     db.active.order = db.active.order || {};
