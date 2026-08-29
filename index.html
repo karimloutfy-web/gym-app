@@ -267,7 +267,19 @@
   .pl-actions { padding: 14px 16px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 9px; }
   .pl-actions .row2 { display: flex; gap: 9px; }
   .pl-actions .row2 .btn { flex: 1; }
+  .pl-actions .pl-cw { width: 100%; height: 44px; font-size: 13px; }
   .pl-done { height: 60px; font-size: 18px; }
+  .pl-count { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
+
+  /* reorder sheet */
+  .ro-list { margin: 6px 0 14px; }
+  .ro-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; margin-bottom: 6px; background: var(--surface); font-size: 14.5px; }
+  .ro-row.done { opacity: .5; }
+  .ro-row .k2 { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-faint); font-weight: 700; }
+  .ro-btns { display: flex; gap: 5px; flex-shrink: 0; }
+  .ro-btns button { width: 36px; height: 34px; border: 1px solid var(--line-strong); border-radius: 7px; font-size: 13px; color: var(--text-muted); background: var(--surface-2); }
+  .ro-btns button:disabled { opacity: .3; }
+  .ro-btns button:active:not(:disabled) { background: var(--accent-soft); color: var(--accent-ink); }
 
   /* summary + progress */
   .statbar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0 18px; }
@@ -627,12 +639,24 @@
     return exId;
   }
 
+  // reorder a resolved exercise list to the user's saved per-day order (by slot index)
+  function applyOrder(dayLabel, exercises, ord) {
+    ord = ord || (db && db.active && db.active.order && db.active.order[dayLabel]);
+    if (!ord || !ord.length) return exercises;
+    var bySlot = {}, used = {};
+    exercises.forEach(function (x) { if (x.slotIdx != null) bySlot[x.slotIdx] = x; });
+    var out = [];
+    ord.forEach(function (si) { if (bySlot[si] && !used[si]) { out.push(bySlot[si]); used[si] = 1; } });
+    exercises.forEach(function (x) { if (x.slotIdx == null || !used[x.slotIdx]) out.push(x); });
+    return out;
+  }
+
   function resolveSession(tpl, active, eq) {
     var cyc = tpl.microcycle;
     var day = cyc[active.cycleIndex % cyc.length];
     var wk = active.weekIndex;
     var exercises = [];
-    day.slots.forEach(function (slot) {
+    day.slots.forEach(function (slot, slotIdx) {
       var s = slot;
       // option substitution
       if (slot.optionId && active.options[slot.optionId] === false) {
@@ -646,7 +670,7 @@
       if (!ex) return;
       if (ex.bw) {
         exercises.push({
-          exId: exId, name: ex.name, assist: true, bw: true, target: s.reps,
+          exId: exId, name: ex.name, slotIdx: slotIdx, assist: true, bw: true, target: s.reps,
           workSets: Array.from({ length: s.sets }, function () { return { reps: s.reps, amrap: !!s.amrap }; })
         });
         return;
@@ -655,12 +679,13 @@
       var base = active.lifts[anchorId] ? active.lifts[anchorId].weight : eq.bar;
       var weight = s.pctOfAnchor ? roundLoad(base * s.pctOfAnchor, eq) : roundLoad(base, eq);
       exercises.push({
-        exId: exId, name: ex.name, weight: weight, target: s.reps, topSet: !!s.topSet,
+        exId: exId, name: ex.name, slotIdx: slotIdx, weight: weight, target: s.reps, topSet: !!s.topSet,
         warmups: ex.bar ? genWarmups(weight, eq) : [],
         workSets: Array.from({ length: s.sets }, function () { return { weight: weight, reps: s.reps }; })
       });
     });
-    return { label: day.label, dayType: day.dayType || null, exercises: exercises };
+    var ordered = (db && db.active && tpl.id === db.active.templateId) ? applyOrder(day.label, exercises) : exercises;
+    return { label: day.label, dayType: day.dayType || null, exercises: ordered };
   }
 
   // result: { dayType, exercises: [{ exId, made:boolean, done:boolean, topWeight:number }] }
@@ -779,6 +804,12 @@
     var pk2 = { options: {}, cycleIndex: 5, weekIndex: 3, lifts: deriveStartingWeights(SL, { squat: { mode: "direct", weight: 100 }, bench: { mode: "direct", weight: 60 }, press: { mode: "direct", weight: 40 }, deadlift: { mode: "direct", weight: 80 }, row: { mode: "direct", weight: 40 } }, eq) };
     applyResult(SL, pk2, { dayType: null, cycleIndex: 1, exercises: [{ exId: "squat", made: true }] }, eq);
     A(pk2.cycleIndex % SL.microcycle.length === 0 && pk2.weekIndex === 4, "completed last microcycle day → weekIndex increments");
+
+    // --- reorder: applyOrder permutes by slot index, unknown slots kept at the end ---
+    var exs = [{ name: "Squat", slotIdx: 0 }, { name: "Bench", slotIdx: 1 }, { name: "Row", slotIdx: 2 }, { name: "Curl", slotIdx: null }];
+    var ro = applyOrder("A", exs, [2, 0, 1]);
+    A(ro.map(function (x) { return x.name; }).join(",") === "Row,Squat,Bench,Curl", "applyOrder([2,0,1]) → Row,Squat,Bench,Curl (ad-hoc last) → " + ro.map(function (x) { return x.name; }).join(","));
+    A(applyOrder("A", exs, null) === exs, "applyOrder with no saved order returns the list unchanged");
 
     var el = document.createElement("div");
     el.className = "selftest";
@@ -1287,6 +1318,10 @@
       return '<i class="' + cls + '"></i>';
     }).join("");
 
+    var totalWork = 0, doneWork = 0;
+    run.queue.forEach(function (q, qi) { if (q.kind === "work") { totalWork++; if (qi < run.i) doneWork++; } });
+    var setNo = Math.min(doneWork + 1, totalWork);
+
     var body;
     if (step.assist) {
       body = '<div class="pl-ex">' + esc(step.name) + '</div>' +
@@ -1310,13 +1345,14 @@
         '<div class="pl-top"><button class="icon-btn pl-x" id="pl-close" aria-label="Close">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
           '<div class="pl-rail">' + rail + '</div>' +
-          '<span class="mono" style="font-size:11.5px;color:var(--text-faint)">' + (step.xi + 1) + '/' + nEx + '</span>' +
+          '<span class="pl-count">Set ' + setNo + ' / ' + totalWork + '</span>' +
           '<button class="icon-btn pl-menu-btn" id="pl-menu" aria-label="Workout options">' +
           '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></button>' +
         '</div>' +
         '<div class="pl-body">' + body + '</div>' +
         '<div class="pl-actions">' +
           '<button class="btn btn-primary pl-done" id="pl-done">' + doneLabel + '</button>' +
+          (!step.assist ? '<button class="btn btn-ghost pl-cw" id="pl-cw">Change weight</button>' : '') +
           '<div class="row2">' +
             (step.kind === "work" && !step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log different</button>' : '') +
             (step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log reps</button>' : '') +
@@ -1331,6 +1367,8 @@
     document.getElementById("pl-skip").onclick = function () { recordSet(step, step.weight, 0, false); };
     var adj = document.getElementById("pl-adjust");
     if (adj) adj.onclick = function () { openAdjust(step); };
+    var cw = document.getElementById("pl-cw");
+    if (cw) cw.onclick = function () { openChangeWeight(step); };
   }
 
   function endWorkoutPrompt() {
@@ -1338,17 +1376,94 @@
   }
 
   function openPlayerMenu(step) {
-    var canChangeW = !step.assist;
     openSheet(
       '<h2>Workout options</h2>' +
-      (canChangeW ? '<button class="menu-item" id="pm-weight"><span>Change weight — ' + esc(step.name) + '</span><span class="k2">' + fmt(step.weight) + ' ' + U() + '</span></button>' : '') +
+      '<button class="menu-item" id="pm-reorder"><span>Reorder exercises</span><span class="k2">↕</span></button>' +
       '<button class="menu-item" id="pm-add"><span>Add an exercise</span><span class="k2">+</span></button>' +
       '<button class="menu-item danger" id="pm-end">End workout without saving</button>'
     );
-    var pmw = document.getElementById("pm-weight");
-    if (pmw) pmw.onclick = function () { openChangeWeight(step); };
+    document.getElementById("pm-reorder").onclick = function () { openReorder(); };
     document.getElementById("pm-add").onclick = function () { openExercisePicker(); };
     document.getElementById("pm-end").onclick = function () { closeSheet(); endWorkoutPrompt(); };
+  }
+
+  function openReorder() {
+    var curXi = run.queue[run.i].xi;
+    var tail = [];
+    for (var i = curXi + 1; i < run.res.exercises.length; i++) tail.push(i);
+
+    function render() {
+      var html = '<h2>Reorder exercises</h2>';
+      if (tail.length < 2) {
+        html += '<p class="sh-lead">' + (tail.length ? "Only one exercise left — nothing to reorder." : "Nothing left to reorder in this workout.") + '</p>' +
+          '<div class="btn-row"><button class="btn btn-primary" id="ro-done">OK</button></div>';
+        openSheet(html);
+        document.getElementById("ro-done").onclick = closeSheet;
+        return;
+      }
+      html += '<p class="sh-lead">Order the exercises you haven’t done yet. Saved as your order for this workout going forward.</p><div class="ro-list">';
+      for (var j = 0; j <= curXi; j++) {
+        html += '<div class="ro-row done"><span>' + esc(run.res.exercises[j].name) + '</span><span class="k2">' + (j === curXi ? "now" : "done") + '</span></div>';
+      }
+      tail.forEach(function (xi, i) {
+        html += '<div class="ro-row"><span>' + esc(run.res.exercises[xi].name) + '</span>' +
+          '<span class="ro-btns">' +
+            '<button data-to="' + (i - 1) + '" data-j="' + i + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Move up">▲</button>' +
+            '<button data-to="' + (i + 1) + '" data-j="' + i + '"' + (i === tail.length - 1 ? ' disabled' : '') + ' aria-label="Move down">▼</button>' +
+          '</span></div>';
+      });
+      html += '</div><div class="btn-row"><button class="btn btn-ghost" id="ro-cancel">Cancel</button><button class="btn btn-primary" id="ro-save">Save order</button></div>';
+      openSheet(html);
+      sheetRoot.querySelectorAll("[data-j]").forEach(function (b) {
+        b.onclick = function () {
+          var jj = +b.dataset.j, to = +b.dataset.to;
+          if (to < 0 || to >= tail.length) return;
+          var v = tail.splice(jj, 1)[0];
+          tail.splice(to, 0, v);
+          render();
+        };
+      });
+      document.getElementById("ro-cancel").onclick = closeSheet;
+      document.getElementById("ro-save").onclick = function () { closeSheet(); applyReorderToRun(tail); };
+    }
+    render();
+  }
+
+  // tailOrder = array of xi values (all > curXi) in the desired new order
+  function applyReorderToRun(tailOrder) {
+    var curXi = run.queue[run.i].xi;
+    var cut = run.i;
+    while (cut < run.queue.length && run.queue[cut].xi === curXi) cut++;
+    var frozen = run.queue.slice(0, cut);
+
+    var newExOrder = [];
+    for (var i = 0; i <= curXi; i++) newExOrder.push(i);
+    tailOrder.forEach(function (xi) { newExOrder.push(xi); });
+    run.res.exercises = newExOrder.map(function (o) { return run.res.exercises[o]; });
+    run.results = newExOrder.map(function (o) { return run.results[o]; });
+
+    var tail = [];
+    for (var nx = curXi + 1; nx < run.res.exercises.length; nx++) {
+      var x = run.res.exercises[nx];
+      (x.warmups || []).forEach(function (w) {
+        tail.push({ xi: nx, kind: "warm", weight: w.weight, reps: w.reps, exId: x.exId, name: x.name });
+      });
+      x.workSets.forEach(function (w, si) {
+        tail.push({ xi: nx, kind: "work", weight: x.assist ? null : w.weight, reps: w.reps, amrap: !!w.amrap,
+          exId: x.exId, name: x.name, assist: !!x.assist, topSet: !!x.topSet, adhoc: !!x.adhoc,
+          setNo: si + 1, setCount: x.workSets.length, target: x.target });
+      });
+    }
+    run.queue = frozen.concat(tail);
+
+    // persist the full new order (slot-based; ad-hoc exercises are session-only)
+    db.active.order = db.active.order || {};
+    db.active.order[run.res.label] = run.res.exercises
+      .map(function (x) { return x.slotIdx; })
+      .filter(function (s) { return s != null; });
+    save();
+    toast("Order saved");
+    renderPlayer();
   }
 
   function openChangeWeight(step) {
