@@ -1,6 +1,6 @@
 /* Rack Coach service worker — app-shell caching for offline use.
    Bump CACHE when you change index.html or icons so clients pick it up. */
-var CACHE = "rackcoach-v10";
+var CACHE = "rackcoach-v11";
 var SHELL = [
   "./",
   "./index.html",
