@@ -287,7 +287,10 @@
   .pl-actions .row2 { display: flex; gap: 9px; }
   .pl-actions .row2 .btn { flex: 1; }
   .pl-actions .pl-cw { width: 100%; height: 44px; font-size: 13px; }
-  .pl-done { height: 60px; font-size: 18px; }
+  .pl-prow { display: flex; gap: 9px; }
+  .pl-prow .pl-done { flex: 1; height: 60px; font-size: 18px; }
+  .pl-prow .pl-back { flex: 0 0 33%; height: 60px; font-size: 14px; }
+  .pl-prow .pl-back:disabled { opacity: .35; }
   .pl-count { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
 
   /* reorder sheet */
@@ -1436,7 +1439,10 @@
 
     var doneLabel = step.kind === "warm" ? "Warm-up done" : "Set done";
     document.getElementById("pl-actions").innerHTML =
-      '<button class="btn btn-primary pl-done" id="pl-done">' + doneLabel + '</button>' +
+      '<div class="pl-prow">' +
+        '<button class="btn btn-ghost pl-back" id="pl-back"' + (run.i <= 0 ? ' disabled' : '') + '>Back</button>' +
+        '<button class="btn btn-primary pl-done" id="pl-done">' + doneLabel + '</button>' +
+      '</div>' +
       (!step.assist ? '<button class="btn btn-ghost pl-cw" id="pl-cw">Change weight</button>' : '') +
       '<div class="row2">' +
         (step.kind === "work" && !step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log different</button>' : '') +
@@ -1444,6 +1450,8 @@
         '<button class="btn btn-ghost sm" id="pl-skip">Skip set</button>' +
       '</div>';
 
+    var back = document.getElementById("pl-back");
+    if (back) back.onclick = stepBack;
     document.getElementById("pl-done").onclick = function () { recordSet(step, step.weight, step.reps, true); };
     document.getElementById("pl-skip").onclick = function () { recordSet(step, step.weight, 0, false); };
     var adj = document.getElementById("pl-adjust");
@@ -1716,6 +1724,18 @@
       r.sets.push({ weight: weight, reps: reps, target: step.target, made: made, amrap: !!step.amrap });
     }
     run.i++;
+    renderPlayer();
+  }
+
+  // step back to the previous set, discarding whatever was logged for it
+  function stepBack() {
+    if (!run || run.i <= 0) return;
+    run.i--;
+    var prev = run.queue[run.i];
+    if (prev.kind === "work") {
+      var sets = run.results[prev.xi].sets;
+      if (sets.length) sets.pop();
+    }
     renderPlayer();
   }
 
