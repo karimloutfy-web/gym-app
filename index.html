@@ -324,6 +324,10 @@
   .lift-prog .lp-sub { font-size: 11.5px; color: var(--text-faint); font-family: "IBM Plex Mono", monospace; margin-top: 2px; }
   .lift-prog .lp-now { font-family: "Barlow Condensed"; font-weight: 700; font-size: 19px; text-align: right; }
   .lift-prog .lp-now small { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  .lift-prog .lp-now.has-now { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+  .lift-prog .lp-now .lp-w { display: block; }
+  .lift-prog .lp-now .lp-since { font-family: "IBM Plex Mono", monospace; font-weight: 500;
+    font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--text-faint); }
   svg.spark { width: 100%; height: 40px; display: block; margin-top: 6px; grid-column: 1 / -1; }
 
   .empty { text-align: center; padding: 40px 20px; }
@@ -1884,17 +1888,28 @@
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     return d.getTime();
   }
-  // one point per week: heaviest working weight the lift reached that week
+  // heaviest work set actually performed for this lift, most recent session first
+  // (only sessions where at least one set had reps > 0 — a skipped lift doesn't count)
+  function lastLiftedTop(exId) {
+    for (var i = db.sessions.length - 1; i >= 0; i--) {
+      var a = ((db.sessions[i] || {}).actual || []).filter(function (x) {
+        return x.exId === exId && x.sets && x.sets.some(function (s) { return s.reps > 0; });
+      })[0];
+      if (a) return a.topWeight;
+    }
+    return null;
+  }
+
+  // one point per week: heaviest weight actually lifted for that lift that week
   function weeklySeries(exId, startWeight, startedAt) {
     var byWeek = {};
     byWeek[weekKey(startedAt)] = startWeight;
     db.sessions.forEach(function (s) {
-      var w = (s.snapshot && s.snapshot[exId] != null) ? s.snapshot[exId] : null;
-      if (w == null) {
-        // legacy sessions: fall back to the heaviest work set logged that day
-        var a = (s.actual || []).filter(function (x) { return x.exId === exId; })[0];
-        if (a) w = a.topWeight;
-      }
+      var a = (s.actual || []).filter(function (x) {
+        return x.exId === exId && x.sets && x.sets.some(function (st) { return st.reps > 0; });
+      })[0];
+      var w = a ? a.topWeight
+        : (s.snapshot && s.snapshot[exId] != null ? s.snapshot[exId] : null); // not trained / legacy
       if (w == null) return;
       var k = weekKey(s.date);
       byWeek[k] = byWeek[k] == null ? w : Math.max(byWeek[k], w);
@@ -1903,11 +1918,16 @@
       .map(function (k) { return { t: k, v: byWeek[k] }; });
   }
 
-  // a chart card: title, "start → now" sub-line, delta badge, weekly series
-  function progCard(title, sub, delta, unit, series) {
+  // a chart card: title, sub-line, delta, weekly series. When nowVal is given the
+  // right-hand cell shows that weight big with a small "N since start" line beneath.
+  function progCard(title, sub, delta, unit, series, nowVal) {
+    var now = nowVal != null
+      ? '<span class="lp-w">' + fmt(nowVal) + ' <small>' + unit + '</small></span>' +
+        (delta !== 0 ? '<span class="lp-since">' + (delta > 0 ? '+' : '') + fmt(delta) + ' since start</span>' : '')
+      : (delta >= 0 ? '+' : '') + fmt(delta) + ' <small>' + unit + '</small>';
     return '<div class="lift-prog"><div><h4>' + esc(title) + '</h4>' +
       '<div class="lp-sub">' + esc(sub) + '</div></div>' +
-      '<div class="lp-now">' + (delta >= 0 ? '+' : '') + fmt(delta) + ' <small>' + unit + '</small></div>' +
+      '<div class="lp-now' + (nowVal != null ? ' has-now' : '') + '">' + now + '</div>' +
       (series.length >= 2
         ? lineChart(series) + '<div class="chart-note">' + series.length + ' weeks · one point each</div>'
         : '<div class="chart-note">Chart starts after your first full week</div>') +
@@ -1953,10 +1973,17 @@
       t.anchors.forEach(function (id) {
         var lift = db.active.lifts[id];
         if (!lift) return;
-        html += progCard(EX[id].name,
-          fmt(lift.start) + " → " + fmt(lift.weight) + " " + U() + (lift.failCount ? "  ·  " + lift.failCount + " miss" + (lift.failCount > 1 ? "es" : "") : ""),
-          lift.weight - lift.start, U(),
-          weeklySeries(id, lift.start, db.active.startedAt));
+        var lastTop = lastLiftedTop(id);
+        var now = lastTop != null ? lastTop : lift.start;
+        var bits = [];
+        if (lift.weight !== now) bits.push("next " + fmt(lift.weight));
+        if (now !== lift.start) bits.push("from " + fmt(lift.start));
+        if (lift.failCount) bits.push(lift.failCount + " miss" + (lift.failCount > 1 ? "es" : ""));
+        var sub = bits.length
+          ? bits.join("  ·  ") + " " + U()
+          : (lastTop != null ? "holding at " + fmt(now) + " " + U() : "not trained yet");
+        html += progCard(EX[id].name, sub, now - lift.start, U(),
+          weeklySeries(id, lift.start, db.active.startedAt), now);
       });
     }
 
