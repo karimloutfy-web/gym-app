@@ -98,13 +98,12 @@
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
-  .app { max-width: 560px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); }
+  .app { max-width: 560px; margin: 0 auto; height: 100vh; height: 100dvh; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
 
   /* header */
   .top {
-    position: sticky; top: 0; z-index: 30;
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    flex-shrink: 0; z-index: 30;
+    background: var(--bg);
     border-bottom: 1px solid var(--line);
     padding: max(11px, env(safe-area-inset-top)) 16px 11px;
     display: flex; align-items: center; gap: 10px;
@@ -118,11 +117,25 @@
   .icon-btn:hover { background: var(--surface-2); color: var(--text); }
   .icon-btn svg { width: 19px; height: 19px; }
 
-  main { flex: 1; padding: 18px 16px calc(92px + env(safe-area-inset-bottom)); }
-  .screen { display: none; }
-  .screen.active { display: block; animation: fadein .13s ease both; }
-  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } }
+  main { flex: 1 1 auto; min-height: 0; position: relative; overflow: hidden; }
+  .screen {
+    position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 18px 16px calc(92px + env(safe-area-inset-bottom));
+    background: var(--bg);
+    transform: translateX(100%); visibility: hidden;
+  }
+  .screen.active { transform: translateX(0); visibility: visible; }
+  .screen.anim { transition: transform .3s cubic-bezier(.32,.72,0,1); }
+  .screen.lead { z-index: 2; }
+  .screen.trail { z-index: 1; }
+  .screen.from-right { transform: translateX(100%); }
+  .screen.from-left  { transform: translateX(-26%); }
+  .screen.to-left    { transform: translateX(-26%); }
+  .screen.to-right   { transform: translateX(100%); }
+  .screen.behind::after {
+    content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.16); pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) { .screen.anim { transition: none; } }
 
   h2.title { font-size: 27px; margin-bottom: 3px; }
   .lead { color: var(--text-muted); font-size: 13.5px; margin-bottom: 18px; max-width: 46ch; }
@@ -248,7 +261,10 @@
   .pick-card .pk-w { font-family: "IBM Plex Mono", monospace; color: var(--text); font-size: 12px; margin-left: 2px; white-space: nowrap; }
 
   /* session player */
-  .player { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; flex-direction: column; }
+  .player { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; flex-direction: column;
+    transform: translateY(100%); transition: transform .32s cubic-bezier(.32,.72,0,1); }
+  .player.show { transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .player { transition: none; } }
   .pl-top { padding: max(12px, env(safe-area-inset-top)) 16px 10px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
   .pl-top .pl-x { color: var(--text-muted); }
   .pl-rail { flex: 1; display: flex; gap: 4px; }
@@ -912,14 +928,61 @@
     body: document.getElementById("s-body")
   };
   var TAB_SCREENS = { home: 1, progress: 1, body: 1 };
-  var cur = "choose";
-  function go(name) {
+  var TAB_ORDER = ["home", "progress", "body"];
+  // rough "depth" so a plain go() can infer push vs pop direction
+  var DEPTH = { home: 0, progress: 0, body: 0, choose: 1, summary: 1, pick: 1, detail: 2, setup: 3 };
+  var cur = null, sliding = false;
+  var SCR_RESET = ["anim", "from-right", "from-left", "to-left", "to-right", "behind", "lead", "trail"];
+  function snapScreens() {
+    Object.keys(screens).forEach(function (k) {
+      SCR_RESET.forEach(function (c) { screens[k].classList.remove(c); });
+      screens[k].classList.toggle("active", k === cur);
+    });
+    sliding = false;
+  }
+
+  function go(name, back) {
+    if (sliding) snapScreens();
+    if (name === cur) { renderChip(); renderTabs(); var rr = renderers[name]; if (rr) rr(); return; }
+    var outgoing = cur ? screens[cur] : null;
+    var incoming = screens[name];
+    if (back == null && cur) back = (DEPTH[name] || 0) < (DEPTH[cur] || 0);
     cur = name;
-    Object.keys(screens).forEach(function (k) { screens[k].classList.toggle("active", k === name); });
-    window.scrollTo(0, 0);
+
+    var r = renderers[name]; if (r) r();
+    if (cur !== name) return;               // renderer redirected via its own go()
+    incoming.scrollTop = 0;
     renderChip();
     renderTabs();
-    var r = renderers[name]; if (r) r();
+
+    var RESET = SCR_RESET;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!outgoing || reduce) {
+      Object.keys(screens).forEach(function (k) {
+        RESET.forEach(function (c) { screens[k].classList.remove(c); });
+        screens[k].classList.toggle("active", k === name);
+      });
+      return;
+    }
+
+    sliding = true;
+    // forward: incoming rides in on top from the right; back: outgoing slides off to the right, revealing incoming underneath
+    incoming.classList.add("anim", "active", back ? "from-left" : "from-right", back ? "trail" : "lead");
+    outgoing.classList.add("anim", back ? "lead" : "trail");
+    if (!back) outgoing.classList.add("behind");
+    void incoming.offsetWidth;                // reflow so the start transform sticks
+    incoming.classList.remove("from-left", "from-right");
+    outgoing.classList.add(back ? "to-right" : "to-left");
+
+    var cleanup = function () {
+      outgoing.removeEventListener("transitionend", cleanup);
+      clearTimeout(t);
+      RESET.forEach(function (c) { incoming.classList.remove(c); outgoing.classList.remove(c); });
+      outgoing.classList.remove("active");
+      sliding = false;
+    };
+    var t = setTimeout(cleanup, 420);
+    outgoing.addEventListener("transitionend", cleanup);
   }
   function renderChip() {
     document.getElementById("pos-chip").hidden = true;
@@ -934,7 +997,11 @@
     });
   }
   document.getElementById("tabbar").querySelectorAll("[data-tab]").forEach(function (b) {
-    b.onclick = function () { go(b.dataset.tab); };
+    b.onclick = function () {
+      var to = b.dataset.tab;
+      if (to === cur) return;
+      go(to, TAB_ORDER.indexOf(to) < TAB_ORDER.indexOf(cur));
+    };
   });
 
   /* ============================================================ CHOOSE */
@@ -1329,6 +1396,9 @@
         '</div>';
       document.getElementById("pl-close").onclick = endWorkoutPrompt;
       document.getElementById("pl-menu").onclick = function () { openPlayerMenu(run.queue[run.i]); };
+      var plNew = root.querySelector(".player");
+      void plNew.offsetWidth;                 // commit the off-screen start position
+      plNew.classList.add("show");            // then slide up
     }
 
     var step = run.queue[run.i];
@@ -1377,7 +1447,7 @@
   }
 
   function endWorkoutPrompt() {
-    confirmSheet("End this workout?", "Nothing from this session is saved and your program won't advance.", function () { run = null; renderPlayer(); go("home"); });
+    confirmSheet("End this workout?", "Nothing from this session is saved and your program won't advance.", function () { run = null; dismissPlayer(function () { go("home", true); }); });
   }
 
   function openPlayerMenu(step) {
@@ -1681,8 +1751,21 @@
 
     lastSummary = sess;
     run = null;
-    document.getElementById("player-root").innerHTML = "";
-    go("summary");
+    dismissPlayer(function () { go("summary"); });
+  }
+
+  function dismissPlayer(cb) {
+    var pl = document.querySelector("#player-root .player");
+    if (!pl) { document.getElementById("player-root").innerHTML = ""; if (cb) cb(); return; }
+    pl.classList.remove("show");
+    var done = function () {
+      pl.removeEventListener("transitionend", done);
+      clearTimeout(tm);
+      document.getElementById("player-root").innerHTML = "";
+      if (cb) cb();
+    };
+    var tm = setTimeout(done, 400);
+    pl.addEventListener("transitionend", done);
   }
 
   /* ============================================================ SUMMARY */
@@ -1729,8 +1812,8 @@
     html += '<div class="btn-row"><button class="btn btn-primary" id="sm-done">Back to program</button></div>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="sm-progress">See progress</button></div>';
     c.innerHTML = html;
-    document.getElementById("sm-done").onclick = function () { go("home"); };
-    document.getElementById("sm-progress").onclick = function () { go("progress"); };
+    document.getElementById("sm-done").onclick = function () { go("home", true); };
+    document.getElementById("sm-progress").onclick = function () { go("progress", false); };
   };
 
   /* ============================================================ PROGRESS */
