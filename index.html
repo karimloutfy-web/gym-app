@@ -1470,47 +1470,82 @@
 
   function openReorder() {
     var first = firstMovableXi();
+    var curXi = run.queue[run.i].xi;
     var mov = [];
     for (var i = first; i < run.res.exercises.length; i++) mov.push(i);
 
-    function render() {
-      var html = '<h2>Reorder exercises</h2>';
-      if (mov.length < 2) {
-        html += '<p class="sh-lead">' + (mov.length ? "Only one exercise left to reorder." : "The exercises left are already underway — nothing to reorder.") + '</p>' +
-          '<div class="btn-row"><button class="btn btn-primary" id="ro-done">OK</button></div>';
-        openSheet(html);
-        document.getElementById("ro-done").onclick = closeSheet;
-        return;
-      }
-      html += '<p class="sh-lead">Arrange what’s left. Anything you’ve already logged a set for stays put. Saved as your order for this workout going forward.</p><div class="ro-list">';
-      for (var j = 0; j < first; j++) {
-        var st = run.results[j].sets.length;
-        html += '<div class="ro-row done"><span>' + esc(run.res.exercises[j].name) + '</span><span class="k2">' + (st ? "logged" : "skipped") + '</span></div>';
-      }
-      var curXi = run.queue[run.i].xi;
-      mov.forEach(function (xi, i) {
-        html += '<div class="ro-row"><span>' + esc(run.res.exercises[xi].name) +
-          (xi === curXi ? ' <span class="k2" style="color:var(--accent-ink)">on now</span>' : '') + '</span>' +
-          '<span class="ro-btns">' +
-            '<button data-to="' + (i - 1) + '" data-j="' + i + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Move up">▲</button>' +
-            '<button data-to="' + (i + 1) + '" data-j="' + i + '"' + (i === mov.length - 1 ? ' disabled' : '') + ' aria-label="Move down">▼</button>' +
-          '</span></div>';
-      });
-      html += '</div><div class="btn-row"><button class="btn btn-ghost" id="ro-cancel">Cancel</button><button class="btn btn-primary" id="ro-save">Save order</button></div>';
-      openSheet(html);
-      sheetRoot.querySelectorAll("[data-j]").forEach(function (b) {
-        b.onclick = function () {
-          var jj = +b.dataset.j, to = +b.dataset.to;
-          if (to < 0 || to >= mov.length) return;
-          var v = mov.splice(jj, 1)[0];
-          mov.splice(to, 0, v);
-          render();
-        };
-      });
-      document.getElementById("ro-cancel").onclick = closeSheet;
-      document.getElementById("ro-save").onclick = function () { closeSheet(); applyReorderToRun(mov); };
+    if (mov.length < 2) {
+      openSheet('<h2>Reorder exercises</h2><p class="sh-lead">' +
+        (mov.length ? "Only one exercise left to reorder." : "The exercises left are already underway — nothing to reorder.") +
+        '</p><div class="btn-row"><button class="btn btn-primary" id="ro-done">OK</button></div>');
+      document.getElementById("ro-done").onclick = closeSheet;
+      return;
     }
-    render();
+
+    var locked = "";
+    for (var j = 0; j < first; j++) {
+      locked += '<div class="ro-row done"><span>' + esc(run.res.exercises[j].name) + '</span><span class="k2">' +
+        (run.results[j].sets.length ? "logged" : "skipped") + '</span></div>';
+    }
+
+    openSheet('<h2>Reorder exercises</h2>' +
+      '<p class="sh-lead">Arrange what’s left. Anything you’ve logged a set for stays put, and it’s saved as your order for this workout.</p>' +
+      '<div class="ro-list" id="ro-list">' + locked + '</div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="ro-cancel">Cancel</button><button class="btn btn-primary" id="ro-save">Save order</button></div>');
+
+    var list = document.getElementById("ro-list");
+    var nodes = {};
+    mov.forEach(function (xi) {
+      var row = document.createElement("div");
+      row.className = "ro-row";
+      row.dataset.xi = xi;
+      row.innerHTML = '<span>' + esc(run.res.exercises[xi].name) +
+        (xi === curXi ? ' <span class="k2" style="color:var(--accent-ink)">on now</span>' : '') + '</span>' +
+        '<span class="ro-btns"><button data-dir="-1" aria-label="Move up">▲</button><button data-dir="1" aria-label="Move down">▼</button></span>';
+      nodes[xi] = row;
+      list.appendChild(row);
+    });
+
+    function reflectDisabled() {
+      mov.forEach(function (xi, i) {
+        var b = nodes[xi].querySelectorAll("button");
+        b[0].disabled = (i === 0);
+        b[1].disabled = (i === mov.length - 1);
+      });
+    }
+    reflectDisabled();
+
+    function move(xi, dir) {
+      var i = mov.indexOf(xi), to = i + dir;
+      if (to < 0 || to >= mov.length) return;
+      var before = {};
+      mov.forEach(function (x) { before[x] = nodes[x].getBoundingClientRect().top; });
+
+      mov.splice(i, 1); mov.splice(to, 0, xi);
+      mov.forEach(function (x) { list.appendChild(nodes[x]); });
+      reflectDisabled();
+
+      // FLIP: invert then play, reflow-based (no rAF — reliable on iOS standalone)
+      mov.forEach(function (x) {
+        var d = before[x] - nodes[x].getBoundingClientRect().top;
+        nodes[x].style.transition = "none";
+        nodes[x].style.transform = d ? "translateY(" + d + "px)" : "";
+      });
+      void list.offsetWidth;
+      mov.forEach(function (x) {
+        nodes[x].style.transition = "transform .2s cubic-bezier(.3,.7,0,1)";
+        nodes[x].style.transform = "";
+      });
+    }
+
+    list.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-dir]");
+      if (!b || b.disabled) return;
+      move(+b.closest(".ro-row").dataset.xi, +b.dataset.dir);
+    });
+
+    document.getElementById("ro-cancel").onclick = closeSheet;
+    document.getElementById("ro-save").onclick = function () { closeSheet(); applyReorderToRun(mov); };
   }
 
   // movOrder = the new order of the movable-exercise xi values (a contiguous tail)
