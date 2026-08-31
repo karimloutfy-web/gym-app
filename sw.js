@@ -1,9 +1,12 @@
 /* Rack Coach service worker — app-shell caching for offline use.
    Bump CACHE when you change index.html or icons so clients pick it up. */
-var CACHE = "rackcoach-v13";
+var CACHE = "rackcoach-v14";
 var SHELL = [
   "./",
   "./index.html",
+  "./data-programs.js",
+  "./data-wods.js",
+  "./data-badges.js",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
@@ -49,6 +52,17 @@ self.addEventListener("fetch", function (e) {
       }).catch(function () {
         return caches.match("./index.html").then(function (r) { return r || caches.match("./"); });
       })
+    );
+    return;
+  }
+
+  // data modules: network-first so content edits propagate without a CACHE bump
+  if (url.origin === self.location.origin && /\/data-[a-z]+\.js$/.test(url.pathname)) {
+    e.respondWith(
+      fetch(req).then(function (res) {
+        if (res.ok) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(req, copy); }); }
+        return res;
+      }).catch(function () { return caches.match(req); })
     );
     return;
   }

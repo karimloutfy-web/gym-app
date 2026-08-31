@@ -250,6 +250,16 @@
   .home-foot { margin-top: 22px; text-align: center; }
   .home-foot button { color: var(--text-faint); font-size: 12.5px; text-decoration: underline; text-underline-offset: 2px; }
 
+  .grit-card { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; margin: 0 0 16px; }
+  .grit-ring { width: 56px; height: 56px; flex: none; }
+  .grit-ring .grit-num { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 18px; fill: var(--text); }
+  .grit-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .grit-k { font-size: 10px; text-transform: uppercase; letter-spacing: .09em; color: var(--text-faint); font-weight: 700; }
+  .grit-band { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 19px; line-height: 1; color: var(--accent-ink); }
+  .grit-bars { display: flex; align-items: flex-end; gap: 3px; margin-top: 5px; }
+  .grit-bars i { width: 7px; border-radius: 2px; display: block; }
+  .grit-bars em { font-style: normal; font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--text-faint); margin-left: 6px; align-self: center; }
+
   /* pick-your-workout screen */
   .pick-card { position: relative; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px; margin-bottom: 12px; }
   .pick-card:hover { border-color: var(--line-strong); }
@@ -287,11 +297,34 @@
   .pl-actions .row2 { display: flex; gap: 9px; }
   .pl-actions .row2 .btn { flex: 1; }
   .pl-actions .pl-cw { width: 100%; height: 44px; font-size: 13px; }
+  .pl-effort { display: flex; align-items: center; gap: 6px; }
+  .pl-effort .pe-k { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--text-faint); margin-right: 2px; white-space: nowrap; }
+  .pe-chip { flex: 1; height: 38px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 500; }
+  .pe-chip.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
   .pl-prow { display: flex; gap: 9px; }
   .pl-prow .pl-done { flex: 1; height: 60px; font-size: 18px; }
   .pl-prow .pl-back { flex: 0 0 33%; height: 60px; font-size: 14px; }
   .pl-prow .pl-back:disabled { opacity: .35; }
   .pl-count { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
+
+  /* metcon player */
+  #mc-bodywrap { display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 8px 16px 0; }
+  .mc-format { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--accent-ink); }
+  .mc-clock { font-size: clamp(64px, 22vw, 120px); font-weight: 500; line-height: 1; margin: 6px 0; letter-spacing: -.02em; }
+  .mc-minute { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 8px; min-height: 18px; }
+  .mc-moves { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 6px; }
+  .mc-move { display: flex; align-items: center; gap: 10px; text-align: left; padding: 11px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); font-size: 13.5px; color: var(--text); }
+  .mc-move .mc-chk { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--line-strong); flex: none; }
+  .mc-move.done { color: var(--text-faint); text-decoration: line-through; border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+  .mc-move.done .mc-chk { background: var(--accent); border-color: var(--accent); }
+  .mc-round-ctl { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; font-size: 13px; color: var(--text-muted); }
+  .mc-round-ctl button { width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface-2); font-size: 18px; color: var(--text); }
+  .mc-round-ctl b { color: var(--text); font-size: 15px; }
+  .mc-startbtn { height: 56px; font-size: 17px; }
+  .mc-cap { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .nc-wod { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 22px; margin: 3px 0 1px; }
+  .nc-wod-sub { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .mc-detail-sub { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
 
   /* reorder sheet */
   .ro-list { margin: 6px 0 14px; }
@@ -411,6 +444,55 @@
   .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 500; z-index: 90; opacity: 0; transition: opacity .22s, transform .22s; pointer-events: none; box-shadow: var(--shadow); max-width: 90vw; text-align: center; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* custom-content editor */
+  .ed-name { width: 100%; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 15px; font-family: inherit; }
+  .ed-slot { display: flex; align-items: center; gap: 8px; padding: 6px 0; flex-wrap: wrap; }
+  .ed-ex { flex: 1; min-width: 110px; text-align: left; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text); font-size: 13.5px; }
+  .ed-nums { display: flex; gap: 6px; }
+  .ed-cap { flex: 1; min-width: 100px; font-size: 12px; color: var(--text-muted); }
+  .ns { display: inline-flex; flex-direction: column; align-items: center; }
+  .ns > span, .ns b { font-family: "IBM Plex Mono", monospace; }
+  .ns { position: relative; }
+  .ns button { width: 30px; height: 32px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font-size: 15px; }
+  .ns button:first-of-type { border-radius: 7px 0 0 7px; }
+  .ns button:last-of-type { border-radius: 0 7px 7px 0; }
+  .ns b { display: inline-grid; place-items: center; min-width: 34px; height: 32px; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); font-size: 13px; font-weight: 600; }
+  .ns i { font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin-top: 3px; }
+  .mp-list { max-height: 46vh; overflow-y: auto; margin: 4px 0 10px; }
+
+  /* badges */
+  .badge-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; margin: 6px 0 4px; }
+  .badge-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 2px; }
+  .badge-cell span { font-size: 9.5px; text-align: center; color: var(--text-faint); line-height: 1.15; max-width: 74px; }
+  .badge-cell.got span { color: var(--text-muted); font-weight: 600; }
+  .badge-svg { width: 52px; height: 52px; }
+  .badge-svg.locked { opacity: .55; }
+  .badge-detail { display: flex; justify-content: center; margin: 2px 0 8px; }
+  .badge-detail .badge-svg { width: 88px; height: 88px; }
+
+  /* celebration */
+  .celebrate { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 24px;
+    background: var(--bg); opacity: 0; transition: opacity .28s ease; overflow: hidden; }
+  .celebrate.show { opacity: 1; }
+  .celebrate .confetti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .cel-inner { position: relative; text-align: center; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .cel-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .18em; font-weight: 700; color: var(--accent-ink); }
+  .cel-title { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 34px; line-height: 1; }
+  .cel-stats { display: flex; gap: 18px; }
+  .cel-stats > div { display: flex; flex-direction: column; }
+  .cel-stats b { font-family: "Barlow Condensed", sans-serif; font-size: 22px; }
+  .cel-stats span { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+  .cel-grit { font-size: 13px; color: var(--text-muted); }
+  .cel-grit b { color: var(--accent-ink); font-size: 15px; }
+  .cel-badges-h { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-faint); font-weight: 700; }
+  .cel-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .cel-badge { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 82px; opacity: 0; animation: celpop .4s ease forwards; }
+  .cel-badge span { font-size: 9.5px; color: var(--text-muted); text-align: center; line-height: 1.15; }
+  .cel-badge .badge-svg { width: 56px; height: 56px; }
+  .cel-inner .btn { width: 200px; margin-top: 6px; }
+  @keyframes celpop { from { opacity: 0; transform: scale(.6) translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .cel-badge { animation: none; opacity: 1; } .celebrate { transition: none; } }
+
   .selftest { position: fixed; inset: 0; background: var(--bg); color: var(--text); font-family: "IBM Plex Mono", monospace; font-size: 12px; padding: 20px; overflow: auto; z-index: 200; white-space: pre-wrap; line-height: 1.6; }
   .selftest .pass { color: var(--gain); }
   .selftest .fail { color: var(--miss); font-weight: 700; }
@@ -434,9 +516,12 @@
     <section class="screen" id="s-setup"></section>
     <section class="screen" id="s-home"></section>
     <section class="screen" id="s-pick"></section>
+    <section class="screen" id="s-roll"></section>
+    <section class="screen" id="s-editor"></section>
     <section class="screen" id="s-summary"></section>
     <section class="screen" id="s-progress"></section>
     <section class="screen" id="s-body"></section>
+    <section class="screen" id="s-badges"></section>
   </main>
 
   <nav class="tabbar" id="tabbar">
@@ -452,13 +537,21 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><path d="M12 8v8M8 11l4-1 4 1M9 21l3-5 3 5"/></svg>
       <span>Body</span>
     </button>
+    <button data-tab="badges" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14.5L7 22l5-3 5 3-1.5-7.5"/></svg>
+      <span>Badges</span>
+    </button>
   </nav>
 </div>
 
 <div id="player-root"></div>
+<div id="fx-root"></div>
 <div id="sheet-root"></div>
 <div class="toast" id="toast"></div>
 
+<script src="data-programs.js"></script>
+<script src="data-wods.js"></script>
+<script src="data-badges.js"></script>
 <script>
 (function () {
   "use strict";
@@ -495,6 +588,17 @@
     legext:     { name: "Leg Extension",    bar: false, grp: "Legs" },
     calfraise:  { name: "Calf Raise",       bar: false, grp: "Legs" },
     tricepext:  { name: "Triceps Pushdown", bar: false, grp: "Arms" },
+    // bodybuilding accessories
+    pecdeck:    { name: "Pec Deck",         bar: false, grp: "Push" },
+    cablefly:   { name: "Cable Fly",        bar: false, grp: "Push" },
+    hacksquat:  { name: "Hack Squat",       bar: false, grp: "Legs" },
+    machinerow: { name: "Chest-Supported Row", bar: false, grp: "Pull" },
+    preacher:   { name: "Preacher Curl",    bar: false, grp: "Arms" },
+    skullcrusher:{ name: "Skull Crusher",   bar: true,  grp: "Arms" },
+    pushdownrope:{ name: "Rope Pushdown",   bar: false, grp: "Arms" },
+    hipabduction:{ name: "Hip Abduction",   bar: false, grp: "Legs" },
+    shrug:      { name: "DB Shrug",         bar: false, grp: "Pull" },
+    hamcurlseated:{ name: "Seated Leg Curl",bar: false, grp: "Legs" },
     // bodyweight
     chinup:     { name: "Chin-up",          bar: false, grp: "Pull", bw: true },
     pullup:     { name: "Pull-up",          bar: false, grp: "Pull", bw: true },
@@ -506,13 +610,49 @@
     abwheel:    { name: "Ab Wheel",         bar: false, grp: "Core", bw: true }
   };
 
+  /* ===================================================== METCON MOVEMENTS */
+  // conditioning movements for CrossFit / Hyrox WODs. unit: how "amount" reads.
+  // loadable: carries an optional prescribed load (shown, never progressed).
+  var MOVES = {
+    run:         { name: "Run",              unit: "m",   loadable: false },
+    row:         { name: "Row",              unit: "m",   loadable: false },
+    bike:        { name: "Echo Bike",        unit: "cal", loadable: false },
+    skierg:      { name: "SkiErg",           unit: "m",   loadable: false },
+    burpee:      { name: "Burpee",           unit: "reps", loadable: false },
+    burpeejump:  { name: "Broad-Jump Burpee", unit: "reps", loadable: false },
+    wallball:    { name: "Wall Ball",        unit: "reps", loadable: true },
+    dubs:        { name: "Double-Under",     unit: "reps", loadable: false },
+    boxjump:     { name: "Box Jump",         unit: "reps", loadable: false },
+    kbswing:     { name: "KB Swing",         unit: "reps", loadable: true },
+    thruster:    { name: "Thruster",         unit: "reps", loadable: true },
+    cleanjerk:   { name: "Clean & Jerk",     unit: "reps", loadable: true },
+    snatch:      { name: "Snatch",           unit: "reps", loadable: true },
+    deadliftm:   { name: "Deadlift",         unit: "reps", loadable: true },
+    pullupm:     { name: "Pull-up",          unit: "reps", loadable: false },
+    c2b:         { name: "Chest-to-Bar",     unit: "reps", loadable: false },
+    ttb:         { name: "Toes-to-Bar",      unit: "reps", loadable: false },
+    hspu:        { name: "Handstand Push-up", unit: "reps", loadable: false },
+    pushupm:     { name: "Push-up",          unit: "reps", loadable: false },
+    airsquat:    { name: "Air Squat",        unit: "reps", loadable: false },
+    lunge:       { name: "Walking Lunge",    unit: "reps", loadable: false },
+    situp:       { name: "Sit-up",           unit: "reps", loadable: false },
+    sledpush:    { name: "Sled Push",        unit: "m",   loadable: true },
+    sledpull:    { name: "Sled Pull",        unit: "m",   loadable: true },
+    farmers:     { name: "Farmers Carry",    unit: "m",   loadable: true },
+    sandbaglunge:{ name: "Sandbag Lunge",    unit: "m",   loadable: true },
+    row_cal:     { name: "Row",              unit: "cal", loadable: false }
+  };
+  function moveName(id) { return (MOVES[id] && MOVES[id].name) || (EX[id] && EX[id].name) || id; }
+  function moveUnit(id) { return (MOVES[id] && MOVES[id].unit) || "reps"; }
+
   /* ============================================================ TEMPLATES */
   // progressionMode: "linear" (per session) | "weekly"
   // slot: { exId, sets, reps, pctOfAnchor?, anchorId?, topSet?, amrap?, optionId? }
   // progression[exId]: { increment, progressOn?("volume"|"intensity"), failRule:{misses,pct} }
-  var TEMPLATES = [
+  var BUILTINS = [
     {
       id: "starting-strength",
+      kind: "barbell",
       name: "Starting Strength",
       author: "Mark Rippetoe",
       blurb: "The classic novice barbell program. Three big lifts a day, three days a week, a little more weight every single session.",
@@ -548,6 +688,7 @@
     },
     {
       id: "stronglifts-5x5",
+      kind: "barbell",
       name: "StrongLifts 5×5",
       author: "Mehdi",
       blurb: "Five sets of five on the core barbell lifts. Start light, add 2.5 kg every workout, deload when you stall.",
@@ -579,6 +720,7 @@
     },
     {
       id: "texas-method",
+      kind: "barbell",
       name: "Texas Method",
       author: "Rippetoe / Kilgore",
       blurb: "An intermediate weekly cycle: a hard volume day, an easy recovery day, then a new 5-rep record on the intensity day.",
@@ -618,7 +760,20 @@
       }
     }
   ];
-  function tplById(id) { return TEMPLATES.filter(function (t) { return t.id === id; })[0]; }
+  // built-in programs + any user-authored plans (db may not exist yet during self-test)
+  var TEMPLATES = BUILTINS.concat(window.RC_PROGRAMS || []);
+  var WOD_POOL = window.RC_WOD_POOL || [];
+  var BADGES = window.RC_BADGES || [];
+  function badgeById(id) { return BADGES.filter(function (b) { return b.id === id; })[0]; }
+  var rollState = { filter: "all", wod: null };
+  function allTemplates() {
+    var custom = (typeof db !== "undefined" && db && db.customPlans) || [];
+    return TEMPLATES.concat(custom);
+  }
+  function tplById(id) { return allTemplates().filter(function (t) { return t.id === id; })[0]; }
+  function tplKind(t) { return (t && t.kind) || "barbell"; }
+  function isMetcon(t) { return tplKind(t) === "metcon"; }
+  function isDouble(t) { return t && t.progressionMode === "double"; }
 
   /* ============================================================ ENGINE */
   function e1RM(w, reps) { reps = Math.min(reps, 12); return w * (1 + reps / 30); }
@@ -629,6 +784,45 @@
     var r = Math.round(w / step) * step;
     if (r < eq.bar) r = eq.bar;
     return Math.round(r * 100) / 100;
+  }
+
+  // round a working weight for a specific lift: barbell lifts snap to the plate
+  // step and can't go below the bar; dumbbell/machine work rounds to a small
+  // increment with no bar floor.
+  function roundFor(exId, w, eq) {
+    if (EX[exId] && EX[exId].bar) return roundLoad(w, eq);
+    var inc = 2.5;
+    var r = Math.max(inc, Math.round(w / inc) * inc);
+    return Math.round(r * 100) / 100;
+  }
+
+  // first slot across the microcycle that trains this exId (for seed metadata)
+  function slotFor(tpl, exId) {
+    var mc = tpl.microcycle || [];
+    for (var d = 0; d < mc.length; d++) {
+      var slots = mc[d].slots || [];
+      for (var i = 0; i < slots.length; i++) if (slots[i].exId === exId) return slots[i];
+    }
+    return null;
+  }
+
+  // give every progressing lift that isn't an anchor its own load entry so it can
+  // advance independently (bodybuilding accessories). Seed from the slot's
+  // seedLoad (absolute) or seedFromAnchor {id, pct}, else the bar.
+  function seedExtraLifts(tpl, lifts, eq) {
+    if (!tpl.progression) return lifts;
+    Object.keys(tpl.progression).forEach(function (exId) {
+      if (lifts[exId]) return;
+      if (EX[exId] && EX[exId].bw) return;   // bodyweight moves have no load
+      var slot = slotFor(tpl, exId);
+      var seed;
+      if (slot && slot.seedLoad != null) seed = slot.seedLoad;
+      else if (slot && slot.seedFromAnchor && lifts[slot.seedFromAnchor.id]) seed = lifts[slot.seedFromAnchor.id].weight * slot.seedFromAnchor.pct;
+      else seed = EX[exId] && EX[exId].bar ? eq.bar : 10;
+      var w = roundFor(exId, seed, eq);
+      lifts[exId] = { weight: w, start: w, failCount: 0, history: [{ t: Date.now(), w: w }] };
+    });
+    return lifts;
   }
 
   // perLiftInput[exId] = {mode:"direct", weight} | {mode:"reptest", weight, reps}
@@ -643,7 +837,7 @@
       var w = roundLoad(base, eq);
       lifts[exId] = { weight: w, start: w, failCount: 0, history: [{ t: Date.now(), w: w }] };
     });
-    return lifts;
+    return seedExtraLifts(tpl, lifts, eq);
   }
 
   function genWarmups(work, eq) {
@@ -694,24 +888,57 @@
       var exId = resolveExId(s.exId, wk);
       var ex = EX[exId];
       if (!ex) return;
+      var repHigh = s.repHigh || null;
       if (ex.bw) {
         exercises.push({
-          exId: exId, name: ex.name, slotIdx: slotIdx, assist: true, bw: true, target: s.reps,
-          workSets: Array.from({ length: s.sets }, function () { return { reps: s.reps, amrap: !!s.amrap }; })
+          exId: exId, name: ex.name, slotIdx: slotIdx, assist: true, bw: true, target: s.reps, repHigh: repHigh,
+          workSets: Array.from({ length: s.sets }, function () { return { reps: s.reps, repHigh: repHigh, amrap: !!s.amrap }; })
         });
         return;
       }
       var anchorId = s.anchorId || exId;
-      var base = active.lifts[anchorId] ? active.lifts[anchorId].weight : eq.bar;
-      var weight = s.pctOfAnchor ? roundLoad(base * s.pctOfAnchor, eq) : roundLoad(base, eq);
+      var lift = active.lifts[anchorId];
+      var base = lift ? lift.weight : eq.bar;
+      var weight;
+      if (s.pctOfAnchor) weight = roundLoad(base * s.pctOfAnchor, eq);
+      else if (lift) weight = roundFor(exId, lift.weight, eq);
+      else if (s.seedLoad != null) weight = roundFor(exId, s.seedLoad, eq);
+      else weight = roundFor(exId, base, eq);
       exercises.push({
-        exId: exId, name: ex.name, slotIdx: slotIdx, weight: weight, target: s.reps, topSet: !!s.topSet,
+        exId: exId, name: ex.name, slotIdx: slotIdx, weight: weight, target: s.reps, repHigh: repHigh, topSet: !!s.topSet,
         warmups: ex.bar ? genWarmups(weight, eq) : [],
-        workSets: Array.from({ length: s.sets }, function () { return { weight: weight, reps: s.reps }; })
+        workSets: Array.from({ length: s.sets }, function () { return { weight: weight, reps: s.reps, repHigh: repHigh }; })
       });
     });
     var ordered = (db && db.active && tpl.id === db.active.templateId) ? applyOrder(day.label, exercises) : exercises;
     return { label: day.label, dayType: day.dayType || null, exercises: ordered };
+  }
+
+  /* ===================================================== METCON ENGINE */
+  var FORMAT_LABEL = { amrap: "AMRAP", emom: "EMOM", fortime: "For Time", rft: "Rounds For Time", chipper: "Chipper", hyrox: "Hyrox" };
+  // countdown formats show a shrinking clock; the rest count up
+  function metconCountsDown(wod) { return wod.format === "amrap" || wod.format === "emom"; }
+  function metconMoves(wod) { return wod.format === "hyrox" ? (wod.stations || []) : (wod.movements || []); }
+  function metconSubtitle(wod) {
+    if (wod.scheme) return wod.scheme + " " + (FORMAT_LABEL[wod.format] || "For Time");
+    if (wod.format === "amrap") return (wod.capMin || "?") + ":00 AMRAP";
+    if (wod.format === "emom") return "EMOM " + (wod.capMin || (wod.minutes ? wod.minutes.length : "?"));
+    if (wod.format === "hyrox") return "Hyrox — " + ((wod.stations || []).length) + " stations";
+    if (wod.format === "rft" || wod.format === "chipper") {
+      var r = wod.targetRounds ? wod.targetRounds + " rounds for time" : FORMAT_LABEL[wod.format];
+      return r + (wod.capMin ? " · cap " + wod.capMin + ":00" : "");
+    }
+    return "For Time" + (wod.capMin ? " · cap " + wod.capMin + ":00" : "");
+  }
+  function moveLine(m) {
+    var u = m.unit || moveUnit(m.move);
+    var amt = m.amount != null ? (u === "reps" ? m.amount + " × " : m.amount + " " + u + " ") : "";
+    return amt + moveName(m.move) + (m.load ? " @ " + m.load + " " + (m.loadUnit || "kg") : "") + (m.note ? " (" + m.note + ")" : "");
+  }
+  function resolveMetcon(tpl, active) {
+    var mc = tpl.microcycle;
+    var day = mc[(active.cycleIndex || 0) % mc.length];
+    return { kind: "metcon", label: day.label, wod: day.wod, title: day.wod.name, subtitle: metconSubtitle(day.wod) };
   }
 
   // result: { dayType, exercises: [{ exId, made:boolean, done:boolean, topWeight:number }] }
@@ -726,6 +953,31 @@
       var lift = active.lifts[re.exId];
       if (!lift) return;
       var basis = (re.topWeight && re.topWeight > 0) ? re.topWeight : lift.weight;
+
+      // double progression: only add load once the top of the rep range is hit on every set.
+      if (tpl.progressionMode === "double") {
+        if (re.hitTop) {
+          lift.weight = roundFor(re.exId, basis + p.increment, eq);
+          lift.failCount = 0;
+          notes.push({ exId: re.exId, kind: "up", to: lift.weight });
+        } else if (re.made) {
+          lift.weight = roundFor(re.exId, basis, eq);
+          notes.push({ exId: re.exId, kind: "hold", double: true, to: lift.weight });
+        } else {
+          lift.failCount++;
+          if (lift.failCount >= p.failRule.misses) {
+            lift.weight = roundFor(re.exId, basis * p.failRule.pct, eq);
+            lift.failCount = 0;
+            notes.push({ exId: re.exId, kind: "deload", to: lift.weight });
+          } else {
+            lift.weight = roundFor(re.exId, basis, eq);
+            notes.push({ exId: re.exId, kind: "hold", miss: lift.failCount, before: p.failRule.misses, to: lift.weight });
+          }
+        }
+        lift.history.push({ t: Date.now(), w: lift.weight });
+        return;
+      }
+
       if (re.made) {
         lift.weight = roundLoad(basis + p.increment, eq);
         lift.failCount = 0;
@@ -743,13 +995,17 @@
       }
       lift.history.push({ t: Date.now(), w: lift.weight });
     });
-    // advance from the workout that was actually done (the user may have picked a
-    // different day than the one scheduled). "Next" becomes the day after it.
+    advanceRotation(active, tpl, result.cycleIndex);
+    return notes;
+  }
+
+  // advance from the workout that was actually done (the user may have picked a
+  // different day than the one scheduled). "Next" becomes the day after it.
+  function advanceRotation(active, tpl, doneIdx) {
     var len = tpl.microcycle.length;
-    var done = (result.cycleIndex != null) ? (result.cycleIndex % len) : (active.cycleIndex % len);
+    var done = (doneIdx != null) ? (doneIdx % len) : (active.cycleIndex % len);
     active.cycleIndex = done + 1;
     if (active.cycleIndex % len === 0) active.weekIndex++;
-    return notes;
   }
 
   /* ============================================================ SELF TEST */
@@ -837,6 +1093,80 @@
     A(ro.map(function (x) { return x.name; }).join(",") === "Row,Squat,Bench,Curl", "applyOrder([2,0,1]) → Row,Squat,Bench,Curl (ad-hoc last) → " + ro.map(function (x) { return x.name; }).join(","));
     A(applyOrder("A", exs, null) === exs, "applyOrder with no saved order returns the list unchanged");
 
+    // --- scaffold: template kinds, custom-plan resolution, advanceRotation parity ---
+    A(tplKind(SL) === "barbell" && !isMetcon(SL) && !isDouble(SL), "built-ins report kind 'barbell'");
+    A(tplById("starting-strength") && tplById("texas-method"), "tplById resolves the 3 built-ins");
+    var ar = { cycleIndex: 5, weekIndex: 3 };
+    advanceRotation(ar, SL, 1);
+    A(ar.cycleIndex % SL.microcycle.length === 0 && ar.weekIndex === 4, "advanceRotation matches applyResult rotation math");
+    var d1 = defaults(), d2 = JSON.parse(JSON.stringify(d1));
+    A(d1.version === 2 && Array.isArray(d1.customPlans) && Array.isArray(d1.customWorkouts) && d1.badges && d1.badges.earned && JSON.stringify(d1) === JSON.stringify(d2), "defaults() v2 shape is stable / migration-idempotent");
+
+    // --- bodybuilding: double progression + accessory seeding ---
+    var BB = tplById("upper-lower-hypertrophy");
+    if (BB) {
+      A(tplKind(BB) === "bodybuilding" && isDouble(BB), "BB template reports kind 'bodybuilding' + double");
+      var bbLifts = deriveStartingWeights(BB, { bench: { mode: "direct", weight: 80 }, row: { mode: "direct", weight: 70 }, squat: { mode: "direct", weight: 100 }, deadlift: { mode: "direct", weight: 120 }, press: { mode: "direct", weight: 50 } }, eq);
+      A(bbLifts.lateral && bbLifts.lateral.weight === 7.5 && bbLifts.legpress && bbLifts.legpress.weight === 90, "BB accessories seeded from seedLoad (lateral→7.5, legpress→90, no bar floor)");
+      A(bbLifts.rdl && bbLifts.rdl.weight === roundLoad(120 * 0.55, eq), "BB seedFromAnchor: rdl = 55% of deadlift");
+      var bbState = { options: {}, cycleIndex: 0, weekIndex: 0, lifts: JSON.parse(JSON.stringify(bbLifts)) };
+      var bs0 = resolveSession(BB, bbState, eq);
+      A(bs0.exercises[0].repHigh === 8 && bs0.exercises[0].workSets[0].repHigh === 8, "BB resolveSession threads repHigh onto exercise + sets");
+      // hit the top of the range on every set → weight goes up
+      applyResult(BB, bbState, { dayType: null, exercises: [{ exId: "bench", done: true, made: true, hitTop: true, topWeight: 80 }] }, eq);
+      A(bbState.lifts.bench.weight === 82.5 && bbState.lifts.bench.failCount === 0, "BB double: hit top → +2.5, failCount reset");
+      // made the bottom but not the top → weight holds, no miss counted
+      bbState.lifts.bench.weight = 82.5;
+      var dn = applyResult(BB, bbState, { dayType: null, exercises: [{ exId: "bench", done: true, made: true, hitTop: false, topWeight: 82.5 }] }, eq);
+      A(bbState.lifts.bench.weight === 82.5 && bbState.lifts.bench.failCount === 0 && dn[0].double === true, "BB double: hit bottom not top → hold, note.double");
+      // miss the bottom 3× → deload
+      applyResult(BB, bbState, { dayType: null, exercises: [{ exId: "bench", done: true, made: false, hitTop: false, topWeight: 82.5 }] }, eq);
+      applyResult(BB, bbState, { dayType: null, exercises: [{ exId: "bench", done: true, made: false, hitTop: false, topWeight: 82.5 }] }, eq);
+      var dd = applyResult(BB, bbState, { dayType: null, exercises: [{ exId: "bench", done: true, made: false, hitTop: false, topWeight: 82.5 }] }, eq);
+      A(bbState.lifts.bench.weight === roundLoad(82.5 * 0.9, eq) && dd[0].kind === "deload", "BB double: 3 missed bottoms → deload");
+    }
+    // barbell path untouched by the double branch
+    A(repRange(8, 12) === "8–12" && repRange(5, null) === "5" && repRange(8, 8) === "8", "repRange formats single vs range");
+
+    // --- metcon engine ---
+    var CFB = tplById("crossfit-benchmarks");
+    if (CFB) {
+      A(isMetcon(CFB) && tplKind(CFB) === "metcon", "metcon template reports kind 'metcon'");
+      var rm = resolveMetcon(CFB, { cycleIndex: 1 });
+      A(rm.kind === "metcon" && rm.wod.name === "Fran" && rm.subtitle === "21-15-9 For Time", "resolveMetcon picks the day's WOD + subtitle");
+      A(metconSubtitle(tplById("crossfit-benchmarks").microcycle[0].wod) === "20:00 AMRAP", "AMRAP subtitle");
+      A(metconCountsDown({ format: "amrap" }) && metconCountsDown({ format: "emom" }) && !metconCountsDown({ format: "fortime" }), "AMRAP/EMOM count down, for-time counts up");
+      var HX = tplById("hyrox-race-prep");
+      A(HX && metconMoves(HX.microcycle[0].wod).length === 8, "Hyrox full sim resolves 8 stations");
+      // rotation advance parity for a metcon program
+      var mstate = { cycleIndex: 3, weekIndex: 0 };
+      advanceRotation(mstate, CFB, 3);
+      A(mstate.cycleIndex === 4, "metcon program advances rotation via the shared helper");
+      A(fmtClock(0) === "0:00" && fmtClock(65000) === "1:05" && fmtClock(600000) === "10:00", "fmtClock mm:ss");
+    }
+
+    // --- roller pool ---
+    A(WOD_POOL.length >= 20, "WOD pool has 20+ workouts");
+    A(WOD_POOL.every(function (w) { return w.id && w.name && w.format && w.scoreType; }), "every pooled WOD has id/name/format/scoreType");
+    A(WOD_POOL.some(function (w) { return w.style === "crossfit"; }) && WOD_POOL.some(function (w) { return w.style === "hyrox"; }), "pool covers both crossfit and hyrox");
+    rollState.filter = "hyrox"; rollState.wod = null;
+    A(rollPick() && rollPick().style === "hyrox", "rollPick respects the style filter");
+    rollState.filter = "all"; rollState.wod = null;
+
+    // --- custom content ---
+    var clone = deepClone(tplById("stronglifts-5x5"));
+    clone.id = "cust-test"; clone.custom = true; clone.basedOn = "stronglifts-5x5";
+    A(clone.microcycle.length === 2 && clone.microcycle[0].slots[0].exId === "squat" && tplById("stronglifts-5x5").id === "stronglifts-5x5", "deepClone copies a template without mutating the original");
+    A(resolveSession(clone, { options: {}, cycleIndex: 0, weekIndex: 0, lifts: deriveStartingWeights(clone, { squat: { mode: "direct", weight: 60 }, bench: { mode: "direct", weight: 40 }, press: { mode: "direct", weight: 30 }, deadlift: { mode: "direct", weight: 80 }, row: { mode: "direct", weight: 40 } }, eq) }, eq).exercises[0].exId === "squat", "a duplicated plan resolves through the normal engine");
+
+    // --- badges ---
+    A(BADGES.length === 151, "badge catalogue has exactly 151 entries → " + BADGES.length);
+    var bIds = {}; BADGES.forEach(function (b) { bIds[b.id] = (bIds[b.id] || 0) + 1; });
+    A(Object.keys(bIds).every(function (k) { return bIds[k] === 1; }), "every badge id is unique");
+    A(BADGES.every(function (b) { return b.name && b.desc && b.cat && b.tier && b.glyph && typeof b.check === "function"; }), "every badge is fully formed");
+    var fakeCtx = { stats: {}, sessions: [], body: [], customPlans: [], customWorkouts: [] };
+    A(BADGES.every(function (b) { try { b.check(fakeCtx); return true; } catch (e) { return false; } }), "no badge check throws on an empty context");
+
     var el = document.createElement("div");
     el.className = "selftest";
     el.innerHTML = "RACK COACH — SELF TEST\n" + (ok ? "<span class='pass'>ALL PASSED</span>" : "<span class='fail'>FAILURES ABOVE</span>") + "\n\n" +
@@ -851,19 +1181,28 @@
   var KEY = "rackcoach.v1";
   function defaults() {
     return {
-      version: 1,
-      settings: { unit: "kg", lengthUnit: "cm", theme: "system" },
+      version: 2,
+      settings: { unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir" },
       equipment: { bar: 20, smallestPlate: 1.25, step: 2.5, hasDumbbells: false },
       active: null,
       sessions: [],
-      body: []   // [{ id, date, bw, m:{chest,arms,waist,hips,thighs,calves}, note }]
+      body: [],  // [{ id, date, bw, m:{chest,arms,waist,hips,thighs,calves}, note }]
+      customPlans: [],     // full template objects authored/duplicated by the user
+      customWorkouts: [],  // one-off single sessions (strength or metcon)
+      badges: { earned: {}, seen: {} }   // earned[id] = ts ; seen[id] = 1
     };
   }
   var db;
   try { db = JSON.parse(localStorage.getItem(KEY)) || defaults(); }
   catch (e) { db = defaults(); }
-  db.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system" }, db.settings || {});
+  db.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir" }, db.settings || {});
   db.equipment = Object.assign({ bar: 20, smallestPlate: 1.25, step: 2.5, hasDumbbells: false }, db.equipment || {});
+  db.customPlans = Array.isArray(db.customPlans) ? db.customPlans : [];
+  db.customWorkouts = Array.isArray(db.customWorkouts) ? db.customWorkouts : [];
+  if (!db.badges || typeof db.badges !== "object") db.badges = { earned: {}, seen: {} };
+  db.badges.earned = db.badges.earned || {};
+  db.badges.seen = db.badges.seen || {};
+  if (!db.version || db.version < 2) db.version = 2;
   db.sessions = db.sessions || [];
   db.body = Array.isArray(db.body) ? db.body : [];
 
@@ -897,6 +1236,23 @@
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
   // human label for a resolved session ("Workout A" / "Volume day")
   function sessionLabel(res) { return res.dayType ? cap(res.dayType) + " day" : "Workout " + res.label; }
+
+  // "8" or "8–12" for a double-progression rep range
+  function repRange(lo, hi) { return hi && hi > lo ? lo + "–" + hi : String(lo); }
+
+  // effort logging — stored value is always reps-in-reserve (0 = to failure).
+  // "4+" caps the low-effort end. Display remaps to RPE when the user prefers it.
+  var RIR_VALUES = [4, 3, 2, 1, 0];
+  function effortIsRpe() { return db.settings.effortScale === "rpe"; }
+  function effortChipLabel(v) {
+    if (effortIsRpe()) return v >= 4 ? "≤6" : String(10 - v);
+    return v >= 4 ? "4+" : String(v);
+  }
+  function effortText(rir) {
+    if (rir == null) return "";
+    if (effortIsRpe()) return "RPE " + (rir >= 4 ? "≤6" : (10 - rir));
+    return "RIR " + (rir >= 4 ? "4+" : rir);
+  }
 
   // Ronnie Coleman, rotated daily
   var QUOTES = [
@@ -932,14 +1288,17 @@
     setup: document.getElementById("s-setup"),
     home: document.getElementById("s-home"),
     pick: document.getElementById("s-pick"),
+    roll: document.getElementById("s-roll"),
+    editor: document.getElementById("s-editor"),
     summary: document.getElementById("s-summary"),
     progress: document.getElementById("s-progress"),
-    body: document.getElementById("s-body")
+    body: document.getElementById("s-body"),
+    badges: document.getElementById("s-badges")
   };
-  var TAB_SCREENS = { home: 1, progress: 1, body: 1 };
-  var TAB_ORDER = ["home", "progress", "body"];
+  var TAB_SCREENS = { home: 1, progress: 1, body: 1, badges: 1 };
+  var TAB_ORDER = ["home", "progress", "body", "badges"];
   // rough "depth" so a plain go() can infer push vs pop direction
-  var DEPTH = { home: 0, progress: 0, body: 0, choose: 1, summary: 1, pick: 1, detail: 2, setup: 3 };
+  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, choose: 1, summary: 1, pick: 1, roll: 1, detail: 2, setup: 3, editor: 3 };
   var cur = null, sliding = false;
   var SCR_RESET = ["anim", "from-right", "from-left", "to-left", "to-right", "behind", "lead", "trail"];
   function snapScreens() {
@@ -998,7 +1357,7 @@
   }
   function renderTabs() {
     var tb = document.getElementById("tabbar");
-    var show = !!db.active && !!TAB_SCREENS[cur];
+    var show = (!!db.active || db.sessions.length > 0) && !!TAB_SCREENS[cur];
     tb.classList.toggle("show", show);
     if (!show) return;
     tb.querySelectorAll("[data-tab]").forEach(function (b) {
@@ -1019,22 +1378,397 @@
     var c = screens.choose;
     var html = '<button class="backlink" id="ch-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
       '<h2 class="title">' + (db.active ? "Change program" : "Pick your program") + '</h2>' +
-      '<p class="lead">A proven barbell program, run for you — it holds your weights, tells you what to lift each session, and adds load on the schedule the program is built around.</p>';
-    TEMPLATES.forEach(function (t) {
-      var modeLabel = t.progressionMode === "linear" ? "adds weight every session" : "adds weight every week";
-      html += '<button class="prog-card" data-tpl="' + t.id + '">' +
+      '<p class="lead">Pick a program and it runs for you — it tells you what to do each session and, for the lifting programs, holds your weights and adds load on schedule.</p>';
+    var GROUPS = [
+      ["barbell", "Barbell strength"],
+      ["bodybuilding", "Bodybuilding"],
+      ["crossfit", "CrossFit"],
+      ["hyrox", "Hyrox"]
+    ];
+    function card(t) {
+      return '<button class="prog-card" data-tpl="' + t.id + '">' +
         '<h3>' + esc(t.name) + '</h3><div class="by">' + esc(t.author) + '</div>' +
-        '<div class="tags"><span class="tag">' + t.daysPerWeek + '×/week</span><span class="tag">' + esc(modeLabel) + '</span><span class="tag">barbell</span></div>' +
+        '<div class="tags"><span class="tag">' + t.daysPerWeek + '×/week</span><span class="tag">' + esc(progModeLabel(t)) + '</span><span class="tag">' + esc(progKindLabel(t)) + '</span></div>' +
         '<p>' + esc(t.blurb) + '</p>' +
         '<div class="best">Best for: ' + esc(t.bestFor) + '</div>' +
       '</button>';
+    }
+    GROUPS.forEach(function (g) {
+      var inGroup = TEMPLATES.filter(function (t) { return (t.style || tplKind(t)) === g[0]; });
+      if (!inGroup.length) return;
+      html += '<div class="eyebrow" style="margin-top:18px">' + g[1] + '</div>';
+      inGroup.forEach(function (t) { html += card(t); });
     });
+    if (db.customPlans.length) {
+      html += '<div class="eyebrow" style="margin-top:18px">Your plans</div>';
+      db.customPlans.forEach(function (t) { html += card(t); });
+    }
+
+    if (WOD_POOL.length) {
+      html += '<div class="eyebrow" style="margin-top:18px">No commitment</div>' +
+        '<button class="prog-card" id="ch-roll"><h3>Roll a random workout</h3>' +
+        '<p>Skip the program — get a random CrossFit or Hyrox piece to do right now. It still lands in your history.</p></button>';
+    }
+
+    if (db.customWorkouts.length) {
+      html += '<div class="eyebrow" style="margin-top:18px">Your one-off workouts</div>';
+      db.customWorkouts.forEach(function (cw) {
+        html += '<button class="prog-card" data-cw="' + cw.id + '"><h3>' + esc(cw.name) + '</h3>' +
+          '<p>' + (cw.kind === "metcon" ? esc(metconSubtitle(cw.wod)) : (cw.exercises || []).length + ' exercises') + '</p></button>';
+      });
+    }
+
+    html += '<div class="eyebrow" style="margin-top:22px">Make your own</div>' +
+      '<div class="home-links" style="flex-direction:column;gap:8px">' +
+        '<button class="btn btn-ghost" id="ch-dup">Duplicate a program to tweak</button>' +
+        '<button class="btn btn-ghost" id="ch-new-workout">Build a one-off workout</button>' +
+      '</div>';
+
     c.innerHTML = html;
     document.getElementById("ch-back").onclick = function () { go("home"); };
+    var chRoll = document.getElementById("ch-roll");
+    if (chRoll) chRoll.onclick = function () { go("roll"); };
+    document.getElementById("ch-dup").onclick = openDuplicatePicker;
+    document.getElementById("ch-new-workout").onclick = function () { startWorkoutBuilder(); };
     c.querySelectorAll("[data-tpl]").forEach(function (b) {
       b.onclick = function () { draft = null; showDetail(b.dataset.tpl); };
     });
+    c.querySelectorAll("[data-cw]").forEach(function (b) {
+      b.onclick = function () { openCustomWorkoutSheet(b.dataset.cw); };
+    });
   };
+
+  /* ============================================================ CUSTOM CONTENT */
+  function customWorkoutById(id) { return db.customWorkouts.filter(function (w) { return w.id === id; })[0]; }
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function openDuplicatePicker() {
+    var opts = TEMPLATES.filter(function (t) { return !t.custom && !isMetcon(t); });
+    openSheet('<h2>Duplicate a program</h2><p class="sh-lead">Make an editable copy you can tweak — swap exercises, change sets and reps. The original stays put.</p>' +
+      opts.map(function (t) { return '<button class="menu-item" data-dup="' + t.id + '"><span>' + esc(t.name) + '</span><span class="k2">' + esc(progKindLabel(t)) + '</span></button>'; }).join("") +
+      '<div class="btn-row"><button class="btn btn-ghost" id="dup-cancel">Cancel</button></div>');
+    document.getElementById("dup-cancel").onclick = closeSheet;
+    document.getElementById("sheet-root").querySelectorAll("[data-dup]").forEach(function (b) {
+      b.onclick = function () {
+        var src = tplById(b.dataset.dup);
+        var copy = deepClone(src);
+        copy.id = "cust-" + uid();
+        copy.custom = true;
+        copy.basedOn = src.id;
+        copy.name = "My " + src.name;
+        copy.author = "You";
+        copy.createdAt = Date.now();
+        copy.updatedAt = Date.now();
+        db.customPlans.push(copy);
+        save();
+        closeSheet();
+        editorState = { mode: "plan", planId: copy.id };
+        go("editor");
+      };
+    });
+  }
+
+  var editorState = null;
+
+  function startWorkoutBuilder(existingId) {
+    var cw = existingId ? deepClone(customWorkoutById(existingId)) : {
+      id: "cw-" + uid(), custom: true, kind: "strength", name: "",
+      exercises: [{ exId: "bench", sets: 3, reps: 8, repHigh: null, weight: 40 }],
+      createdAt: Date.now()
+    };
+    editorState = { mode: "workout", draft: cw, isNew: !existingId };
+    go("editor");
+  }
+
+  renderers.editor = function () {
+    var c = screens.editor;
+    if (!editorState) { go("choose"); return; }
+    if (editorState.mode === "plan") return renderPlanEditor(c);
+    return renderWorkoutBuilder(c);
+  };
+
+  function renderPlanEditor(c) {
+    var t = tplById(editorState.planId);
+    if (!t) { editorState = null; go("choose"); return; }
+    var isDbl = t.progressionMode === "double";
+    var html = '<button class="backlink" id="ed-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Programs</button>' +
+      '<h2 class="title">Edit program</h2>' +
+      '<div class="field"><label>Name</label><input class="ed-name" id="ed-name" value="' + esc(t.name) + '"></div>' +
+      '<p class="lead">Change exercises, sets and reps. Day structure and progression rules stay as the original.</p>';
+    t.microcycle.forEach(function (day, di) {
+      html += '<div class="day-block"><h4>' + esc(day.label) + '</h4>';
+      day.slots.forEach(function (slot, si) {
+        var ex = EX[slot.exId] || { name: slot.exId };
+        html += '<div class="ed-slot" data-di="' + di + '" data-si="' + si + '">' +
+          '<button class="ed-ex" data-pick="1">' + esc(ex.name) + '</button>' +
+          '<div class="ed-nums">' +
+            numStep("sets", slot.sets, 1, 10) +
+            numStep("reps", slot.reps, 1, 30) +
+            (isDbl ? numStep("repHigh", slot.repHigh || slot.reps, 1, 40) : "") +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+    });
+    html += '<div class="btn-row"><button class="btn btn-ghost" id="ed-delete">Delete this program</button></div>' +
+      '<div class="btn-row"><button class="btn btn-primary" id="ed-save">Save</button></div>';
+    c.innerHTML = html;
+
+    document.getElementById("ed-back").onclick = function () { go("choose"); };
+    document.getElementById("ed-name").oninput = function () { t.name = this.value; };
+    c.querySelectorAll(".ed-slot").forEach(function (row) {
+      var di = +row.dataset.di, si = +row.dataset.si;
+      var slot = t.microcycle[di].slots[si];
+      row.querySelector("[data-pick]").onclick = function () {
+        openMovePicker(false, function (exId) {
+          var wasProg = t.progression && t.progression[slot.exId];
+          slot.exId = exId;
+          // keep the swapped-in lift progressing like the one it replaced
+          if (wasProg && t.progression && !t.progression[exId] && !(EX[exId] && EX[exId].bw)) {
+            t.progression[exId] = deepClone(wasProg);
+            if (EX[exId] && EX[exId].bar && t.anchors && t.anchors.indexOf(exId) < 0) t.anchors = t.anchors.concat([exId]);
+          }
+          renderers.editor();
+        });
+      };
+      row.querySelectorAll("[data-num]").forEach(function (grp) {
+        var f = grp.dataset.num;
+        grp.querySelector("[data-d='-']").onclick = function () { slot[f] = Math.max(1, (slot[f] || slot.reps) - 1); renderers.editor(); };
+        grp.querySelector("[data-d='+']").onclick = function () { slot[f] = (slot[f] || slot.reps) + 1; renderers.editor(); };
+      });
+    });
+    document.getElementById("ed-save").onclick = function () {
+      t.name = document.getElementById("ed-name").value.trim() || t.name;
+      t.updatedAt = Date.now();
+      save();
+      toast("Saved");
+      go("choose");
+    };
+    document.getElementById("ed-delete").onclick = function () {
+      if (db.active && db.active.templateId === t.id) { toast("Switch to another program first"); return; }
+      confirmSheet("Delete this program?", "The editable copy is removed. Built-in programs aren't affected.", function () {
+        db.customPlans = db.customPlans.filter(function (p) { return p.id !== t.id; });
+        save();
+        editorState = null;
+        go("choose");
+      });
+    };
+  }
+
+  function renderWorkoutBuilder(c) {
+    var d = editorState.draft;
+    if (d.kind === "metcon" && !d.wod) d.wod = { id: d.id, name: d.name, format: "amrap", scoreType: "rounds", capMin: 12, movements: [{ move: "burpee", amount: 10 }] };
+
+    var html = '<button class="backlink" id="ed-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Programs</button>' +
+      '<h2 class="title">' + (editorState.isNew ? "New workout" : "Edit workout") + '</h2>' +
+      '<div class="field"><label>Name</label><input class="ed-name" id="wb-name" value="' + esc(d.name) + '" placeholder="Arm day, Saturday grind…"></div>' +
+      '<div class="seg-ctl" data-wb-kind>' +
+        '<button data-k="strength" aria-selected="' + (d.kind === "strength") + '">Lifting</button>' +
+        '<button data-k="metcon" aria-selected="' + (d.kind === "metcon") + '">Conditioning</button>' +
+      '</div>';
+
+    if (d.kind === "strength") {
+      d.exercises = d.exercises || [];
+      d.exercises.forEach(function (row, i) {
+        var ex = EX[row.exId] || { name: row.exId, bar: false };
+        html += '<div class="day-block">' +
+          '<div class="ed-slot"><button class="ed-ex" data-pickex="' + i + '">' + esc(ex.name) + '</button>' +
+            '<div class="ed-nums">' + step("ex:" + i + ":sets", row.sets, 1) + step("ex:" + i + ":reps", row.reps, 1) + '</div></div>' +
+          (ex.bw ? '' : '<div class="ed-slot"><span class="ed-cap">Weight (' + U() + ')</span><div class="ed-nums">' + step("ex:" + i + ":weight", row.weight || 20, 0, eq().step) + '</div></div>') +
+          '<button class="btn btn-ghost sm" data-del="' + i + '" style="margin-top:6px">Remove</button>' +
+        '</div>';
+      });
+      html += '<div class="btn-row"><button class="btn btn-ghost" id="wb-add">Add an exercise</button></div>';
+    } else {
+      html += '<div class="field"><label>Format</label><div class="seg-ctl" data-wb-fmt>' +
+        ['amrap', 'fortime', 'rft'].map(function (f) { return '<button data-f="' + f + '" aria-selected="' + (d.wod.format === f) + '">' + FORMAT_LABEL[f] + '</button>'; }).join("") +
+      '</div></div>' +
+      '<div class="ed-slot"><span class="ed-cap">' + (d.wod.format === "amrap" ? "Minutes" : "Time cap (min)") + '</span><div class="ed-nums">' + step("cap", d.wod.capMin || 12, 1) + '</div></div>';
+      (d.wod.movements || []).forEach(function (m, i) {
+        html += '<div class="day-block"><div class="ed-slot">' +
+          '<button class="ed-ex" data-pickmv="' + i + '">' + esc(moveName(m.move)) + '</button>' +
+          '<div class="ed-nums">' + step("mv:" + i + ":amount", m.amount || 10, 1) + '</div></div>' +
+          '<button class="btn btn-ghost sm" data-delmv="' + i + '" style="margin-top:6px">Remove</button></div>';
+      });
+      html += '<div class="btn-row"><button class="btn btn-ghost" id="wb-addmv">Add a movement</button></div>';
+    }
+    html += '<div class="btn-row"><button class="btn btn-primary" id="wb-save">Save workout</button></div>';
+    c.innerHTML = html;
+
+    function step(path, val, min, stp) {
+      return '<span class="ns" data-path="' + path + '" data-min="' + (min || 0) + '" data-step="' + (stp || 1) + '">' +
+        '<button data-d="-">–</button><b>' + fmt(val) + '</b><button data-d="+">+</button></span>';
+    }
+    function setVal(path, delta) {
+      var p = path.split(":");
+      var obj, field;
+      if (p[0] === "cap") { d.wod.capMin = Math.max(1, (d.wod.capMin || 12) + delta); }
+      else if (p[0] === "ex") { obj = d.exercises[+p[1]]; field = p[2]; }
+      else if (p[0] === "mv") { obj = d.wod.movements[+p[1]]; field = p[2]; }
+      if (obj) {
+        var el = c.querySelector('[data-path="' + path + '"]');
+        var mn = +el.dataset.min, stp = +el.dataset.step;
+        obj[field] = Math.max(mn, (+obj[field] || 0) + delta * stp);
+      }
+      renderers.editor();
+    }
+
+    document.getElementById("ed-back").onclick = function () { go("choose"); };
+    document.getElementById("wb-name").oninput = function () { d.name = this.value; };
+    c.querySelectorAll("[data-wb-kind] button").forEach(function (b) {
+      b.onclick = function () { d.kind = b.dataset.k; renderers.editor(); };
+    });
+    var fmtSeg = c.querySelector("[data-wb-fmt]");
+    if (fmtSeg) fmtSeg.querySelectorAll("button").forEach(function (b) {
+      b.onclick = function () { d.wod.format = b.dataset.f; d.wod.scoreType = b.dataset.f === "amrap" ? "rounds" : "time"; renderers.editor(); };
+    });
+    c.querySelectorAll(".ns").forEach(function (grp) {
+      grp.querySelector("[data-d='-']").onclick = function () { setVal(grp.dataset.path, -1); };
+      grp.querySelector("[data-d='+']").onclick = function () { setVal(grp.dataset.path, 1); };
+    });
+    c.querySelectorAll("[data-pickex]").forEach(function (b) {
+      b.onclick = function () { var i = +b.dataset.pickex; openMovePicker(false, function (id) { d.exercises[i].exId = id; renderers.editor(); }); };
+    });
+    c.querySelectorAll("[data-pickmv]").forEach(function (b) {
+      b.onclick = function () { var i = +b.dataset.pickmv; openMovePicker(true, function (id) { d.wod.movements[i].move = id; renderers.editor(); }); };
+    });
+    c.querySelectorAll("[data-del]").forEach(function (b) {
+      b.onclick = function () { d.exercises.splice(+b.dataset.del, 1); renderers.editor(); };
+    });
+    c.querySelectorAll("[data-delmv]").forEach(function (b) {
+      b.onclick = function () { d.wod.movements.splice(+b.dataset.delmv, 1); renderers.editor(); };
+    });
+    var addEx = document.getElementById("wb-add");
+    if (addEx) addEx.onclick = function () { d.exercises.push({ exId: "dbcurl", sets: 3, reps: 10, weight: 15 }); renderers.editor(); };
+    var addMv = document.getElementById("wb-addmv");
+    if (addMv) addMv.onclick = function () { d.wod.movements.push({ move: "burpee", amount: 10 }); renderers.editor(); };
+
+    document.getElementById("wb-save").onclick = function () {
+      d.name = (document.getElementById("wb-name").value || "").trim() || "Untitled workout";
+      if (d.kind === "strength" && !(d.exercises || []).length) { toast("Add an exercise first"); return; }
+      if (d.kind === "metcon") {
+        if (!(d.wod.movements || []).length) { toast("Add a movement first"); return; }
+        d.wod.name = d.name; d.wod.id = d.id;
+        d.wod.targetRounds = d.wod.format === "rft" ? (d.wod.targetRounds || 5) : null;
+        delete d.exercises;
+      } else {
+        delete d.wod;
+      }
+      var idx = db.customWorkouts.map(function (w) { return w.id; }).indexOf(d.id);
+      if (idx >= 0) db.customWorkouts[idx] = d; else db.customWorkouts.push(d);
+      save();
+      editorState = null;
+      toast("Workout saved");
+      go("choose");
+    };
+  }
+
+  function numStep(field, val) {
+    return '<span class="ns" data-num="' + field + '"><button data-d="-">–</button><b>' + fmt(val) + '</b><button data-d="+">+</button>' +
+      '<i>' + (field === "repHigh" ? "top" : field) + '</i></span>';
+  }
+
+  // a simple movement/exercise picker sheet. metcon=true → MOVES, else EX
+  function openMovePicker(metcon, cb) {
+    var src = metcon ? MOVES : EX;
+    var ids = Object.keys(src);
+    openSheet('<h2>Pick ' + (metcon ? "a movement" : "an exercise") + '</h2>' +
+      '<div class="mp-list">' + ids.map(function (id) {
+        return '<button class="menu-item" data-mp="' + id + '"><span>' + esc(src[id].name) + '</span></button>';
+      }).join("") + '</div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="mp-cancel">Cancel</button></div>');
+    document.getElementById("mp-cancel").onclick = closeSheet;
+    document.getElementById("sheet-root").querySelectorAll("[data-mp]").forEach(function (b) {
+      b.onclick = function () { closeSheet(); cb(b.dataset.mp); };
+    });
+  }
+
+  function openCustomWorkoutSheet(cwId) {
+    var cw = customWorkoutById(cwId);
+    if (!cw) return;
+    openSheet('<h2>' + esc(cw.name) + '</h2>' +
+      '<p class="sh-lead">' + (cw.kind === "metcon" ? esc(metconSubtitle(cw.wod)) : (cw.exercises || []).length + ' exercises') + '</p>' +
+      '<div class="btn-row"><button class="btn btn-primary" id="cw-run">Do this workout</button></div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="cw-edit">Edit</button><button class="btn btn-ghost" id="cw-del">Delete</button></div>');
+    document.getElementById("cw-run").onclick = function () { closeSheet(); runCustomWorkout(cw); };
+    document.getElementById("cw-edit").onclick = function () { closeSheet(); startWorkoutBuilder(cw.id); };
+    document.getElementById("cw-del").onclick = function () {
+      db.customWorkouts = db.customWorkouts.filter(function (w) { return w.id !== cw.id; });
+      save(); closeSheet(); go("choose");
+    };
+  }
+
+  function runCustomWorkout(cw) {
+    if (cw.kind === "metcon") {
+      var w = deepClone(cw.wod);
+      w.name = cw.name; w.style = "custom";
+      startMetconPlayer(null, w);
+      return;
+    }
+    startFreestyleStrength(cw);
+  }
+
+  function startFreestyleStrength(cw) {
+    var exercises = (cw.exercises || []).map(function (row) {
+      var ex = EX[row.exId] || { name: row.exId, bar: false };
+      var isBw = !!ex.bw;
+      return {
+        exId: row.exId, name: ex.name, adhoc: true, assist: isBw, bw: isBw,
+        target: row.reps, repHigh: null, weight: isBw ? 0 : (row.weight || 0),
+        warmups: [],
+        workSets: Array.from({ length: Math.max(1, row.sets || 1) }, function () { return { weight: isBw ? null : (row.weight || 0), reps: row.reps }; })
+      };
+    });
+    if (!exercises.length) { toast("Add an exercise first"); return; }
+    var queue = [];
+    exercises.forEach(function (x, xi) {
+      x.workSets.forEach(function (ws, si) {
+        queue.push({ xi: xi, kind: "work", weight: x.assist ? null : ws.weight, reps: ws.reps,
+          exId: x.exId, name: x.name, assist: !!x.assist, adhoc: true,
+          setNo: si + 1, setCount: x.workSets.length, target: x.target });
+      });
+    });
+    run = {
+      custom: true, freestyleName: cw.name, customWorkoutId: cw.id,
+      t: null, res: { label: cw.name, dayType: null, exercises: exercises }, queue: queue, i: 0,
+      startedAt: Date.now(), chosenIdx: null,
+      results: exercises.map(function (x) {
+        return { exId: x.exId, name: x.name, assist: !!x.assist, bw: !!x.bw, adhoc: true, target: x.target, plannedWeight: x.weight || 0, sets: [] };
+      })
+    };
+    renderPlayer();
+  }
+
+  function finishFreestylePlayer() {
+    var sess = {
+      id: uid(), date: run.startedAt, kind: "freestyle",
+      templateId: null, programName: run.freestyleName, customWorkoutId: run.customWorkoutId,
+      dayLabel: run.freestyleName, weekIndex: 0, dayType: null,
+      durationSec: Math.round((Date.now() - run.startedAt) / 1000),
+      snapshot: {}, notes: [],
+      actual: run.results.map(function (r) {
+        var top = r.sets.reduce(function (m, s) { return (s.weight || 0) >= (m.weight || 0) ? s : m; }, r.sets[0] || {});
+        return { exId: r.exId, name: r.name, assist: r.assist, adhoc: true, made: null,
+          sets: r.sets, topWeight: (top && top.weight) || 0, topReps: (top && top.reps) || 0 };
+      })
+    };
+    db.sessions.push(sess);
+    save();
+    lastSummary = sess;
+    run = null;
+    finishAndCelebrate(sess, function () { go("summary"); });
+  }
+
+  function progModeLabel(t) {
+    if (isMetcon(t)) return "for time / rounds";
+    if (t.progressionMode === "double") return "progressive overload";
+    if (t.progressionMode === "weekly") return "adds weight every week";
+    return "adds weight every session";
+  }
+  function progKindLabel(t) {
+    var k = t.style || tplKind(t);
+    return k === "bodybuilding" ? "hypertrophy" : k === "crossfit" ? "CrossFit" : k === "hyrox" ? "Hyrox" : "barbell";
+  }
 
   function showDetail(tplId) { detailId = tplId; go("detail"); }
   var detailId = null;
@@ -1044,47 +1778,89 @@
     var demo = demoLifts(t);
     var html = '<button class="backlink" id="d-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>All programs</button>' +
       '<h2 class="title">' + esc(t.name) + '</h2><p class="lead">' + esc(t.blurb) + '</p>';
-    var rule = t.progressionMode === "linear"
-      ? "Each session, if you complete every prescribed rep, the next session adds " + fmt(t.progression[t.anchors[0]].increment) + "–" + fmt(t.progression.deadlift.increment) + " " + U() + " to that lift. Miss the target " + t.progression[t.anchors[0]].failRule.misses + " sessions in a row and it cuts the weight " + Math.round((1 - t.progression[t.anchors[0]].failRule.pct) * 100) + "% so you can build back up."
-      : "Monday is heavy volume (5×5), Wednesday is light recovery, Friday you work up to one hard set of 5 at a new best. Beat Friday's set and next week's weights all move up; miss it twice and that lift resets " + Math.round((1 - t.progression.squat.failRule.pct) * 100) + "%.";
+
+    if (isMetcon(t)) {
+      html += '<div class="rule-box"><b>How it works</b>Each session is a workout for time or rounds. No weights to set up and nothing to progress — you log your score and it goes in your history.</div>' +
+        '<div class="eyebrow">The sessions</div>';
+      t.microcycle.forEach(function (day) {
+        var w = day.wod;
+        html += '<div class="day-block"><h4>' + esc(day.label) + ' <span class="dtype">' + esc(FORMAT_LABEL[w.format] || w.format) + '</span></h4>' +
+          '<div class="mc-detail-sub">' + esc(metconSubtitle(w)) + '</div>' +
+          metconMoves(w).map(function (m) { return '<div class="ex-line"><span>' + esc(moveLine(m)) + '</span></div>'; }).join("") +
+          (w.equipmentNote ? '<div class="best">Needs: ' + esc(w.equipmentNote) + '</div>' : '') +
+        '</div>';
+      });
+      html += '<div class="btn-row"><button class="btn btn-primary" id="d-use">Use this program</button></div>';
+      c.innerHTML = html;
+      document.getElementById("d-back").onclick = function () { go("choose"); };
+      document.getElementById("d-use").onclick = function () { startSetup(t.id); };
+      return;
+    }
+
+    var a0 = (t.anchors && t.anchors[0]) || (t.progression && Object.keys(t.progression)[0]);
+    var p0 = t.progression && a0 ? t.progression[a0] : null;
+    var incHi = t.progression ? Object.keys(t.progression).reduce(function (m, k) { return Math.max(m, t.progression[k].increment || 0); }, 0) : 0;
+    var rule;
+    if (t.progressionMode === "double")
+      rule = "Every lift has a rep range. Take every set to the top of the range and next time the weight goes up " + fmt(p0 ? p0.increment : 2.5) + "–" + fmt(incHi) + " " + U() + " and you drop back to the bottom. Fall short of the bottom " + (p0 ? p0.failRule.misses : 3) + " sessions running and it trims " + Math.round((1 - (p0 ? p0.failRule.pct : 0.9)) * 100) + "% so you can rebuild.";
+    else if (t.progressionMode === "weekly")
+      rule = "Monday is heavy volume (5×5), Wednesday is light recovery, Friday you work up to one hard set of 5 at a new best. Beat Friday's set and next week's weights all move up; miss it twice and that lift resets " + Math.round((1 - t.progression.squat.failRule.pct) * 100) + "%.";
+    else
+      rule = "Each session, if you complete every prescribed rep, the next session adds " + fmt(p0 ? p0.increment : 2.5) + "–" + fmt(incHi || 5) + " " + U() + " to that lift. Miss the target " + (p0 ? p0.failRule.misses : 3) + " sessions in a row and it cuts the weight " + Math.round((1 - (p0 ? p0.failRule.pct : 0.9)) * 100) + "% so you can build back up.";
     html += '<div class="rule-box"><b>How it progresses</b>' + esc(rule) + '</div>';
     html += '<div class="eyebrow">A week of training <span style="text-transform:none;font-weight:500;color:var(--text-faint)">— example weights</span></div>';
     t.microcycle.forEach(function (day) {
       var res = resolveSession(t, { options: optionDefaults(t), cycleIndex: t.microcycle.indexOf(day), weekIndex: 0, lifts: demo }, eq());
       html += '<div class="day-block"><h4>' + esc(day.label) + (day.dayType ? ' <span class="dtype">' + esc(day.dayType) + '</span>' : '') + '</h4>';
       res.exercises.forEach(function (x) {
-        var sc = x.assist ? (x.workSets.length + "×" + x.target + (x.workSets[0].amrap ? "+" : "")) : (x.workSets.length + "×" + x.target);
+        var sc = x.assist ? (x.workSets.length + "×" + repRange(x.target, x.repHigh) + (x.workSets[0].amrap ? "+" : "")) : (x.workSets.length + "×" + repRange(x.target, x.repHigh));
         html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' + sc +
           (x.assist ? '' : ' &nbsp; <span class="wt">' + fmt(x.weight) + ' ' + U() + '</span>') + '</span></div>';
       });
       html += '</div>';
     });
-    html += '<div class="btn-row"><button class="btn btn-primary" id="d-use">Use this program</button></div>';
+    html += '<div class="btn-row"><button class="btn btn-primary" id="d-use">Use this program</button></div>' +
+      (t.custom ? '<div class="btn-row"><button class="btn btn-ghost" id="d-edit">Edit this program</button></div>' : '');
     c.innerHTML = html;
     document.getElementById("d-back").onclick = function () { go("choose"); };
     document.getElementById("d-use").onclick = function () { startSetup(t.id); };
+    var de = document.getElementById("d-edit");
+    if (de) de.onclick = function () { editorState = { mode: "plan", planId: t.id }; go("editor"); };
   };
 
   function optionDefaults(t) { var o = {}; (t.options || []).forEach(function (x) { o[x.id] = x.default; }); return o; }
   function demoLifts(t) {
     var base = { squat: 100, bench: 70, press: 45, deadlift: 120, row: 55, powerclean: 50 };
     var lifts = {};
-    t.anchors.forEach(function (id) { lifts[id] = { weight: roundLoad(base[id] || 40, eq()), start: base[id], failCount: 0, history: [] }; });
-    return lifts;
+    (t.anchors || []).forEach(function (id) { lifts[id] = { weight: roundLoad(base[id] || 40, eq()), start: base[id], failCount: 0, history: [] }; });
+    return seedExtraLifts(t, lifts, eq());
   }
 
   /* ============================================================ SETUP */
   var draft = null;
   function startSetup(tplId) {
     var t = tplById(tplId);
+    if (isMetcon(t)) { commitMetconProgram(tplId); return; }
     draft = {
       templateId: tplId,
       options: optionDefaults(t),
       equipment: Object.assign({}, db.equipment),
       inputs: {}
     };
-    t.anchors.forEach(function (id) { draft.inputs[id] = { mode: "reptest", weight: "", reps: "" }; });
+    (t.anchors || []).forEach(function (id) { draft.inputs[id] = { mode: "reptest", weight: "", reps: "" }; });
     go("setup");
+  }
+
+  function commitMetconProgram(tplId) {
+    db.active = {
+      templateId: tplId, kind: "metcon",
+      options: {}, startedAt: Date.now(),
+      cycleIndex: 0, weekIndex: 0, lifts: {}
+    };
+    draft = null;
+    save();
+    toast("Program ready — let's train");
+    go("home");
   }
 
   renderers.setup = function () {
@@ -1196,12 +1972,13 @@
   function commitProgram() {
     var t = tplById(draft.templateId);
     var lifts = {};
-    t.anchors.forEach(function (id) {
+    (t.anchors || []).forEach(function (id) {
       var w = computeStart(t, id);
       lifts[id] = { weight: w, start: w, failCount: 0, history: [{ t: Date.now(), w: w }] };
     });
     db.equipment = Object.assign({}, draft.equipment);
     if (!db.equipment.step) db.equipment.step = db.equipment.smallestPlate * 2;
+    seedExtraLifts(t, lifts, db.equipment);
     db.active = {
       templateId: draft.templateId,
       options: Object.assign({}, draft.options),
@@ -1224,6 +2001,379 @@
   }
   function latestBody() { return db.body.length ? db.body[db.body.length - 1] : null; }
 
+  // rolling consistency metric, 0–100, over the last 4 Monday-weeks.
+  // 70 pts adherence to the weekly target · 20 pts on-target streak · 10 pts recency.
+  function weeklyTarget() {
+    if (db.active) { var t = tplById(db.active.templateId); if (t && t.daysPerWeek) return t.daysPerWeek; }
+    return 3;
+  }
+  function gritScore() {
+    if (!db.sessions.length) return null;
+    var target = weeklyTarget();
+    var thisWk = weekKey(Date.now());
+    var counts = [0, 0, 0, 0]; // index 0 = current week, 3 = three weeks ago
+    db.sessions.forEach(function (s) {
+      var idx = Math.round((thisWk - weekKey(s.date)) / 604800000);
+      if (idx >= 0 && idx < 4) counts[idx]++;
+    });
+    var adher = 0;
+    counts.forEach(function (n) { adher += Math.min(n, target); });
+    adher = Math.round((adher / (target * 4)) * 70);
+    var streak = 0;
+    for (var i = 0; i < 4; i++) { if (counts[i] >= target) streak++; else break; }
+    var streakPts = Math.min(streak, 4) * 5;
+    var last = db.sessions[db.sessions.length - 1].date;
+    var days = (Date.now() - last) / 86400000;
+    var recency = days <= 3 ? 10 : days <= 7 ? 5 : 0;
+    var score = Math.max(0, Math.min(100, adher + streakPts + recency));
+    var band = score >= 80 ? "Forging" : score >= 55 ? "Steady" : score >= 25 ? "Slipping" : "Cold";
+    return { score: score, band: band, weeks: counts.slice().reverse(), target: target };
+  }
+  /* ============================================================ BADGE STATS */
+  var DAY_MS = 86400000;
+  function dayKey(ts) { var d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }
+  function seasonOf(ts) { return ["winter", "spring", "summer", "autumn"][Math.floor(((new Date(ts).getMonth()) % 12) / 3)]; }
+
+  function computeStats() {
+    var ss = db.sessions.slice().sort(function (a, b) { return a.date - b.date; });
+    var st = {
+      totalSessions: ss.length, totalVolume: 0, maxSessionVolume: 0, totalReps: 0,
+      metconCount: 0, hyroxCount: 0, rollerCount: 0, freestyleCount: 0,
+      hyroxFullSims: 0, wodsRx: 0, rirZeroSets: 0, tankSessions: 0,
+      earlyCount: 0, lateCount: 0, weekendCount: 0, midnight: false,
+      longestSessionSec: 0, fastestWodSec: null, bestHyroxSec: null,
+      emomDone: false, chipperDone: false, doubleBumps: 0, noteCount: 0,
+      bestLift: {}, prCount: 0, deloadRecovered: false,
+      bestWeekCount: 0, weeksHitTarget: 0, currentStreak: 0, longestStreak: 0,
+      comeback: false, daysOfWeek: 0, seasonCount: 0,
+      distinctExercises: 0, distinctPrograms: 0, distinctWods: 0,
+      maxProgramSessions: 0, ranBarbellTrio: false, bestBwMultiple: 0, hybridDay: false,
+      bodyLogCount: db.body.length, measureLogCount: 0,
+      grit: (gritScore() || { score: 0 }).score
+    };
+
+    var bestE1 = {}, sawDeload = {}, seasons = {}, dows = {}, exSet = {}, progSet = {}, wodSet = {};
+    var progCount = {}, weekCount = {}, dayHits = {}, dayHasKind = {};
+
+    ss.forEach(function (s) {
+      var d = new Date(s.date), hr = d.getHours();
+      if (hr < 6) st.earlyCount++;
+      if (hr >= 21) st.lateCount++;
+      if (hr < 4) st.midnight = true;
+      if (d.getDay() === 0 || d.getDay() === 6) st.weekendCount++;
+      dows[d.getDay()] = 1;
+      seasons[seasonOf(s.date)] = 1;
+      st.longestSessionSec = Math.max(st.longestSessionSec, s.durationSec || 0);
+      var wk = weekKey(s.date); weekCount[wk] = (weekCount[wk] || 0) + 1;
+      var dk = dayKey(s.date); dayHits[dk] = 1;
+      var kindTag = s.kind === "metcon" ? "metcon" : "strength";
+      dayHasKind[dk] = dayHasKind[dk] || {}; dayHasKind[dk][kindTag] = 1;
+
+      if (s.templateId) { progSet[s.templateId] = 1; progCount[s.templateId] = (progCount[s.templateId] || 0) + 1; }
+
+      if (s.kind === "metcon") {
+        st.metconCount++;
+        if (s.style === "hyrox" || s.format === "hyrox") st.hyroxCount++;
+        if (s.format === "hyrox" && (s.movements || []).length >= 8) {
+          st.hyroxFullSims++;
+          if (s.score && s.score.timeSec > 0) st.bestHyroxSec = st.bestHyroxSec == null ? s.score.timeSec : Math.min(st.bestHyroxSec, s.score.timeSec);
+        }
+        if (s.format === "emom") st.emomDone = true;
+        if (s.format === "chipper") st.chipperDone = true;
+        if (s.score && s.score.rx) st.wodsRx++;
+        if (s.score && s.score.type === "time" && s.score.timeSec > 0 && !s.score.cappedOut)
+          st.fastestWodSec = st.fastestWodSec == null ? s.score.timeSec : Math.min(st.fastestWodSec, s.score.timeSec);
+        if (s.wodName) wodSet[s.wodName] = 1;
+        if (s.source === "roller") st.rollerCount++;
+        return;
+      }
+      if (s.kind === "freestyle") st.freestyleCount++;
+      if (s.source === "roller") st.rollerCount++;
+
+      // strength-shaped session
+      var vol = 0, sessRirs = [], loggedWork = 0;
+      (s.actual || []).forEach(function (a) {
+        exSet[a.exId] = 1;
+        var topW = 0, topR = 0;
+        (a.sets || []).forEach(function (x) {
+          vol += (x.weight || 0) * (x.reps || 0);
+          st.totalReps += (x.reps || 0);
+          if (x.rir === 0) st.rirZeroSets++;
+          if (!a.assist && x.reps > 0) { loggedWork++; sessRirs.push(x.rir); }
+          if ((x.weight || 0) >= topW) { topW = x.weight || 0; topR = x.reps || 0; }
+        });
+        if (topW > 0) {
+          st.bestLift[a.exId] = Math.max(st.bestLift[a.exId] || 0, topW);
+          var e1 = topW * (1 + Math.min(topR, 12) / 30);
+          if (bestE1[a.exId] && e1 > bestE1[a.exId] * 1.001) st.prCount++;
+          bestE1[a.exId] = Math.max(bestE1[a.exId] || 0, e1);
+        }
+      });
+      st.totalVolume += vol;
+      st.maxSessionVolume = Math.max(st.maxSessionVolume, vol);
+      if (loggedWork >= 3 && sessRirs.every(function (v) { return v != null && v >= 2; })) st.tankSessions++;
+
+      (s.notes || []).forEach(function (n) {
+        if (n.kind === "deload") sawDeload[n.exId] = 1;
+        if (n.kind === "up" && sawDeload[n.exId]) st.deloadRecovered = true;
+        if (n.kind === "up") {
+          var tt = tplById(s.templateId);
+          if (tt && tt.progressionMode === "double") st.doubleBumps++;
+        }
+      });
+    });
+
+    // notes on body logs
+    db.body.forEach(function (e) {
+      if (e.note) st.noteCount++;
+      if (e.m && Object.keys(e.m).some(function (k) { return e.m[k] != null; })) st.measureLogCount++;
+    });
+
+    // streaks
+    var days = Object.keys(dayHits).map(Number).sort(function (a, b) { return a - b; });
+    var run = 0, best = 0;
+    for (var i = 0; i < days.length; i++) {
+      if (i > 0 && days[i] - days[i - 1] === DAY_MS) run++; else run = 1;
+      best = Math.max(best, run);
+      if (i > 0 && days[i] - days[i - 1] >= 14 * DAY_MS) st.comeback = true;
+    }
+    st.longestStreak = best;
+    if (days.length) {
+      var today = dayKey(Date.now()), lastDay = days[days.length - 1];
+      if (today - lastDay <= DAY_MS) {
+        var cs = 1;
+        for (var j = days.length - 1; j > 0; j--) { if (days[j] - days[j - 1] === DAY_MS) cs++; else break; }
+        st.currentStreak = cs;
+      }
+    }
+
+    var target = weeklyTarget();
+    Object.keys(weekCount).forEach(function (k) {
+      st.bestWeekCount = Math.max(st.bestWeekCount, weekCount[k]);
+      if (weekCount[k] >= target) st.weeksHitTarget++;
+    });
+    Object.keys(dayHasKind).forEach(function (k) { if (dayHasKind[k].metcon && dayHasKind[k].strength) st.hybridDay = true; });
+
+    st.daysOfWeek = Object.keys(dows).length;
+    st.seasonCount = Object.keys(seasons).length;
+    st.distinctExercises = Object.keys(exSet).length;
+    st.distinctPrograms = Object.keys(progSet).length;
+    st.distinctWods = Object.keys(wodSet).length;
+    Object.keys(progCount).forEach(function (k) { st.maxProgramSessions = Math.max(st.maxProgramSessions, progCount[k]); });
+    st.ranBarbellTrio = progSet["starting-strength"] && progSet["stronglifts-5x5"] && progSet["texas-method"];
+
+    var lb = latestBody();
+    if (lb && lb.bw) {
+      ["squat", "bench", "deadlift", "press", "row"].forEach(function (id) {
+        if (st.bestLift[id]) st.bestBwMultiple = Math.max(st.bestBwMultiple, st.bestLift[id] / lb.bw);
+      });
+    }
+
+    // circular-ish: badges already earned
+    var earnedIds = Object.keys(db.badges.earned || {});
+    st.earnedCount = earnedIds.length;
+    var ec = {};
+    earnedIds.forEach(function (id) { var b = badgeById(id); if (b) ec[b.cat] = 1; });
+    st.earnedCats = Object.keys(ec).length;
+
+    return st;
+  }
+
+  function badgeContext() {
+    return { stats: computeStats(), sessions: db.sessions, active: db.active, body: db.body,
+      customPlans: db.customPlans, customWorkouts: db.customWorkouts };
+  }
+
+  // evaluate all badges; record newly-earned ones; return the new list
+  function evaluateBadges() {
+    if (!BADGES.length) return [];
+    var ctx = badgeContext();
+    var fresh = [];
+    BADGES.forEach(function (b) {
+      if (db.badges.earned[b.id]) return;
+      var ok = false;
+      try { ok = !!b.check(ctx); } catch (e) { ok = false; }
+      if (ok) { db.badges.earned[b.id] = Date.now(); fresh.push(b); }
+    });
+    if (fresh.length) save();
+    return fresh;
+  }
+
+  /* ============================================================ BADGE ART */
+  var TIER_COLOR = { bronze: "#b98a4b", silver: "#9aa7b2", gold: "#dcae3c", platinum: "#48c9b6", onyx: "#8a7fd6" };
+  var GLYPHS = {
+    check:    "M5 13l4 4L19 7",
+    flame:    "M12 3c3 4 5 6 5 9a5 5 0 01-10 0c0-1.5.6-2.8 1.5-3.8C9 10 11 8 12 3z",
+    calendar: "M4 6h16v14H4zM4 10h16M9 3v4M15 3v4",
+    mountain: "M3 19l6-11 4 6 2-3 6 8z",
+    barbell:  "M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12",
+    infinity: "M8 12a3 3 0 100 .01M16 12a3 3 0 100 .01M9 10.5c2 2 4 3 6 0M9 13.5c2-2 4-3 6 0",
+    bolt:     "M13 2L4 14h7l-1 8 9-13h-7z",
+    crown:    "M4 8l4 4 4-7 4 7 4-4v9H4z",
+    diamond:  "M6 3h12l3 6-9 12L3 9z",
+    star:     "M12 3l2.6 5.6L21 9.5l-4.5 4.3L17.6 21 12 17.7 6.4 21l1.1-7.2L3 9.5l6.4-.9z",
+    shield:   "M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z",
+    timer:    "M12 8v5l3 2M9 3h6M12 21a8 8 0 100-16 8 8 0 000 16z",
+    trophy:   "M7 4h10v4a5 5 0 01-10 0zM4 6h3M17 6h3M10 15h4M9 20h6M12 13v2",
+    rocket:   "M12 3c4 2 6 6 6 11l-3 3H9l-3-3c0-5 2-9 6-11zM10 11a2 2 0 104 0 2 2 0 00-4 0z",
+    skull:    "M6 11a6 6 0 1112 0v4H6zM9 20v-3M15 20v-3M12 20v-3M9.5 11h.01M14.5 11h.01",
+    heart:    "M12 20S4 14 4 8.5A4.5 4.5 0 0112 6a4.5 4.5 0 018 2.5C20 14 12 20 12 20z",
+    sun:      "M12 8a4 4 0 100 8 4 4 0 000-8zM12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19",
+    moon:     "M20 14A8 8 0 1110 4a6 6 0 0010 10z",
+    target:   "M12 21a9 9 0 100-18 9 9 0 000 18zM12 16a4 4 0 100-8 4 4 0 000 8zM12 12h.01"
+  };
+  function badgeSVG(glyph, tier, earned) {
+    var col = TIER_COLOR[tier] || TIER_COLOR.bronze;
+    var d = GLYPHS[glyph] || GLYPHS.star;
+    if (!earned) {
+      return '<svg class="badge-svg locked" viewBox="0 0 48 48" aria-hidden="true">' +
+        '<circle cx="24" cy="24" r="21" fill="none" stroke="var(--line-strong)" stroke-width="2"/>' +
+        '<circle cx="24" cy="24" r="16" fill="var(--surface-2)"/>' +
+        '<g transform="translate(12 12) scale(1)" fill="none" stroke="var(--text-faint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity=".5"><path d="' + d + '"/></g>' +
+        '</svg>';
+    }
+    return '<svg class="badge-svg" viewBox="0 0 48 48" aria-hidden="true">' +
+      '<defs><radialGradient id="bg-' + tier + '" cx="50%" cy="38%"><stop offset="0%" stop-color="' + col + '" stop-opacity=".28"/><stop offset="100%" stop-color="' + col + '" stop-opacity="0"/></radialGradient></defs>' +
+      '<circle cx="24" cy="24" r="21" fill="url(#bg-' + tier + ')" stroke="' + col + '" stroke-width="2.4"/>' +
+      '<circle cx="24" cy="24" r="15.5" fill="var(--surface)"/>' +
+      '<g transform="translate(12 12)" fill="none" stroke="' + col + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></g>' +
+      '</svg>';
+  }
+
+  var CAT_LABEL = { consistency: "Consistency", volume: "Volume", strength: "Strength", variety: "Variety", crossfit: "Conditioning", hyrox: "Hyrox", roller: "Roller", effort: "Effort", time: "Time & season", body: "Body" };
+  var CAT_ORDER = ["consistency", "strength", "volume", "crossfit", "hyrox", "effort", "variety", "time", "roller", "body"];
+
+  renderers.badges = function () {
+    var c = screens.badges;
+    var earned = db.badges.earned || {};
+    var total = BADGES.length, got = BADGES.filter(function (b) { return earned[b.id]; }).length;
+    var html = '<h2 class="title">Badges</h2>' +
+      '<p class="lead"><b>' + got + '</b> / ' + total + ' earned</p>';
+    CAT_ORDER.forEach(function (cat) {
+      var list = BADGES.filter(function (b) { return b.cat === cat; });
+      if (!list.length) return;
+      var g = list.filter(function (b) { return earned[b.id]; }).length;
+      html += '<div class="eyebrow" style="margin-top:16px">' + esc(CAT_LABEL[cat] || cat) + ' <span style="text-transform:none;color:var(--text-faint);font-weight:500">' + g + '/' + list.length + '</span></div>' +
+        '<div class="badge-grid">';
+      list.forEach(function (b) {
+        html += '<button class="badge-cell' + (earned[b.id] ? ' got' : '') + '" data-badge="' + b.id + '">' +
+          badgeSVG(b.glyph, b.tier, !!earned[b.id]) +
+          '<span>' + esc(earned[b.id] ? b.name : "Locked") + '</span></button>';
+      });
+      html += '</div>';
+    });
+    c.innerHTML = html;
+    c.querySelectorAll("[data-badge]").forEach(function (el) {
+      el.onclick = function () { openBadgeSheet(el.dataset.badge); };
+    });
+  };
+
+  /* ============================================================ CELEBRATION */
+  function confettiBurst(canvas) {
+    if (!canvas) return;
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width = canvas.offsetWidth, H = canvas.height = canvas.offsetHeight;
+    var cols = ["#35c8b6", "#dcae3c", "#48c9b6", "#9aa7b2", "#e0b64a"];
+    var bits = [];
+    for (var i = 0; i < 90; i++) bits.push({
+      x: W / 2 + (Math.random() - 0.5) * 80, y: H * 0.32,
+      vx: (Math.random() - 0.5) * 9, vy: -6 - Math.random() * 8,
+      s: 4 + Math.random() * 5, c: cols[i % cols.length], r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4
+    });
+    var t0 = Date.now();
+    function frame() {
+      var el = Date.now() - t0;
+      ctx.clearRect(0, 0, W, H);
+      bits.forEach(function (b) {
+        b.vy += 0.32; b.x += b.vx; b.y += b.vy; b.r += b.vr; b.vx *= 0.99;
+        ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r);
+        ctx.globalAlpha = Math.max(0, 1 - el / 2600);
+        ctx.fillStyle = b.c; ctx.fillRect(-b.s / 2, -b.s / 2, b.s, b.s * 0.6);
+        ctx.restore();
+      });
+      if (el < 2600) requestAnimationFrame(frame); else ctx.clearRect(0, 0, W, H);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function renderCelebration(sess, newBadges, cb) {
+    var fx = document.getElementById("fx-root");
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var isMet = sess.kind === "metcon";
+    var stats;
+    if (isMet) {
+      stats = [["Score", metconScoreText(sess)], ["Time", Math.max(1, Math.round(sess.durationSec / 60)) + " min"], ["Effort", sess.score && sess.score.rx ? "RX" : "Scaled"]];
+    } else {
+      var vol = 0, sets = 0;
+      (sess.actual || []).forEach(function (a) { a.sets.forEach(function (x) { vol += (x.weight || 0) * (x.reps || 0); sets++; }); });
+      stats = [["Volume", fmt(Math.round(vol)) + " " + U()], ["Sets", sets], ["Time", Math.max(1, Math.round(sess.durationSec / 60)) + " min"]];
+    }
+    var g = gritScore();
+    fx.innerHTML = '<div class="celebrate">' +
+      '<canvas class="confetti"></canvas>' +
+      '<div class="cel-inner">' +
+        '<div class="cel-eyebrow">Workout complete</div>' +
+        '<div class="cel-title">' + esc(isMet ? (sess.wodName || "Done") : (sess.dayLabel || "Done")) + '</div>' +
+        '<div class="cel-stats">' + stats.map(function (s) { return '<div><b>' + esc(String(s[1])) + '</b><span>' + esc(s[0]) + '</span></div>'; }).join("") + '</div>' +
+        (g ? '<div class="cel-grit">Grit <b>' + g.score + '</b> · ' + esc(g.band) + '</div>' : '') +
+        (newBadges.length ? '<div class="cel-badges-h">' + newBadges.length + ' new badge' + (newBadges.length > 1 ? 's' : '') + '</div><div class="cel-badges">' +
+          newBadges.slice(0, 8).map(function (b, i) { return '<div class="cel-badge" style="animation-delay:' + (0.15 + i * 0.1) + 's">' + badgeSVG(b.glyph, b.tier, true) + '<span>' + esc(b.name) + '</span></div>'; }).join("") +
+          (newBadges.length > 8 ? '<div class="cel-badge"><span style="font-size:12px;color:var(--text-muted)">+' + (newBadges.length - 8) + ' more</span></div>' : '') + '</div>' : '') +
+        '<button class="btn btn-primary" id="cel-continue">Continue</button>' +
+      '</div>' +
+    '</div>';
+    var node = fx.querySelector(".celebrate");
+    void node.offsetWidth;
+    node.classList.add("show");
+    if (!reduce) setTimeout(function () { confettiBurst(fx.querySelector(".confetti")); }, 120);
+    document.getElementById("cel-continue").onclick = function () {
+      node.classList.remove("show");
+      setTimeout(function () { fx.innerHTML = ""; if (cb) cb(); }, 280);
+    };
+  }
+
+  function finishAndCelebrate(sess, cb) {
+    var fresh = evaluateBadges();
+    dismissPlayer(function () { renderCelebration(sess, fresh, cb); });
+  }
+
+  function openBadgeSheet(id) {
+    var b = badgeById(id);
+    if (!b) return;
+    var ts = db.badges.earned[id];
+    openSheet('<div class="badge-detail">' + badgeSVG(b.glyph, b.tier, !!ts) + '</div>' +
+      '<h2 style="text-align:center">' + esc(ts ? b.name : "Locked") + '</h2>' +
+      '<p class="sh-lead" style="text-align:center">' + esc(b.desc) + '</p>' +
+      '<p style="text-align:center;font-size:12px;color:var(--text-faint)">' +
+        (ts ? "Earned " + relDate(ts) + " · " + cap(b.tier) : cap(b.tier) + " badge") + '</p>' +
+      '<div class="btn-row"><button class="btn btn-primary" id="bd-ok">Close</button></div>');
+    document.getElementById("bd-ok").onclick = closeSheet;
+  }
+
+  function gritCardHtml() {
+    var g = gritScore();
+    if (!g) return "";
+    var C = 150.8, off = C * (1 - g.score / 100);
+    var bars = g.weeks.map(function (n) {
+      var h = Math.max(3, Math.min(1, n / g.target) * 22);
+      var hit = n >= g.target;
+      return '<i style="height:' + h + 'px;background:' + (hit ? 'var(--accent)' : 'var(--line-strong)') + '"></i>';
+    }).join("");
+    return '<div class="grit-card" id="grit-card">' +
+      '<svg class="grit-ring" viewBox="0 0 56 56" aria-hidden="true">' +
+        '<circle cx="28" cy="28" r="24" fill="none" stroke="var(--line)" stroke-width="5"/>' +
+        '<circle cx="28" cy="28" r="24" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"' +
+          ' stroke-dasharray="' + C + '" stroke-dashoffset="' + off + '" transform="rotate(-90 28 28)"/>' +
+        '<text x="28" y="33" text-anchor="middle" class="grit-num">' + g.score + '</text>' +
+      '</svg>' +
+      '<div class="grit-meta">' +
+        '<span class="grit-k">Grit Score</span>' +
+        '<span class="grit-band">' + g.band + '</span>' +
+        '<span class="grit-bars">' + bars + '<em>4-wk consistency</em></span>' +
+      '</div>' +
+    '</div>';
+  }
+
   renderers.home = function () {
     var c = screens.home;
 
@@ -1231,42 +2381,62 @@
       c.innerHTML = quoteHtml() + '<div class="home-hero">' +
         '<div class="h-eyebrow">Welcome</div>' +
         '<h2 class="title">Ready when you are</h2>' +
-        '<p class="lead">Pick a proven barbell program and it runs for you — holds your weights, tells you what to lift each session, and adds load on schedule.</p>' +
-        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-setup">Set up your program</button></div>' +
+        '<p class="lead">Pick a program and it runs for you — or just roll a random workout and go.</p>' +
+        gritCardHtml() +
+        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-setup">Set up a program</button></div>' +
+        (WOD_POOL.length ? '<div class="btn-row"><button class="btn btn-ghost btn-lg" id="h-roll">Roll a random workout</button></div>' : '') +
       '</div>';
       document.getElementById("h-setup").onclick = function () { go("choose"); };
+      var hr = document.getElementById("h-roll");
+      if (hr) hr.onclick = function () { go("roll"); };
       return;
     }
 
     var t = tplById(db.active.templateId);
-    var res = resolveSession(t, db.active, eq());
+    if (!t) { db.active = null; save(); go("choose"); return; }
+    var metcon = isMetcon(t);
     var lb = latestBody();
 
     var html = quoteHtml() + '<div class="home-hero">' +
       '<div class="h-eyebrow">' + esc(t.name) + '</div>' +
-      '<h2 class="title">Week ' + (db.active.weekIndex + 1) + '</h2>';
+      '<h2 class="title">Week ' + (db.active.weekIndex + 1) + '</h2>' +
+      gritCardHtml();
 
     // next-workout summary
-    html += '<div class="next-card"><div class="nc-eye">Next up · ' + esc(sessionLabel(res)) + '</div>';
-    res.exercises.forEach(function (x) {
-      var setStr = x.workSets.length + "×" + x.target + (x.assist && x.workSets[0].amrap ? "+" : "");
-      html += '<div class="nc-ex"><span class="nx-name">' + esc(x.name) + '</span>' +
-        '<span>' + (x.assist
-          ? '<span class="nx-set">' + setStr + '</span>'
-          : '<span class="nx-set">' + setStr + '</span>&nbsp;&nbsp;<span class="nx-w">' + fmt(x.weight) + ' ' + U() + '</span>') +
-        '</span></div>';
-    });
-    html += '</div>';
+    if (metcon) {
+      var mres = resolveMetcon(t, db.active);
+      html += '<div class="next-card"><div class="nc-eye">Next up · ' + esc(mres.label) + '</div>' +
+        '<div class="nc-wod">' + esc(mres.title) + '</div>' +
+        '<div class="nc-wod-sub">' + esc(mres.subtitle) + '</div>' +
+        metconMoves(mres.wod).slice(0, 6).map(function (m) {
+          return '<div class="nc-ex"><span class="nx-name">' + esc(moveLine(m)) + '</span></div>';
+        }).join("") +
+      '</div>';
+    } else {
+      var res = resolveSession(t, db.active, eq());
+      html += '<div class="next-card"><div class="nc-eye">Next up · ' + esc(sessionLabel(res)) + '</div>';
+      res.exercises.forEach(function (x) {
+        var setStr = x.workSets.length + "×" + repRange(x.target, x.repHigh) + (x.assist && x.workSets[0].amrap ? "+" : "");
+        html += '<div class="nc-ex"><span class="nx-name">' + esc(x.name) + '</span>' +
+          '<span>' + (x.assist
+            ? '<span class="nx-set">' + setStr + '</span>'
+            : '<span class="nx-set">' + setStr + '</span>&nbsp;&nbsp;<span class="nx-w">' + fmt(x.weight) + ' ' + U() + '</span>') +
+          '</span></div>';
+      });
+      html += '</div>';
+    }
 
     html += '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-start">Start working out</button></div>' +
       '<div class="home-links">' +
         '<button class="btn btn-ghost" data-go="progress">Progress</button>' +
+        (WOD_POOL.length ? '<button class="btn btn-ghost" data-go="roll">Random WOD</button>' : '') +
         '<button class="btn btn-ghost" data-go="body">Body</button>' +
       '</div>';
 
     // quick stats
     var last = db.sessions.length ? db.sessions[db.sessions.length - 1] : null;
-    var lastLbl = last ? (/^[A-Z]$/.test(last.dayLabel) ? "Workout " + last.dayLabel : cap(last.dayLabel) + " day") : null;
+    var lastLbl = last ? (last.kind === "metcon" ? (last.wodName || "WOD")
+      : (/^[A-Z]$/.test(last.dayLabel) ? "Workout " + last.dayLabel : cap(last.dayLabel) + " day")) : null;
     html += '<div class="home-stats">' +
       '<button class="home-stat" data-go="body">' +
         '<span class="hs-k">Bodyweight</span>' +
@@ -1294,6 +2464,7 @@
     var c = screens.pick;
     if (!db.active) { go("home"); return; }
     var t = tplById(db.active.templateId);
+    if (!t) { db.active = null; save(); go("choose"); return; }
     var nextIdx = db.active.cycleIndex % t.microcycle.length;
 
     var html = '<button class="backlink" id="pk-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
@@ -1301,8 +2472,18 @@
       '<p class="lead">' + esc(t.name) + ' · Week ' + (db.active.weekIndex + 1) + '</p>';
 
     t.microcycle.forEach(function (day, idx) {
-      var res = resolveSession(t, { options: db.active.options, cycleIndex: idx, weekIndex: db.active.weekIndex, lifts: db.active.lifts }, eq());
       var suggested = idx === nextIdx;
+      if (isMetcon(t)) {
+        var w = day.wod;
+        html += '<button class="pick-card' + (suggested ? ' suggested' : '') + '" data-idx="' + idx + '">' +
+          (suggested ? '<span class="pk-badge">Up next</span>' : '') +
+          '<h3>' + esc(w.name) + '</h3>' +
+          '<div class="pk-dtype">' + esc(metconSubtitle(w)) + '</div>' +
+          '<div class="pk-ex">' + metconMoves(w).map(function (m) { return esc(moveLine(m)); }).join('  ·  ') + '</div>' +
+        '</button>';
+        return;
+      }
+      var res = resolveSession(t, { options: db.active.options, cycleIndex: idx, weekIndex: db.active.weekIndex, lifts: db.active.lifts }, eq());
       html += '<button class="pick-card' + (suggested ? ' suggested' : '') + '" data-idx="' + idx + '">' +
         (suggested ? '<span class="pk-badge">Up next</span>' : '') +
         '<h3>' + (res.dayType ? esc(cap(res.dayType) + " day") : "Workout " + esc(res.label)) + '</h3>' +
@@ -1320,10 +2501,58 @@
     });
   };
 
+  /* ============================================================ RANDOM WOD ROLLER */
+  function rollPick() {
+    var pool = WOD_POOL.filter(function (w) { return rollState.filter === "all" || w.style === rollState.filter; });
+    if (!pool.length) return null;
+    var next;
+    do { next = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && next === rollState.wod);
+    return next;
+  }
+  renderers.roll = function () {
+    var c = screens.roll;
+    if (!WOD_POOL.length) { go(db.active ? "home" : "choose"); return; }
+    var w = rollState.wod;
+    var html = '<button class="backlink" id="rl-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' + (db.active ? "Home" : "Back") + '</button>' +
+      '<h2 class="title">Roll a workout</h2>' +
+      '<p class="lead">Spin the wheel and get a random conditioning piece — no program, no progression, just a workout to do today. It still counts in your history and Grit Score.</p>' +
+      '<div class="seg-ctl" data-roll-filter>' +
+        ['all', 'crossfit', 'hyrox'].map(function (f) {
+          return '<button data-f="' + f + '" aria-selected="' + (rollState.filter === f) + '">' + (f === "all" ? "All" : f === "crossfit" ? "CrossFit" : "Hyrox") + '</button>';
+        }).join("") +
+      '</div>';
+
+    if (w) {
+      html += '<div class="next-card" style="margin-top:16px">' +
+        '<div class="nc-eye">' + esc((w.style === "hyrox" ? "Hyrox" : "CrossFit")) + '</div>' +
+        '<div class="nc-wod">' + esc(w.name) + '</div>' +
+        '<div class="nc-wod-sub">' + esc(metconSubtitle(w)) + '</div>' +
+        metconMoves(w).map(function (m) { return '<div class="nc-ex"><span class="nx-name">' + esc(moveLine(m)) + '</span></div>'; }).join("") +
+        (w.equipmentNote ? '<div class="best">Needs: ' + esc(w.equipmentNote) + '</div>' : '') +
+      '</div>' +
+      '<div class="btn-row"><button class="btn btn-primary btn-lg" id="rl-start">Start this workout</button></div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="rl-again">Roll again</button></div>';
+    } else {
+      html += '<div class="btn-row" style="margin-top:20px"><button class="btn btn-primary btn-lg" id="rl-roll">Roll</button></div>';
+    }
+    c.innerHTML = html;
+    document.getElementById("rl-back").onclick = function () { go(db.active ? "home" : "choose"); };
+    c.querySelectorAll("[data-roll-filter] button").forEach(function (b) {
+      b.onclick = function () { rollState.filter = b.dataset.f; rollState.wod = null; renderers.roll(); };
+    });
+    var doRoll = function () { rollState.wod = rollPick(); renderers.roll(); };
+    var rb = document.getElementById("rl-roll"); if (rb) rb.onclick = doRoll;
+    var ra = document.getElementById("rl-again"); if (ra) ra.onclick = doRoll;
+    var rs = document.getElementById("rl-start");
+    if (rs) rs.onclick = function () { startMetconPlayer(null, rollState.wod); };
+  };
+
   /* ============================================================ SESSION PLAYER */
   var run = null;
   function startPlayer(chosenIdx) {
     var t = tplById(db.active.templateId);
+    if (!t) { db.active = null; save(); go("choose"); return; }
+    if (isMetcon(t)) { startMetconPlayer(chosenIdx); return; }
     var len = t.microcycle.length;
     var idx = (chosenIdx == null) ? (db.active.cycleIndex % len) : (chosenIdx % len);
     var actForResolve = (chosenIdx == null) ? db.active
@@ -1338,7 +2567,7 @@
       x.workSets.forEach(function (w, si) {
         queue.push({ xi: xi, kind: "work", weight: x.assist ? null : w.weight, reps: w.reps, amrap: !!w.amrap,
           exId: x.exId, name: x.name, assist: !!x.assist, topSet: !!x.topSet,
-          setNo: si + 1, setCount: x.workSets.length, target: x.target });
+          setNo: si + 1, setCount: x.workSets.length, target: x.target, repHigh: w.repHigh || x.repHigh || null });
       });
     });
     run = { t: t, res: res, queue: queue, i: 0, startedAt: Date.now(), chosenIdx: idx,
@@ -1386,7 +2615,8 @@
   function renderPlayer() {
     var root = document.getElementById("player-root");
     if (!run) { root.innerHTML = ""; return; }
-    if (run.i >= run.queue.length) { finishPlayer(); return; }
+    if (run.kind === "metcon") { renderMetconPlayer(); return; }
+    if (run.i >= run.queue.length) { run.custom ? finishFreestylePlayer() : finishPlayer(); return; }
 
     // build the shell once, then update its parts in place (no full-DOM flash between sets)
     if (!root.querySelector(".player")) {
@@ -1424,9 +2654,10 @@
     if (step.assist) {
       body = '<div class="pl-ex">' + esc(step.name) + '</div>' +
         '<div class="pl-setno">Set ' + step.setNo + ' of ' + step.setCount + '</div>' +
-        '<div class="pl-target">' + step.target + (step.amrap ? '+' : '') + '<span class="u"> reps</span></div>' +
+        '<div class="pl-target">' + repRange(step.target, step.repHigh) + (step.amrap ? '+' : '') + '<span class="u"> reps</span></div>' +
         '<div class="pl-sub">' +
-        (step.amrap ? '<div class="pl-hint">As many good reps as you can — at least ' + step.target + '.</div>' : '<div class="pl-hint">Bodyweight.</div>') +
+        (step.amrap ? '<div class="pl-hint">As many good reps as you can — at least ' + step.target + '.</div>'
+          : (step.repHigh ? '<div class="pl-hint">Aim for the top of the range on every set.</div>' : '<div class="pl-hint">Bodyweight.</div>')) +
         '</div>';
     } else {
       var setLabel = step.kind === "warm" ? "Warm-up" : (step.topSet ? "Work set" : "Set " + step.setNo + " of " + step.setCount);
@@ -1434,15 +2665,24 @@
         '<div class="pl-setno">' + setLabel + '</div>' +
         '<div class="pl-target">' + fmt(step.weight) + '<span class="u"> ' + U() + '</span></div>' +
         '<div class="pl-sub">' +
-        '<div class="pl-x-reps">× ' + step.reps + (step.amrap ? '+' : '') + ' reps</div>' +
+        '<div class="pl-x-reps">× ' + repRange(step.reps, step.repHigh) + (step.amrap ? '+' : '') + ' reps</div>' +
         (step.kind === "warm" ? '<div class="pl-tag warm">Warm-up</div>' : (step.topSet ? '<div class="pl-tag top">Top set — make it count</div>' : '')) +
-        (((step.kind === "warm" || step.kind === "work") && plateStr(step.weight)) ? '<div class="pl-hint">' + plateStr(step.weight) + '</div>' : '') +
+        ((EX[step.exId] && EX[step.exId].bar && (step.kind === "warm" || step.kind === "work") && plateStr(step.weight)) ? '<div class="pl-hint">' + plateStr(step.weight) + '</div>' : (step.repHigh ? '<div class="pl-hint">Top of the range on every set.</div>' : '')) +
         '</div>';
     }
     document.getElementById("pl-body").innerHTML = body;
 
     var doneLabel = step.kind === "warm" ? "Warm-up done" : "Set done";
+    var effortStrip = "";
+    if (step.kind === "work") {
+      effortStrip = '<div class="pl-effort" id="pl-effort"><span class="pe-k">' +
+        (effortIsRpe() ? "RPE" : "Reps left") + '</span>' +
+        RIR_VALUES.map(function (v) {
+          return '<button class="pe-chip' + (run.pendingRir === v ? ' on' : '') + '" data-rir="' + v + '">' + effortChipLabel(v) + '</button>';
+        }).join("") + '</div>';
+    }
     document.getElementById("pl-actions").innerHTML =
+      effortStrip +
       '<div class="pl-prow">' +
         '<button class="btn btn-ghost pl-back" id="pl-back"' + (run.i <= 0 ? ' disabled' : '') + '>Back</button>' +
         '<button class="btn btn-primary pl-done" id="pl-done">' + doneLabel + '</button>' +
@@ -1456,7 +2696,16 @@
 
     var back = document.getElementById("pl-back");
     if (back) back.onclick = stepBack;
-    document.getElementById("pl-done").onclick = function () { recordSet(step, step.weight, step.reps, true); };
+    var eff = document.getElementById("pl-effort");
+    if (eff) eff.querySelectorAll("[data-rir]").forEach(function (b) {
+      b.onclick = function () {
+        var v = +b.dataset.rir;
+        run.pendingRir = (run.pendingRir === v) ? null : v;
+        eff.querySelectorAll("[data-rir]").forEach(function (x) { x.classList.toggle("on", +x.dataset.rir === run.pendingRir); });
+      };
+    });
+    // a range set's prescription is "top of the range" — "Set done" logs that; fell short → "Log different"
+    document.getElementById("pl-done").onclick = function () { recordSet(step, step.weight, step.repHigh || step.reps, true); };
     document.getElementById("pl-skip").onclick = function () { recordSet(step, step.weight, 0, false); };
     var adj = document.getElementById("pl-adjust");
     if (adj) adj.onclick = function () { openAdjust(step); };
@@ -1465,7 +2714,11 @@
   }
 
   function endWorkoutPrompt() {
-    confirmSheet("End this workout?", "Nothing from this session is saved and your program won't advance.", function () { run = null; dismissPlayer(function () { go("home", true); }); });
+    confirmSheet("End this workout?", "Nothing from this session is saved and your program won't advance.", function () {
+      if (run && run.tick) { clearInterval(run.tick); run.tick = null; }
+      run = null;
+      dismissPlayer(function () { go("home", true); });
+    });
   }
 
   function openPlayerMenu(step) {
@@ -1606,12 +2859,14 @@
     run.i = curMovable ? frozen.length : passed;
 
     // persist the full new order (slot-based; ad-hoc exercises are session-only)
-    db.active.order = db.active.order || {};
-    db.active.order[run.res.label] = run.res.exercises
-      .map(function (x) { return x.slotIdx; })
-      .filter(function (s) { return s != null; });
-    save();
-    toast("Order saved");
+    if (db.active && !run.custom) {
+      db.active.order = db.active.order || {};
+      db.active.order[run.res.label] = run.res.exercises
+        .map(function (x) { return x.slotIdx; })
+        .filter(function (s) { return s != null; });
+      save();
+      toast("Order saved");
+    }
     renderPlayer();
   }
 
@@ -1723,10 +2978,13 @@
   }
 
   function recordSet(step, weight, reps, made) {
+    if (!run) return;
     var r = run.results[step.xi];
     if (step.kind === "work") {
-      r.sets.push({ weight: weight, reps: reps, target: step.target, made: made, amrap: !!step.amrap });
+      r.sets.push({ weight: weight, reps: reps, target: step.target, repHigh: step.repHigh || null, made: made, amrap: !!step.amrap,
+        rir: (run.pendingRir == null ? null : run.pendingRir) });
     }
+    run.pendingRir = null;
     run.i++;
     renderPlayer();
   }
@@ -1734,6 +2992,7 @@
   // step back to the previous set, discarding whatever was logged for it
   function stepBack() {
     if (!run || run.i <= 0) return;
+    run.pendingRir = null;
     run.i--;
     var prev = run.queue[run.i];
     if (prev.kind === "work") {
@@ -1787,6 +3046,7 @@
         exId: r.exId,
         done: ws.length > 0,
         made: ws.length > 0 && ws.every(function (s) { return s.reps >= s.target; }),
+        hitTop: ws.length > 0 && ws.every(function (s) { return s.reps >= (s.repHigh || s.target); }),
         topWeight: topW
       });
     });
@@ -1794,7 +3054,7 @@
 
     // snapshot of working weights after this session — for the weekly progress chart
     var snapshot = {};
-    t.anchors.forEach(function (id) { if (db.active.lifts[id]) snapshot[id] = db.active.lifts[id].weight; });
+    (t.anchors || []).forEach(function (id) { if (db.active.lifts[id]) snapshot[id] = db.active.lifts[id].weight; });
 
     var sess = {
       id: uid(), date: run.startedAt, templateId: t.id, dayLabel: run.res.label,
@@ -1816,10 +3076,235 @@
 
     lastSummary = sess;
     run = null;
-    dismissPlayer(function () { go("summary"); });
+    finishAndCelebrate(sess, function () { go("summary"); });
+  }
+
+  /* ===================================================== METCON PLAYER */
+  function metconElapsed() {
+    if (!run || !run.startWall) return 0;
+    var nowRef = run.running ? Date.now() : (run.pausedAt || run.startWall);
+    return Math.max(0, nowRef - run.startWall - run.pausedMs);
+  }
+  function fmtClock(ms) {
+    var s = Math.round(ms / 1000), m = Math.floor(s / 60);
+    s = s % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+  function metconMinuteText() {
+    var w = run.wod;
+    if (w.format !== "emom" || !w.minutes || !w.minutes.length) return "";
+    var min = Math.floor(metconElapsed() / 60000);
+    return "Minute " + (min + 1) + " — " + w.minutes[min % w.minutes.length].text;
+  }
+
+  function startMetconPlayer(chosenIdx, explicitWod) {
+    var t = db.active ? tplById(db.active.templateId) : null;
+    var wod, label, idx = null;
+    if (explicitWod) { wod = explicitWod; label = explicitWod.name; }
+    else {
+      var len = t.microcycle.length;
+      idx = (chosenIdx == null) ? (db.active.cycleIndex % len) : (chosenIdx % len);
+      var r = resolveMetcon(t, { cycleIndex: idx });
+      wod = r.wod; label = r.label;
+    }
+    run = {
+      kind: "metcon", t: t, adhoc: !!explicitWod, chosenIdx: idx,
+      wod: wod, res: { label: label, dayType: null },
+      startedAt: Date.now(), startWall: null, pausedMs: 0, pausedAt: null,
+      running: false, roundsDone: 0, checks: {}, emomLastMin: -1
+    };
+    renderMetconPlayer();
+  }
+
+  function metconTick() {
+    if (!run || run.kind !== "metcon") return;
+    var clk = document.getElementById("mc-clock");
+    if (!clk) return;
+    var el = metconElapsed(), w = run.wod;
+    if (metconCountsDown(w)) {
+      var cap = (w.capMin || 0) * 60000;
+      var rem = cap - el;
+      clk.textContent = fmtClock(Math.max(0, rem));
+      if (rem <= 0 && run.running) { run.running = false; navigator.vibrate && navigator.vibrate([200, 100, 200]); openMetconScore(); return; }
+    } else {
+      clk.textContent = fmtClock(el);
+    }
+    if (w.format === "emom") {
+      var min = Math.floor(el / 60000);
+      if (min !== run.emomLastMin) { run.emomLastMin = min; navigator.vibrate && navigator.vibrate(180); }
+      var mt = document.getElementById("mc-minute");
+      if (mt) mt.textContent = metconMinuteText();
+    }
+  }
+
+  function metconStartPause() {
+    if (!run.startWall) { run.startWall = Date.now(); run.running = true; }
+    else if (run.running) { run.running = false; run.pausedAt = Date.now(); }
+    else { run.pausedMs += Date.now() - run.pausedAt; run.pausedAt = null; run.running = true; }
+    renderMetconPlayer();
+  }
+
+  function renderMetconPlayer() {
+    var root = document.getElementById("player-root");
+    if (!run || run.kind !== "metcon") { root.innerHTML = ""; return; }
+    var w = run.wod, moves = metconMoves(w);
+    var down = metconCountsDown(w);
+
+    if (!root.querySelector(".player")) {
+      root.innerHTML =
+        '<div class="player">' +
+          '<div class="pl-top">' +
+            '<button class="icon-btn pl-x" id="mc-close" aria-label="Close">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+            '<div class="pl-rail" id="mc-rail"></div>' +
+            '<span class="pl-count" id="mc-count"></span>' +
+            '<span style="width:34px"></span>' +
+          '</div>' +
+          '<div class="pl-body" id="mc-bodywrap"></div>' +
+          '<div class="pl-actions" id="mc-actions"></div>' +
+        '</div>';
+      document.getElementById("mc-close").onclick = endWorkoutPrompt;
+      var plNew = root.querySelector(".player");
+      void plNew.offsetWidth;
+      plNew.classList.add("show");
+      if (!run.tick) run.tick = setInterval(metconTick, 250);
+    }
+
+    var hyrox = w.format === "hyrox";
+    var checkedCount = moves.filter(function (_, j) { return run.checks[j]; }).length;
+    var progress = hyrox ? checkedCount : run.roundsDone;
+    var target = w.targetRounds || (hyrox ? moves.length : null);
+    document.getElementById("mc-rail").innerHTML = target
+      ? Array.from({ length: target }, function (_, i) { return '<i class="' + (i < progress ? "done" : "") + '"></i>'; }).join("")
+      : "";
+    document.getElementById("mc-count").textContent = w.format === "amrap" || w.format === "rft" || hyrox || w.format === "chipper"
+      ? (target ? progress + " / " + target : "Round " + (run.roundsDone + 1)) : "";
+
+    var el = metconElapsed();
+    var clockTxt = down ? fmtClock(Math.max(0, (w.capMin || 0) * 60000 - el)) : fmtClock(el);
+    var body = '<div class="mc-format">' + esc(metconSubtitle(w)) + '</div>' +
+      '<div class="mc-clock mono" id="mc-clock">' + clockTxt + '</div>' +
+      (w.format === "emom" ? '<div class="mc-minute" id="mc-minute">' + esc(metconMinuteText()) + '</div>' : '') +
+      '<div class="mc-moves">' +
+      moves.map(function (m, i) {
+        return '<button class="mc-move' + (run.checks[i] ? ' done' : '') + '" data-mi="' + i + '">' +
+          '<span class="mc-chk"></span><span>' + esc(moveLine(m)) + '</span></button>';
+      }).join("") +
+      '</div>' +
+      (w.format === "rft" || w.format === "amrap" || w.format === "chipper"
+        ? '<div class="mc-round-ctl"><button id="mc-rminus">–</button><span>Rounds done: <b>' + run.roundsDone + '</b></span><button id="mc-rplus">+</button></div>' : '');
+    document.getElementById("mc-bodywrap").innerHTML = body;
+
+    var startLbl = !run.startWall ? "Start" : (run.running ? "Pause" : "Resume");
+    document.getElementById("mc-actions").innerHTML =
+      '<button class="btn btn-primary mc-startbtn" id="mc-start">' + startLbl + '</button>' +
+      '<button class="btn btn-ghost" id="mc-finish">Finish &amp; log score</button>';
+
+    document.getElementById("mc-start").onclick = metconStartPause;
+    document.getElementById("mc-finish").onclick = function () { openMetconScore(); };
+    document.getElementById("mc-bodywrap").querySelectorAll("[data-mi]").forEach(function (b) {
+      b.onclick = function () {
+        var i = +b.dataset.mi;
+        run.checks[i] = !run.checks[i];
+        var allDone = moves.every(function (_, j) { return run.checks[j]; });
+        if (allDone && !hyrox && (w.format === "rft" || w.format === "amrap")) {
+          run.roundsDone++;
+          run.checks = {};
+        }
+        renderMetconPlayer();
+      };
+    });
+    var rm = document.getElementById("mc-rminus"), rp = document.getElementById("mc-rplus");
+    if (rm) rm.onclick = function () { run.roundsDone = Math.max(0, run.roundsDone - 1); renderMetconPlayer(); };
+    if (rp) rp.onclick = function () { run.roundsDone++; renderMetconPlayer(); };
+  }
+
+  function openMetconScore() {
+    var w = run.wod, st = w.scoreType || "time";
+    var el = metconElapsed();
+    var prefillSec = Math.round(el / 1000);
+    var pm = Math.floor(prefillSec / 60), ps = prefillSec % 60;
+    var fields = "";
+    if (st === "rounds") {
+      fields = '<div class="ag"><div class="lab">Rounds completed</div><div class="stepper"><button data-a="ro-">–</button><input class="mono" id="ms-ro" inputmode="numeric" value="' + run.roundsDone + '"><button data-a="ro+">+</button></div></div>' +
+        '<div class="ag"><div class="lab">+ reps into next round</div><div class="stepper"><button data-a="rp-">–</button><input class="mono" id="ms-rp" inputmode="numeric" value="0"><button data-a="rp+">+</button></div></div>';
+    } else if (st === "reps") {
+      fields = '<div class="ag"><div class="lab">Total reps</div><div class="stepper"><button data-a="tr-">–</button><input class="mono" id="ms-tr" inputmode="numeric" value="0"><button data-a="tr+">+</button></div></div>';
+    } else if (st === "load") {
+      fields = '<div class="ag"><div class="lab">Top load (' + U() + ')</div><div class="stepper"><button data-a="ld-">–</button><input class="mono" id="ms-ld" inputmode="decimal" value="0"><button data-a="ld+">+</button></div></div>';
+    } else {
+      fields = '<div class="ag"><div class="lab">Time — min</div><div class="stepper"><button data-a="mm-">–</button><input class="mono" id="ms-mm" inputmode="numeric" value="' + pm + '"><button data-a="mm+">+</button></div></div>' +
+        '<div class="ag"><div class="lab">sec</div><div class="stepper"><button data-a="ss-">–</button><input class="mono" id="ms-ss" inputmode="numeric" value="' + ps + '"><button data-a="ss+">+</button></div></div>' +
+        '<label class="mc-cap"><input type="checkbox" id="ms-cap"> Hit the time cap (did not finish)</label>';
+    }
+    openSheet(
+      '<h2>' + esc(w.name) + '</h2><p class="sh-lead">Log your score — it goes in your history.</p>' +
+      '<div class="adj-grid">' + fields + '</div>' +
+      '<div class="field" style="margin-top:10px"><div class="mini-seg" data-set="rx"><button data-v="rx" aria-selected="true">RX</button><button data-v="scaled" aria-selected="false">Scaled</button></div></div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="ms-cancel">Back</button><button class="btn btn-primary" id="ms-save">Log it</button></div>'
+    );
+    var rx = true;
+    var sr = document.getElementById("sheet-root");
+    sr.querySelectorAll('[data-set="rx"] button').forEach(function (b) {
+      b.onclick = function () { rx = b.dataset.v === "rx"; sr.querySelectorAll('[data-set="rx"] button').forEach(function (x) { x.setAttribute("aria-selected", x === b); }); };
+    });
+    sr.querySelectorAll("[data-a]").forEach(function (b) {
+      b.onclick = function () {
+        var map = { "ro": "ms-ro", "rp": "ms-rp", "tr": "ms-tr", "ld": "ms-ld", "mm": "ms-mm", "ss": "ms-ss" };
+        var k = b.dataset.a.slice(0, 2), dir = b.dataset.a.slice(2) === "+" ? 1 : -1;
+        var inp = document.getElementById(map[k]);
+        var step = k === "ld" ? eq().step : 1;
+        inp.value = Math.max(0, (parseFloat(inp.value) || 0) + dir * step);
+      };
+    });
+    document.getElementById("ms-cancel").onclick = function () { closeSheet(); renderMetconPlayer(); };
+    document.getElementById("ms-save").onclick = function () {
+      var score = { rx: rx };
+      if (st === "rounds") { score.rounds = parseInt(document.getElementById("ms-ro").value, 10) || 0; score.reps = parseInt(document.getElementById("ms-rp").value, 10) || 0; }
+      else if (st === "reps") { score.reps = parseInt(document.getElementById("ms-tr").value, 10) || 0; }
+      else if (st === "load") { score.load = parseFloat(document.getElementById("ms-ld").value) || 0; }
+      else {
+        score.timeSec = (parseInt(document.getElementById("ms-mm").value, 10) || 0) * 60 + (parseInt(document.getElementById("ms-ss").value, 10) || 0);
+        score.cappedOut = document.getElementById("ms-cap").checked;
+      }
+      closeSheet();
+      finishMetconPlayer(score);
+    };
+  }
+
+  function finishMetconPlayer(score) {
+    if (!run) return;
+    if (run.tick) { clearInterval(run.tick); run.tick = null; }
+    var w = run.wod, t = run.t;
+    var sess = {
+      id: uid(), date: run.startedAt, kind: "metcon",
+      templateId: run.adhoc ? null : (t && t.id), programName: t ? t.name : (run.adhoc ? "Rolled workout" : null),
+      adhoc: run.adhoc, source: run.adhoc ? "roller" : "program",
+      dayLabel: run.res.label, wodId: w.id, wodName: w.name, style: w.style, format: w.format,
+      weekIndex: db.active ? db.active.weekIndex : null,
+      durationSec: Math.round((Date.now() - run.startedAt) / 1000),
+      score: {
+        type: w.scoreType || "time",
+        rounds: score.rounds != null ? score.rounds : null,
+        reps: score.reps != null ? score.reps : null,
+        timeSec: score.timeSec != null ? score.timeSec : null,
+        load: score.load != null ? score.load : null,
+        cappedOut: !!score.cappedOut,
+        rx: score.rx !== false
+      },
+      movements: metconMoves(w).map(function (m) { return { move: m.move, amount: m.amount }; }),
+      note: ""
+    };
+    db.sessions.push(sess);
+    if (db.active && !run.adhoc && t) advanceRotation(db.active, t, run.chosenIdx);
+    save();
+    lastSummary = sess;
+    run = null;
+    finishAndCelebrate(sess, function () { go("summary"); });
   }
 
   function dismissPlayer(cb) {
+    if (run && run.tick) { clearInterval(run.tick); run.tick = null; }
     var pl = document.querySelector("#player-root .player");
     if (!pl) { document.getElementById("player-root").innerHTML = ""; if (cb) cb(); return; }
     pl.classList.remove("show");
@@ -1839,13 +3324,17 @@
     var c = screens.summary;
     var s = lastSummary;
     if (!s) { go("home"); return; }
-    var t = tplById(s.templateId);
+
+    if (s.kind === "metcon") { renderMetconSummary(c, s); return; }
+
+    var freestyle = s.kind === "freestyle";
+    var t = tplById(s.templateId) || { name: s.programName || "Workout" };
     var vol = 0, sets = 0;
     s.actual.forEach(function (a) { a.sets.forEach(function (x) { vol += (x.weight || 0) * (x.reps || 0); sets++; }); });
     var mins = Math.max(1, Math.round(s.durationSec / 60));
 
     var html = '<h2 class="title">' + esc(s.dayLabel) + ' done</h2>' +
-      '<p class="lead">' + esc(t.name) + ' · Week ' + (s.weekIndex + 1) + '</p>' +
+      '<p class="lead">' + (freestyle ? 'One-off workout' : esc(t.name) + ' · Week ' + (s.weekIndex + 1)) + '</p>' +
       '<div class="statbar">' +
         '<div class="stat"><div class="k">Volume</div><div class="v">' + fmt(Math.round(vol)) + '<small> ' + U() + '</small></div></div>' +
         '<div class="stat"><div class="k">Sets</div><div class="v">' + sets + '</div></div>' +
@@ -1857,10 +3346,21 @@
     s.actual.forEach(function (a) {
       if (!a.sets.length) return;
       var top = a.topWeight ? fmt(a.topWeight) + U() + " × " + a.topReps : a.topReps + " reps";
-      html += '<div class="ex-line"><span>' + esc(a.name) + (a.adhoc ? ' <span class="k2" style="font-size:9.5px;color:var(--text-faint)">ADDED</span>' : '') +
-        '</span><span class="scheme">' + a.sets.length + " sets · " + esc(top) + '</span></div>';
+      var rirs = a.sets.map(function (x) { return x.rir; }).filter(function (v) { return v != null; });
+      var effTag = rirs.length ? ' · ' + effortText(Math.min.apply(null, rirs)) : '';
+      html += '<div class="ex-line"><span>' + esc(a.name) + (a.adhoc && !freestyle ? ' <span class="k2" style="font-size:9.5px;color:var(--text-faint)">ADDED</span>' : '') +
+        '</span><span class="scheme">' + a.sets.length + " sets · " + esc(top) + esc(effTag) + '</span></div>';
     });
     html += '</div>';
+
+    if (freestyle) {
+      html += '<div class="btn-row"><button class="btn btn-primary" id="sm-done">Done</button></div>' +
+        '<div class="btn-row"><button class="btn btn-ghost" id="sm-progress">See history</button></div>';
+      c.innerHTML = html;
+      document.getElementById("sm-done").onclick = function () { go("home", true); };
+      document.getElementById("sm-progress").onclick = function () { go("progress", false); };
+      return;
+    }
 
     html += '<div class="eyebrow">Next session\'s weights</div><div class="day-block">';
     if (!s.notes.length) html += '<p style="font-size:13px;color:var(--text-muted)">No program changes this session.</p>';
@@ -1868,6 +3368,7 @@
       var ic, txt;
       if (n.kind === "up") { ic = "up"; txt = "up to " + fmt(n.to) + " " + U(); }
       else if (n.kind === "deload") { ic = "deload"; txt = "stalled — cut to " + fmt(n.to) + " " + U() + " to rebuild"; }
+      else if (n.double) { ic = "hold"; txt = "hold " + fmt(n.to) + " " + U() + " — add reps until you own the top of the range"; }
       else { ic = "hold"; txt = "stay at " + fmt(n.to) + " " + U() + " (" + n.miss + " miss" + (n.miss > 1 ? "es" : "") + ", " + (n.before - n.miss) + " more before a cut)"; }
       html += '<div class="change-row"><span class="cr-ic ' + ic + '">' + (n.kind === "up" ? "▲" : n.kind === "deload" ? "▼" : "–") + '</span>' +
         '<span>' + esc(EX[n.exId] ? EX[n.exId].name : n.exId) + '</span><span class="cr-w">' + esc(txt) + '</span></div>';
@@ -1880,6 +3381,37 @@
     document.getElementById("sm-done").onclick = function () { go("home", true); };
     document.getElementById("sm-progress").onclick = function () { go("progress", false); };
   };
+
+  function metconScoreText(s) {
+    var sc = s.score || {};
+    if (sc.type === "rounds") return sc.rounds + " rounds" + (sc.reps ? " + " + sc.reps : "");
+    if (sc.type === "reps") return sc.reps + " reps";
+    if (sc.type === "load") return fmt(sc.load) + " " + U();
+    if (sc.timeSec != null) return fmtClock(sc.timeSec * 1000) + (sc.cappedOut ? " (capped)" : "");
+    return "—";
+  }
+  function renderMetconSummary(c, s) {
+    var mins = Math.max(1, Math.round(s.durationSec / 60));
+    var html = '<h2 class="title">' + esc(s.wodName || s.dayLabel) + '</h2>' +
+      '<p class="lead">' + esc(s.programName || (s.adhoc ? "Rolled workout" : "Workout")) + ' · ' + esc(FORMAT_LABEL[s.format] || s.format) + '</p>' +
+      '<div class="statbar">' +
+        '<div class="stat"><div class="k">Score</div><div class="v">' + esc(metconScoreText(s)) + '</div></div>' +
+        '<div class="stat"><div class="k">Time</div><div class="v">' + mins + '<small> min</small></div></div>' +
+        '<div class="stat"><div class="k">Effort</div><div class="v">' + (s.score && s.score.rx ? "RX" : "Scaled") + '</div></div>' +
+      '</div>';
+    if (s.movements && s.movements.length) {
+      html += '<div class="eyebrow">The workout</div><div class="day-block">' +
+        s.movements.map(function (m) {
+          return '<div class="ex-line"><span>' + esc(moveName(m.move)) + '</span><span class="scheme">' + (m.amount != null ? m.amount + " " + moveUnit(m.move) : "") + '</span></div>';
+        }).join("") + '</div>';
+    }
+    if (s.note) html += '<p style="font-size:13px;color:var(--text-muted)">' + esc(s.note) + '</p>';
+    html += '<div class="btn-row"><button class="btn btn-primary" id="sm-done">Done</button></div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="sm-progress">See history</button></div>';
+    c.innerHTML = html;
+    document.getElementById("sm-done").onclick = function () { go("home", true); };
+    document.getElementById("sm-progress").onclick = function () { go("progress", false); };
+  }
 
   /* ============================================================ PROGRESS */
   // Monday-anchored week key for a timestamp
@@ -1958,34 +3490,64 @@
     return html;
   }
 
+  function metconHistoryHtml() {
+    var ms = db.sessions.filter(function (s) { return s.kind === "metcon" || s.kind === "freestyle"; });
+    if (!ms.length) return "";
+    var html = '<div class="eyebrow" style="margin-top:22px">Workouts</div>';
+    ms.slice(-12).reverse().forEach(function (s) {
+      var sum = s.kind === "freestyle"
+        ? (s.actual || []).reduce(function (n, a) { return n + a.sets.length; }, 0) + " sets"
+        : esc(metconScoreText(s)) + (s.score && !s.score.rx ? " · scaled" : "");
+      html += '<div class="rec-row"><span class="rr-day">' + esc(s.wodName || s.dayLabel) + '</span>' +
+        '<span class="rr-sum">' + sum + '</span>' +
+        '<span class="rr-date">' + relDate(s.date) + '</span></div>';
+    });
+    return html;
+  }
+
   renderers.progress = function () {
     var c = screens.progress;
-    if (!db.active) { go("home"); return; }
+    if (!db.active) {
+      if (!db.sessions.length) { go("home"); return; }
+      var html0 = '<h2 class="title">History</h2>' +
+        '<p class="lead">' + db.sessions.length + ' workout' + (db.sessions.length === 1 ? '' : 's') + ' logged · no active program</p>' +
+        metconHistoryHtml() +
+        '<div class="eyebrow" style="margin-top:22px">Body</div>' + bodyChartsHtml();
+      c.innerHTML = html0;
+      return;
+    }
     var t = tplById(db.active.templateId);
+    if (!t) { db.active = null; save(); go("choose"); return; }
+    var metcon = isMetcon(t);
+    var liftSessions = db.sessions.filter(function (s) { return !s.kind || s.kind === "barbell" || s.kind === "bodybuilding"; });
 
     var html = '<h2 class="title">Progress</h2>' +
       '<p class="lead">' + esc(t.name) + ' · started ' + relDate(db.active.startedAt) + ' · ' + db.sessions.length + ' session' + (db.sessions.length === 1 ? '' : 's') + '</p>';
 
-    html += '<div class="eyebrow" style="margin-top:4px">Lifts</div>';
-    if (!db.sessions.length) {
-      html += '<p class="chart-note" style="margin-bottom:6px">Finish your first workout and your lifts start charting here.</p>';
-    } else {
-      t.anchors.forEach(function (id) {
-        var lift = db.active.lifts[id];
-        if (!lift) return;
-        var lastTop = lastLiftedTop(id);
-        var now = lastTop != null ? lastTop : lift.start;
-        var bits = [];
-        if (lift.weight !== now) bits.push("next " + fmt(lift.weight));
-        if (now !== lift.start) bits.push("from " + fmt(lift.start));
-        if (lift.failCount) bits.push(lift.failCount + " miss" + (lift.failCount > 1 ? "es" : ""));
-        var sub = bits.length
-          ? bits.join("  ·  ") + " " + U()
-          : (lastTop != null ? "holding at " + fmt(now) + " " + U() : "not trained yet");
-        html += progCard(EX[id].name, sub, now - lift.start, U(),
-          weeklySeries(id, lift.start, db.active.startedAt), now);
-      });
+    if (!metcon) {
+      html += '<div class="eyebrow" style="margin-top:4px">Lifts</div>';
+      if (!liftSessions.length) {
+        html += '<p class="chart-note" style="margin-bottom:6px">Finish your first workout and your lifts start charting here.</p>';
+      } else {
+        (t.anchors || []).forEach(function (id) {
+          var lift = db.active.lifts[id];
+          if (!lift) return;
+          var lastTop = lastLiftedTop(id);
+          var now = lastTop != null ? lastTop : lift.start;
+          var bits = [];
+          if (lift.weight !== now) bits.push("next " + fmt(lift.weight));
+          if (now !== lift.start) bits.push("from " + fmt(lift.start));
+          if (lift.failCount) bits.push(lift.failCount + " miss" + (lift.failCount > 1 ? "es" : ""));
+          var sub = bits.length
+            ? bits.join("  ·  ") + " " + U()
+            : (lastTop != null ? "holding at " + fmt(now) + " " + U() : "not trained yet");
+          html += progCard(EX[id].name, sub, now - lift.start, U(),
+            weeklySeries(id, lift.start, db.active.startedAt), now);
+        });
+      }
     }
+
+    html += metconHistoryHtml();
 
     html += '<div class="eyebrow" style="margin-top:22px">Body</div>' + bodyChartsHtml();
 
@@ -1996,14 +3558,16 @@
         '<div class="stat"><div class="k">Per week</div><div class="v">' + t.daysPerWeek + '</div></div>' +
       '</div>';
 
-      html += '<div class="eyebrow" style="margin-top:22px">Recent sessions</div>';
-      db.sessions.slice(-6).reverse().forEach(function (s) {
-        html += '<div class="rec-row"><span class="rr-day">' + esc(s.dayLabel) + '</span>' +
-          '<span class="rr-sum">' + s.actual.filter(function (a) { return !a.assist; }).map(function (a) {
-            return fmt(a.topWeight) + "×" + a.topReps;
-          }).join("  ") + '</span>' +
-          '<span class="rr-date">' + relDate(s.date) + '</span></div>';
-      });
+      if (!metcon && liftSessions.length) {
+        html += '<div class="eyebrow" style="margin-top:22px">Recent sessions</div>';
+        liftSessions.slice(-6).reverse().forEach(function (s) {
+          html += '<div class="rec-row"><span class="rr-day">' + esc(s.dayLabel) + '</span>' +
+            '<span class="rr-sum">' + (s.actual || []).filter(function (a) { return !a.assist; }).map(function (a) {
+              return fmt(a.topWeight) + "×" + a.topReps;
+            }).join("  ") + '</span>' +
+            '<span class="rr-date">' + relDate(s.date) + '</span></div>';
+        });
+      }
     }
     c.innerHTML = html;
   };
@@ -2180,7 +3744,10 @@
         db.body.push({ id: uid(), date: Date.now(), bw: isNaN(bwv) ? null : bwv, m: m, note: "" });
       }
       db.body.sort(function (a, b) { return a.date - b.date; });
-      save(); closeSheet(); go("body"); toast("Saved");
+      save();
+      var newB = evaluateBadges();
+      closeSheet(); go("body");
+      toast(newB.length ? newB.length + " new badge" + (newB.length > 1 ? "s" : "") + " unlocked" : "Saved");
     };
   }
 
@@ -2212,6 +3779,8 @@
           '<button data-v="cm" aria-selected="' + (L() === "cm") + '">cm</button><button data-v="in" aria-selected="' + (L() === "in") + '">in</button></div></div>' +
         '<div class="toggle-line"><div class="tl-k">Theme</div><div class="mini-seg" data-set="theme">' +
           ['system', 'light', 'dark'].map(function (x) { return '<button data-v="' + x + '" aria-selected="' + (db.settings.theme === x) + '">' + (x === "system" ? "Auto" : x) + '</button>'; }).join("") + '</div></div>' +
+        '<div class="toggle-line"><div class="tl-k">Effort scale</div><div class="mini-seg" data-set="effort">' +
+          '<button data-v="rir" aria-selected="' + (!effortIsRpe()) + '">RIR</button><button data-v="rpe" aria-selected="' + (effortIsRpe()) + '">RPE</button></div></div>' +
       '</div>' +
       (db.active ? '<div class="btn-row"><button class="btn btn-ghost" id="st-change">Switch program</button></div>' : '') +
       '<div class="eyebrow" style="margin:18px 0 8px">Your data</div>' +
@@ -2228,6 +3797,9 @@
     });
     sheetRoot.querySelectorAll('[data-set="theme"] button').forEach(function (b) {
       b.onclick = function () { db.settings.theme = b.dataset.v; applyTheme(); save(); openSettings(); };
+    });
+    sheetRoot.querySelectorAll('[data-set="effort"] button').forEach(function (b) {
+      b.onclick = function () { db.settings.effortScale = b.dataset.v; save(); openSettings(); };
     });
     var sc = document.getElementById("st-change");
     if (sc) sc.onclick = function () { closeSheet(); go("choose"); };
@@ -2284,6 +3856,11 @@
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { if (sheetRoot.innerHTML) closeSheet(); }
+  });
+
+  // a metcon clock runs on wall-clock deltas; repaint it the instant we return to foreground
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && run && run.kind === "metcon") metconTick();
   });
 
   /* ============================================================ BOOT */
