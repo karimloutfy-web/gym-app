@@ -2600,38 +2600,22 @@
     renderPlayer();
   }
 
-  // change the working weight for the current exercise, from this set onward.
-  // on a warm-up step this also re-scales the remaining warm-up ramp.
   function changeCurrentWeight(newW) {
     var step = run.queue[run.i];
-    var xi = step.xi;
-    var x = run.res.exercises[xi];
-    x.weight = newW;
-    run.results[xi].changedWeight = newW;
 
+    // warm-up sets aren't logged and don't feed progression — only touch this one set
     if (step.kind === "warm") {
-      var eqp = eq();
-      var fresh = genWarmups(newW, eqp);
-      var doneWarm = 0;
-      for (var j = 0; j < run.i; j++) {
-        if (run.queue[j].xi === xi && run.queue[j].kind === "warm") doneWarm++;
-      }
-      var repl = fresh.slice(Math.min(doneWarm, fresh.length)).map(function (w) {
-        return { xi: xi, kind: "warm", weight: w.weight, reps: w.reps, exId: x.exId, name: x.name };
-      });
-      x.workSets.forEach(function (w, si) {
-        repl.push({ xi: xi, kind: "work", weight: x.assist ? null : newW, reps: w.reps, amrap: !!w.amrap,
-          exId: x.exId, name: x.name, assist: !!x.assist, topSet: !!x.topSet,
-          setNo: si + 1, setCount: x.workSets.length, target: x.target, repHigh: w.repHigh || x.repHigh || null });
-      });
-      var end = run.i;
-      while (end < run.queue.length && run.queue[end].xi === xi) end++;
-      run.queue.splice.apply(run.queue, [run.i, end - run.i].concat(repl));
-      x.warmups = fresh;
-    } else {
-      for (var k = run.i; k < run.queue.length; k++) {
-        if (run.queue[k].xi === xi && run.queue[k].kind === "work") run.queue[k].weight = newW;
-      }
+      step.weight = newW;
+      renderPlayer();
+      return;
+    }
+
+    // work set: apply to this set and every remaining work set of this exercise
+    var xi = step.xi;
+    run.res.exercises[xi].weight = newW;
+    run.results[xi].changedWeight = newW;
+    for (var k = run.i; k < run.queue.length; k++) {
+      if (run.queue[k].xi === xi && run.queue[k].kind === "work") run.queue[k].weight = newW;
     }
     renderPlayer();
   }
@@ -2899,9 +2883,9 @@
     var isWarm = step.kind === "warm";
     openSheet(
       '<h2>' + esc(step.name) + '</h2><p class="sh-lead">' +
-      (isWarm ? 'Set your working weight — the warm-up ramp re-scales to match.' : 'Set the working weight for this set and the rest of this exercise.') + '</p>' +
+      (isWarm ? 'Adjust this warm-up set only — your working weight isn\'t affected.' : 'Set the working weight for this set and the rest of this exercise.') + '</p>' +
       '<div class="adj-grid"><div class="ag"><div class="lab">Weight (' + U() + ')</div>' +
-      '<div class="stepper"><button data-a="-">–</button><input class="mono" id="cw" inputmode="decimal" value="' + fmt(isWarm ? (run.res.exercises[step.xi].weight || step.weight) : step.weight) + '"><button data-a="+">+</button></div></div></div>' +
+      '<div class="stepper"><button data-a="-">–</button><input class="mono" id="cw" inputmode="decimal" value="' + fmt(step.weight) + '"><button data-a="+">+</button></div></div></div>' +
       '<div id="cw-plate" class="chart-note" style="text-align:center;margin:-4px 0 8px"></div>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="cw-cancel">Cancel</button><button class="btn btn-primary" id="cw-save">Update</button></div>'
     );
