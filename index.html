@@ -227,6 +227,13 @@
   .sc-tag.done { border: 1px solid var(--line-strong); color: var(--text-faint); }
   .day-block.sc-past { opacity: .6; }
   .day-block.sc-past .ex-line { border-bottom-color: transparent; }
+  .sc-tddays { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-muted); font-family: "IBM Plex Mono", monospace; margin-bottom: 8px; }
+  .sc-tddays .k { font-family: "Archivo", sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--text-faint); }
+  .sc-tddays .e { margin-left: auto; color: var(--accent-ink); font-family: "Archivo", sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+
+  .day-picker { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .day-picker button { height: 44px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text-muted); font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 15px; }
+  .day-picker button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
   .nc-ex { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   .nc-ex:last-of-type { border-bottom: none; }
   .nc-ex .nx-name { font-size: 14.5px; font-weight: 500; }
@@ -1848,14 +1855,22 @@
   }
 
   /* ============================================================ SETUP */
+  var DAY_ABBR = ["S", "M", "T", "W", "T", "F", "S"];
+  var DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var DEFAULT_DAYS = { 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 5: [0, 1, 2, 3, 4], 6: [0, 1, 2, 3, 4, 6] };
+  function defaultTrainingDays(n) {
+    return (DEFAULT_DAYS[n] || [0, 1, 2, 3, 4, 5, 6].slice(0, n)).slice();
+  }
+
   var draft = null;
   function startSetup(tplId) {
     var t = tplById(tplId);
-    if (isMetcon(t)) { commitMetconProgram(tplId); return; }
     draft = {
       templateId: tplId,
+      metcon: isMetcon(t),
       options: optionDefaults(t),
       equipment: Object.assign({}, db.equipment),
+      trainingDays: defaultTrainingDays(t.daysPerWeek || 3),
       inputs: {}
     };
     (t.anchors || []).forEach(function (id) { draft.inputs[id] = { mode: "reptest", weight: "", reps: "" }; });
@@ -1866,7 +1881,8 @@
     db.active = {
       templateId: tplId, kind: "metcon",
       options: {}, startedAt: Date.now(),
-      cycleIndex: 0, weekIndex: 0, lifts: {}
+      cycleIndex: 0, weekIndex: 0, lifts: {},
+      trainingDays: (draft && draft.trainingDays) ? draft.trainingDays.slice() : defaultTrainingDays(tplById(tplId).daysPerWeek || 3)
     };
     draft = null;
     save();
@@ -1874,11 +1890,93 @@
     go("home");
   }
 
+  // the 7-chip weekday picker (Sunday first). `sel` is the current array of weekday indices.
+  function dayPickerHtml(sel, target) {
+    return '<div class="eyebrow" style="margin-top:22px">Training days</div>' +
+      '<p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Pick the ' + target + ' days you\'ll train. Weeks run Sunday to Saturday.</p>' +
+      '<div class="day-picker" data-daypick>' +
+      DAY_ABBR.map(function (a, i) {
+        return '<button data-d="' + i + '" aria-pressed="' + (sel.indexOf(i) >= 0) + '">' + a + '</button>';
+      }).join("") + '</div>';
+  }
+  function wireDayPicker(c, onChange) {
+    c.querySelectorAll('[data-daypick] button').forEach(function (b) {
+      b.onclick = function () {
+        var d = +b.dataset.d;
+        var i = draft.trainingDays.indexOf(d);
+        if (i >= 0) draft.trainingDays.splice(i, 1); else draft.trainingDays.push(d);
+        draft.trainingDays.sort(function (x, y) { return x - y; });
+        onChange();
+      };
+    });
+  }
+
+  // edit training days for the already-active program
+  function openTrainingDaysSheet() {
+    if (!db.active) return;
+    var t = tplById(db.active.templateId);
+    var target = (t && t.daysPerWeek) || 3;
+    var sel = (db.active.trainingDays || defaultTrainingDays(target)).slice();
+    function render() {
+      openSheet('<h2>Training days</h2><p class="sh-lead">Pick the ' + target + ' days you train each week — weeks run Sunday to Saturday.</p>' +
+        '<div class="day-picker" data-tdp>' + DAY_ABBR.map(function (a, i) {
+          return '<button data-d="' + i + '" aria-pressed="' + (sel.indexOf(i) >= 0) + '">' + a + '</button>';
+        }).join("") + '</div>' +
+        '<div class="btn-row"><button class="btn btn-ghost" id="tdp-cancel">Cancel</button>' +
+        '<button class="btn btn-primary" id="tdp-save"' + (sel.length === target ? '' : ' disabled style="opacity:.5"') + '>Save</button></div>');
+      sheetRoot.querySelectorAll('[data-tdp] button').forEach(function (b) {
+        b.onclick = function () {
+          var d = +b.dataset.d, i = sel.indexOf(d);
+          if (i >= 0) sel.splice(i, 1); else sel.push(d);
+          sel.sort(function (x, y) { return x - y; });
+          render();
+        };
+      });
+      document.getElementById("tdp-cancel").onclick = closeSheet;
+      document.getElementById("tdp-save").onclick = function () {
+        db.active.trainingDays = sel.slice();
+        save(); closeSheet();
+        if (cur === "schedule") renderers.schedule(); else if (cur === "home") renderers.home();
+      };
+    }
+    render();
+  }
+
+  // "today" / "tomorrow" / "Tue" — the next day the user is due to train
+  function nextTrainingLabel() {
+    if (!db.active || !db.active.trainingDays || !db.active.trainingDays.length) return "";
+    var td = db.active.trainingDays;
+    var trainedToday = db.sessions.some(function (s) { return dayKey(s.date) === dayKey(Date.now()); });
+    var base = new Date(); base.setHours(0, 0, 0, 0);
+    for (var i = 0; i < 8; i++) {
+      var d = new Date(base); d.setDate(d.getDate() + i);
+      if (td.indexOf(d.getDay()) >= 0 && !(i === 0 && trainedToday)) {
+        return i === 0 ? "today" : i === 1 ? "tomorrow" : DAY_SHORT[d.getDay()];
+      }
+    }
+    return "";
+  }
+
   renderers.setup = function () {
     if (!draft) { go("choose"); return; }
     var t = tplById(draft.templateId);
     var c = screens.setup;
     var e = draft.equipment;
+    var target = t.daysPerWeek || 3;
+    var daysOk = draft.trainingDays.length === target;
+
+    // metcon programs: just the training-day picker
+    if (draft.metcon) {
+      c.innerHTML = '<button class="backlink" id="su-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' + esc(t.name) + '</button>' +
+        '<h2 class="title">Set it up</h2><p class="lead">No weights to set for this one — just tell it when you train.</p>' +
+        dayPickerHtml(draft.trainingDays, target) +
+        '<div class="btn-row"><button class="btn btn-primary" id="su-start"' + (daysOk ? '' : ' disabled style="opacity:.5"') + '>Start training</button></div>';
+      document.getElementById("su-back").onclick = function () { showDetail(draft.templateId); };
+      wireDayPicker(c, function () { renderers.setup(); });
+      document.getElementById("su-start").onclick = function () { commitMetconProgram(draft.templateId); };
+      return;
+    }
+
     var html = '<button class="backlink" id="su-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' + esc(t.name) + '</button>' +
       '<h2 class="title">Set it up</h2><p class="lead">Tell it your bar and plates, then set a starting weight for each lift — either do a hard max-rep set and let it calculate, or type the number if you already know it.</p>';
 
@@ -1923,11 +2021,14 @@
       html += '</div>';
     }
 
-    var ready = t.anchors.every(function (id) { return computeStart(t, id) != null; });
+    html += dayPickerHtml(draft.trainingDays, target);
+
+    var ready = daysOk && t.anchors.every(function (id) { return computeStart(t, id) != null; });
     html += '<div class="btn-row"><button class="btn btn-primary" id="su-start"' + (ready ? '' : ' disabled style="opacity:.5"') + '>Start training</button></div>';
     c.innerHTML = html;
 
     document.getElementById("su-back").onclick = function () { showDetail(draft.templateId); };
+    wireDayPicker(c, function () { renderers.setup(); });
 
     c.querySelectorAll('[data-eq="bar"] button').forEach(function (b) {
       b.onclick = function () { draft.equipment.bar = +b.dataset.v; renderers.setup(); };
@@ -1953,7 +2054,7 @@
           if (draft.inputs[id].mode === "reptest") rl.innerHTML = res != null ? 'Starts at <b>' + fmt(res) + ' ' + U() + '</b>' + (t.startingWeight.pct < 1 ? '  (deliberately light — the program ramps you up)' : '') : 'Enter a weight and reps';
           else rl.innerHTML = res != null ? 'Rounds to <b>' + fmt(res) + ' ' + U() + '</b>' : 'Enter a weight';
           var sb = document.getElementById("su-start");
-          var ready2 = t.anchors.every(function (x) { return computeStart(t, x) != null; });
+          var ready2 = draft.trainingDays.length === target && t.anchors.every(function (x) { return computeStart(t, x) != null; });
           sb.disabled = !ready2; sb.style.opacity = ready2 ? "" : ".5";
         };
       });
@@ -1996,7 +2097,8 @@
       startedAt: Date.now(),
       cycleIndex: 0,
       weekIndex: 0,
-      lifts: lifts
+      lifts: lifts,
+      trainingDays: draft.trainingDays.slice()
     };
     draft = null;
     save();
@@ -2006,9 +2108,8 @@
 
   /* ============================================================ HOME */
   function sessionsThisWeek() {
-    var monday = new Date(); var day = (monday.getDay() + 6) % 7;
-    monday.setHours(0, 0, 0, 0); monday.setDate(monday.getDate() - day);
-    return db.sessions.filter(function (s) { return s.date >= monday.getTime(); }).length;
+    var wk = weekKey(Date.now());
+    return db.sessions.filter(function (s) { return s.date >= wk; }).length;
   }
   function latestBody() { return db.body.length ? db.body[db.body.length - 1] : null; }
 
@@ -2415,9 +2516,11 @@
 
     // next-workout summary (tap for the month ahead)
     var ncFoot = '<div class="nc-foot">See the month ahead <span>›</span></div>';
+    var ntl = nextTrainingLabel();
+    var ntlSuffix = ntl ? ' · ' + ntl : '';
     if (metcon) {
       var mres = resolveMetcon(t, db.active);
-      html += '<button class="next-card" id="nc-open"><div class="nc-eye">Next up · ' + esc(mres.label) + '</div>' +
+      html += '<button class="next-card" id="nc-open"><div class="nc-eye">Next up · ' + esc(mres.label) + esc(ntlSuffix) + '</div>' +
         '<div class="nc-wod">' + esc(mres.title) + '</div>' +
         '<div class="nc-wod-sub">' + esc(mres.subtitle) + '</div>' +
         metconMoves(mres.wod).slice(0, 6).map(function (m) {
@@ -2426,7 +2529,7 @@
       '</button>';
     } else {
       var res = resolveSession(t, db.active, eq());
-      html += '<button class="next-card" id="nc-open"><div class="nc-eye">Next up · ' + esc(sessionLabel(res)) + '</div>';
+      html += '<button class="next-card" id="nc-open"><div class="nc-eye">Next up · ' + esc(sessionLabel(res)) + esc(ntlSuffix) + '</div>';
       res.exercises.forEach(function (x) {
         var setStr = x.workSets.length + "×" + repRange(x.target, x.repHigh) + (x.assist && x.workSets[0].amrap ? "+" : "");
         html += '<div class="nc-ex"><span class="nx-name">' + esc(x.name) + '</span>' +
@@ -2474,25 +2577,46 @@
   };
 
   /* ============================================================ SCHEDULE */
+  function advanceSim(sim, t, res) {
+    if (isMetcon(t)) { advanceRotation(sim, t, sim.cycleIndex); return; }
+    var fake = res.exercises.filter(function (x) { return !x.assist; }).map(function (x) {
+      return { exId: x.exId, done: true, made: true, hitTop: true, topWeight: x.weight };
+    });
+    applyResult(t, sim, { dayType: res.dayType, cycleIndex: sim.cycleIndex, exercises: fake }, eq());
+  }
+
   // project the next `days` of sessions, advancing progression as if every
-  // session is completed successfully. Returns [{ date, res }].
+  // session is completed. Uses db.active.trainingDays (weekday indices) if set,
+  // otherwise falls back to even spacing across the week. Returns [{ date, res }].
   function projectSchedule(days) {
     var t = tplById(db.active.templateId);
     if (!t) return [];
     var sim = JSON.parse(JSON.stringify(db.active));
-    var gap = (7 / (t.daysPerWeek || 3)) * 86400000;
-    var start = Date.now(), date = start, out = [], guard = 0;
-    while (date - start <= days * 86400000 && guard++ < 40) {
-      var res = isMetcon(t) ? resolveMetcon(t, sim) : resolveSession(t, sim, eq());
-      out.push({ date: date, res: res });
-      if (isMetcon(t)) {
-        advanceRotation(sim, t, sim.cycleIndex);
-      } else {
-        var fake = res.exercises.filter(function (x) { return !x.assist; }).map(function (x) {
-          return { exId: x.exId, done: true, made: true, hitTop: true, topWeight: x.weight };
-        });
-        applyResult(t, sim, { dayType: res.dayType, cycleIndex: sim.cycleIndex, exercises: fake }, eq());
+    var td = (db.active.trainingDays && db.active.trainingDays.length) ? db.active.trainingDays : null;
+    var out = [], guard = 0;
+    var trainedToday = db.sessions.some(function (s) { return dayKey(s.date) === dayKey(Date.now()); });
+
+    if (td) {
+      var cur = new Date(); cur.setHours(0, 0, 0, 0);
+      var startDay = cur.getTime();
+      while (cur.getTime() - startDay <= days * 86400000 && guard++ < 60) {
+        var isToday = cur.getTime() === startDay;
+        if (td.indexOf(cur.getDay()) >= 0 && !(isToday && trainedToday)) {
+          var res = isMetcon(t) ? resolveMetcon(t, sim) : resolveSession(t, sim, eq());
+          out.push({ date: isToday ? Date.now() : cur.getTime(), res: res });
+          advanceSim(sim, t, res);
+        }
+        cur.setDate(cur.getDate() + 1);
       }
+      return out;
+    }
+
+    var gap = (7 / (t.daysPerWeek || 3)) * 86400000;
+    var start = Date.now(), date = start;
+    while (date - start <= days * 86400000 && guard++ < 40) {
+      var r = isMetcon(t) ? resolveMetcon(t, sim) : resolveSession(t, sim, eq());
+      out.push({ date: date, res: r });
+      advanceSim(sim, t, r);
       date += gap;
     }
     return out;
@@ -2519,10 +2643,13 @@
     items.sort(function (a, b) { return a.date - b.date; });
 
     var upcoming = items.filter(function (x) { return !x.done; }).length;
+    var tdStr = (db.active.trainingDays || []).map(function (d) { return DAY_SHORT[d]; }).join(" · ");
     var html = '<button class="backlink" id="sc-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
       '<h2 class="title">The month ahead</h2>' +
       '<p class="lead">' + esc(t.name) + ' · your next ' + upcoming + ' sessions' +
-      (metcon ? '' : ', weights projected assuming you hit every one') + '.</p>';
+      (metcon ? '' : ', weights projected assuming you hit every one') + '.</p>' +
+      '<button class="sc-tddays" id="sc-tddays"><span class="k">Training days</span>' +
+      (tdStr ? esc(tdStr) : "Not set — tap to choose") + '<span class="e">Edit</span></button>';
 
     var shownWk = null;
     items.forEach(function (item) {
@@ -2572,6 +2699,7 @@
 
     c.innerHTML = html;
     document.getElementById("sc-back").onclick = function () { go("home"); };
+    document.getElementById("sc-tddays").onclick = openTrainingDaysSheet;
   };
 
   /* ============================================================ PICK WORKOUT */
@@ -3539,10 +3667,10 @@
   }
 
   /* ============================================================ PROGRESS */
-  // Monday-anchored week key for a timestamp
+  // Sunday-anchored week key for a timestamp (weeks run Sunday–Saturday)
   function weekKey(ts) {
     var d = new Date(ts); d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    d.setDate(d.getDate() - d.getDay());
     return d.getTime();
   }
   // heaviest work set actually performed for this lift, most recent session first
