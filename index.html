@@ -222,6 +222,11 @@
   .nc-foot { margin-top: 10px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--text-faint); display: flex; align-items: center; gap: 5px; }
   .nc-foot span { font-size: 15px; line-height: 1; }
   .sc-sub { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .sc-tag { margin-left: auto; font-size: 9.5px; text-transform: uppercase; letter-spacing: .09em; font-weight: 700; border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+  .sc-tag.next { background: var(--accent); color: var(--accent-text); }
+  .sc-tag.done { border: 1px solid var(--line-strong); color: var(--text-faint); }
+  .day-block.sc-past { opacity: .6; }
+  .day-block.sc-past .ex-line { border-bottom-color: transparent; }
   .nc-ex { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   .nc-ex:last-of-type { border-bottom: none; }
   .nc-ex .nx-name { font-size: 14.5px; font-weight: 500; }
@@ -2493,31 +2498,63 @@
     return out;
   }
 
+  function dayName(label) { return /^[A-Z]$/.test(label) ? "Workout " + label : cap(label) + " day"; }
+
   renderers.schedule = function () {
     var c = screens.schedule;
     if (!db.active) { go("home"); return; }
     var t = tplById(db.active.templateId);
     if (!t) { db.active = null; save(); go("choose"); return; }
     var metcon = isMetcon(t);
-    var sched = projectSchedule(30);
+    var curWk = weekKey(Date.now());
+
+    // this week's completed sessions, then the projected ones going forward
+    var items = [];
+    db.sessions.forEach(function (s) {
+      if (weekKey(s.date) === curWk) items.push({ date: s.date, done: true, sess: s });
+    });
+    projectSchedule(30).forEach(function (p, i) {
+      items.push({ date: p.date, res: p.res, next: i === 0 });
+    });
+    items.sort(function (a, b) { return a.date - b.date; });
+
+    var upcoming = items.filter(function (x) { return !x.done; }).length;
     var html = '<button class="backlink" id="sc-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
       '<h2 class="title">The month ahead</h2>' +
-      '<p class="lead">' + esc(t.name) + ' · your next ' + sched.length + ' sessions' +
+      '<p class="lead">' + esc(t.name) + ' · your next ' + upcoming + ' sessions' +
       (metcon ? '' : ', weights projected assuming you hit every one') + '.</p>';
 
-    var curWk = weekKey(Date.now()), shownWk = null;
-    sched.forEach(function (item) {
+    var shownWk = null;
+    items.forEach(function (item) {
       var wk = weekKey(item.date);
       if (wk !== shownWk) {
         shownWk = wk;
         var wi = Math.round((wk - curWk) / 604800000);
         html += '<div class="eyebrow" style="margin-top:16px">' + (wi === 0 ? "This week" : wi === 1 ? "Next week" : "In " + wi + " weeks") + '</div>';
       }
-      var res = item.res;
-      var title = metcon ? res.wod.name : (res.dayType ? cap(res.dayType) + " day" : "Workout " + res.label);
       var dlabel = dayKey(item.date) === dayKey(Date.now()) ? "Today"
         : new Date(item.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-      html += '<div class="day-block"><h4>' + esc(dlabel) + ' · ' + esc(title) + '</h4>';
+      var tag = item.done ? '<span class="sc-tag done">Done</span>' : (item.next ? '<span class="sc-tag next">Next</span>' : '');
+
+      if (item.done) {
+        var s = item.sess;
+        var title = s.kind === "metcon" ? (s.wodName || s.dayLabel) : dayName(s.dayLabel);
+        html += '<div class="day-block' + (s.kind === "metcon" ? '' : ' sc-past') + '"><h4>' + esc(dlabel) + ' · ' + esc(title) + tag + '</h4>';
+        if (s.kind === "metcon") {
+          html += '<div class="ex-line"><span>Score</span><span class="scheme">' + esc(metconScoreText(s)) + '</span></div>';
+        } else {
+          (s.actual || []).filter(function (a) { return !a.assist && a.sets && a.sets.length; }).forEach(function (a) {
+            html += '<div class="ex-line"><span>' + esc(a.name) + '</span><span class="scheme">' +
+              a.sets.length + '×' + a.topReps + (a.topWeight ? '  ·  ' + fmt(a.topWeight) + U() : '') + '</span></div>';
+          });
+        }
+        html += '</div>';
+        return;
+      }
+
+      var res = item.res;
+      var t2 = metcon ? res.wod.name : (res.dayType ? cap(res.dayType) + " day" : "Workout " + res.label);
+      html += '<div class="day-block"><h4>' + esc(dlabel) + ' · ' + esc(t2) + tag + '</h4>';
       if (metcon) {
         html += '<div class="sc-sub">' + esc(res.subtitle) + '</div>' +
           metconMoves(res.wod).slice(0, 5).map(function (m) {
