@@ -255,7 +255,10 @@
   .home-hero h2.title { font-size: 30px; margin: 4px 0 14px; }
   .home-hero .lead { margin-bottom: 22px; }
   .h-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
-  .h-prog { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 23px; line-height: 1; }
+  .h-prog { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 23px; line-height: 1; display: inline-flex; align-items: center; gap: 7px; }
+  .h-info { width: 22px; height: 22px; color: var(--text-faint); flex: none; }
+  .h-info svg { width: 100%; height: 100%; }
+  .h-info:hover { color: var(--accent-ink); }
   .h-week { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
   .home-secondary { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line-strong); }
   .btn.btn-lg { height: 58px; font-size: 17px; }
@@ -1819,17 +1822,7 @@
       return;
     }
 
-    var a0 = (t.anchors && t.anchors[0]) || (t.progression && Object.keys(t.progression)[0]);
-    var p0 = t.progression && a0 ? t.progression[a0] : null;
-    var incHi = t.progression ? Object.keys(t.progression).reduce(function (m, k) { return Math.max(m, t.progression[k].increment || 0); }, 0) : 0;
-    var rule;
-    if (t.progressionMode === "double")
-      rule = "Every lift has a rep range. Take every set to the top of the range and next time the weight goes up " + fmt(p0 ? p0.increment : 2.5) + "–" + fmt(incHi) + " " + U() + " and you drop back to the bottom. Fall short of the bottom " + (p0 ? p0.failRule.misses : 3) + " sessions running and it trims " + Math.round((1 - (p0 ? p0.failRule.pct : 0.9)) * 100) + "% so you can rebuild.";
-    else if (t.progressionMode === "weekly")
-      rule = "Monday is heavy volume (5×5), Wednesday is light recovery, Friday you work up to one hard set of 5 at a new best. Beat Friday's set and next week's weights all move up; miss it twice and that lift resets " + Math.round((1 - t.progression.squat.failRule.pct) * 100) + "%.";
-    else
-      rule = "Each session, if you complete every prescribed rep, the next session adds " + fmt(p0 ? p0.increment : 2.5) + "–" + fmt(incHi || 5) + " " + U() + " to that lift. Miss the target " + (p0 ? p0.failRule.misses : 3) + " sessions in a row and it cuts the weight " + Math.round((1 - (p0 ? p0.failRule.pct : 0.9)) * 100) + "% so you can build back up.";
-    html += '<div class="rule-box"><b>How it progresses</b>' + esc(rule) + '</div>';
+    html += '<div class="rule-box"><b>How it progresses</b>' + esc(progressionRuleText(t)) + '</div>';
     html += '<div class="eyebrow">A week of training <span style="text-transform:none;font-weight:500;color:var(--text-faint)">— example weights</span></div>';
     t.microcycle.forEach(function (day) {
       var res = resolveSession(t, { options: optionDefaults(t), cycleIndex: t.microcycle.indexOf(day), weekIndex: 0, lifts: demo }, eq());
@@ -1849,6 +1842,69 @@
     var de = document.getElementById("d-edit");
     if (de) de.onclick = function () { editorState = { mode: "plan", planId: t.id }; go("editor"); };
   };
+
+  function progressionRuleText(t) {
+    if (isMetcon(t)) return "Each session is a workout for time or rounds. Nothing to progress — you log your score and it goes in your history.";
+    var a0 = (t.anchors && t.anchors[0]) || (t.progression && Object.keys(t.progression)[0]);
+    var p0 = t.progression && a0 ? t.progression[a0] : null;
+    var incHi = t.progression ? Object.keys(t.progression).reduce(function (m, k) { return Math.max(m, t.progression[k].increment || 0); }, 0) : 0;
+    if (t.progressionMode === "double")
+      return "Every lift has a rep range. Take every set to the top of the range and next time the weight goes up " + fmt(p0 ? p0.increment : 2.5) + "–" + fmt(incHi) + " " + U() + " and you drop back to the bottom. Fall short of the bottom " + (p0 ? p0.failRule.misses : 3) + " sessions running and it trims " + Math.round((1 - (p0 ? p0.failRule.pct : 0.9)) * 100) + "% so you can rebuild.";
+    if (t.progressionMode === "weekly")
+      return "A hard volume day, an easy recovery day, then an intensity day where you work up to one top set at a new best. Beat the intensity day and next week's weights move up; miss it twice and that lift resets " + Math.round((1 - t.progression.squat.failRule.pct) * 100) + "%.";
+    return "Each session, if you complete every prescribed rep, the next session adds " + fmt(p0 ? p0.increment : 2.5) + "–" + fmt(incHi || 5) + " " + U() + " to that lift. Miss the target " + (p0 ? p0.failRule.misses : 3) + " sessions in a row and it cuts the weight " + Math.round((1 - (p0 ? p0.failRule.pct : 0.9)) * 100) + "% so you can build back up.";
+  }
+
+  // "more about the program" sheet — opened from the i on the home header
+  function openProgramInfoSheet() {
+    if (!db.active) return;
+    var t = tplById(db.active.templateId);
+    if (!t) return;
+    var td = (db.active.trainingDays || []).map(function (d) { return DAY_SHORT[d]; }).join(" · ");
+    var html = '<h2>' + esc(t.name) + '</h2>' +
+      '<p style="font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--text-faint);margin:-4px 0 8px">' + esc(t.author || "") + '</p>' +
+      '<p class="sh-lead">' + esc(t.blurb) + '</p>' +
+      '<div class="rule-box"><b>How it progresses</b>' + esc(progressionRuleText(t)) + '</div>' +
+      '<div class="eyebrow">Schedule</div>' +
+      '<div class="day-block"><div class="ex-line"><span>Sessions a week</span><span class="scheme">' + (t.daysPerWeek || "—") + '</span></div>' +
+      (td ? '<div class="ex-line"><span>Your days</span><span class="scheme">' + esc(td) + '</span></div>' : '') +
+      '<div class="ex-line"><span>Started</span><span class="scheme">' + esc(shortDate(db.active.startedAt)) + ' · week ' + programWeek() + '</span></div></div>';
+
+    if (isMetcon(t)) {
+      html += '<div class="eyebrow">The sessions</div>';
+      t.microcycle.forEach(function (day) {
+        var w = day.wod;
+        html += '<div class="day-block"><h4>' + esc(day.label) + ' <span class="dtype">' + esc(FORMAT_LABEL[w.format] || w.format) + '</span></h4>' +
+          '<div class="mc-detail-sub">' + esc(metconSubtitle(w)) + '</div>' +
+          metconMoves(w).slice(0, 6).map(function (m) { return '<div class="ex-line"><span>' + esc(moveLine(m)) + '</span></div>'; }).join("") +
+        '</div>';
+      });
+    } else if (db.active.lifts) {
+      var lifts = (t.anchors || []).filter(function (id) { return db.active.lifts[id]; });
+      if (lifts.length) {
+        html += '<div class="eyebrow">Working weights now</div><div class="day-block">';
+        lifts.forEach(function (id) {
+          var lf = db.active.lifts[id];
+          html += '<div class="ex-line"><span>' + esc((EX[id] || {}).name || id) + '</span><span class="scheme">' + fmt(lf.weight) + U() +
+            (lf.weight !== lf.start ? '  ·  ' + (lf.weight > lf.start ? '+' : '') + fmt(lf.weight - lf.start) + ' since start' : '') + '</span></div>';
+        });
+        html += '</div>';
+      }
+      html += '<div class="eyebrow">A week of training</div>';
+      t.microcycle.forEach(function (day) {
+        var res = resolveSession(t, { options: db.active.options || optionDefaults(t), cycleIndex: t.microcycle.indexOf(day), weekIndex: db.active.weekIndex || 0, lifts: db.active.lifts }, eq());
+        html += '<div class="day-block"><h4>' + esc(day.label) + (day.dayType ? ' <span class="dtype">' + esc(day.dayType) + '</span>' : '') + '</h4>';
+        res.exercises.forEach(function (x) {
+          html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' +
+            x.workSets.length + '×' + repRange(x.target, x.repHigh) + (x.assist ? '' : '  ·  ' + fmt(x.weight) + U()) + '</span></div>';
+        });
+        html += '</div>';
+      });
+    }
+    html += '<div class="btn-row"><button class="btn btn-primary" id="pi-close">Done</button></div>';
+    openSheet(html);
+    document.getElementById("pi-close").onclick = closeSheet;
+  }
 
   function optionDefaults(t) { var o = {}; (t.options || []).forEach(function (x) { o[x.id] = x.default; }); return o; }
   function demoLifts(t) {
@@ -2514,7 +2570,9 @@
     var lb = latestBody();
 
     var html = quoteHtml() + '<div class="home-hero">' +
-      '<div class="h-head"><span class="h-prog">' + esc(t.name) + '</span>' +
+      '<div class="h-head"><span class="h-prog">' + esc(t.name) +
+        '<button class="h-info" id="h-info" aria-label="About this program"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>' +
+        '</span>' +
         '<span class="h-week">Week ' + programWeek() + '</span></div>' +
       '<div class="home-primary">' +
       gritCardHtml();
@@ -2579,6 +2637,7 @@
     c.innerHTML = html;
     document.getElementById("h-start").onclick = function () { go("pick"); };
     document.getElementById("h-change").onclick = function () { go("choose"); };
+    document.getElementById("h-info").onclick = openProgramInfoSheet;
     var ncOpen = document.getElementById("nc-open");
     if (ncOpen) ncOpen.onclick = function () { go("schedule"); };
     c.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
