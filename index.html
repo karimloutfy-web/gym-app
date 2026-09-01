@@ -254,6 +254,10 @@
   .home-hero .h-eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .13em; font-weight: 700; color: var(--accent-ink); }
   .home-hero h2.title { font-size: 30px; margin: 4px 0 14px; }
   .home-hero .lead { margin-bottom: 22px; }
+  .h-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .h-prog { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 23px; line-height: 1; }
+  .h-week { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
+  .home-secondary { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line-strong); }
   .btn.btn-lg { height: 58px; font-size: 17px; }
   .home-links { display: flex; gap: 9px; margin-top: 10px; }
   .home-links .btn { flex: 1; }
@@ -2510,8 +2514,9 @@
     var lb = latestBody();
 
     var html = quoteHtml() + '<div class="home-hero">' +
-      '<div class="h-eyebrow">' + esc(t.name) + '</div>' +
-      '<h2 class="title">Week ' + (db.active.weekIndex + 1) + '</h2>' +
+      '<div class="h-head"><span class="h-prog">' + esc(t.name) + '</span>' +
+        '<span class="h-week">Week ' + programWeek() + '</span></div>' +
+      '<div class="home-primary">' +
       gritCardHtml();
 
     // next-workout summary (tap for the month ahead)
@@ -2542,6 +2547,8 @@
     }
 
     html += '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-start">Start working out</button></div>' +
+      '</div>' + // close .home-primary
+      '<div class="home-secondary">' +
       '<div class="home-links">' +
         '<button class="btn btn-ghost" data-go="progress">Progress</button>' +
         (WOD_POOL.length ? '<button class="btn btn-ghost" data-go="roll">Random WOD</button>' : '') +
@@ -2566,7 +2573,8 @@
     '</div>';
 
     html += '<div class="home-foot"><button id="h-change">Change program</button></div>' +
-    '</div>';
+    '</div>' + // close .home-secondary
+    '</div>'; // close .home-hero
 
     c.innerHTML = html;
     document.getElementById("h-start").onclick = function () { go("pick"); };
@@ -2712,7 +2720,7 @@
 
     var html = '<button class="backlink" id="pk-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
       '<h2 class="title">Pick your workout</h2>' +
-      '<p class="lead">' + esc(t.name) + ' · Week ' + (db.active.weekIndex + 1) + '</p>';
+      '<p class="lead">' + esc(t.name) + ' · Week ' + programWeek() + '</p>';
 
     t.microcycle.forEach(function (day, idx) {
       var suggested = idx === nextIdx;
@@ -3587,7 +3595,7 @@
     var mins = Math.max(1, Math.round(s.durationSec / 60));
 
     var html = '<h2 class="title">' + esc(s.dayLabel) + ' done</h2>' +
-      '<p class="lead">' + (freestyle ? 'One-off workout' : esc(t.name) + ' · Week ' + (s.weekIndex + 1)) + '</p>' +
+      '<p class="lead">' + (freestyle ? 'One-off workout' : esc(t.name) + ' · Week ' + programWeekAt(s.date)) + '</p>' +
       '<div class="statbar">' +
         '<div class="stat"><div class="k">Volume</div><div class="v">' + fmt(Math.round(vol)) + '<small> ' + U() + '</small></div></div>' +
         '<div class="stat"><div class="k">Sets</div><div class="v">' + sets + '</div></div>' +
@@ -3673,6 +3681,12 @@
     d.setDate(d.getDate() - d.getDay());
     return d.getTime();
   }
+  // calendar weeks since the program started (1-based); shown as "Week N"
+  function programWeekAt(ts) {
+    var start = db.active ? db.active.startedAt : ts;
+    return Math.max(1, Math.round((weekKey(ts) - weekKey(start)) / 604800000) + 1);
+  }
+  function programWeek() { return programWeekAt(Date.now()); }
   // heaviest work set actually performed for this lift, most recent session first
   // (only sessions where at least one set had reps > 0 — a skipped lift doesn't count)
   function lastLiftedTop(exId) {
@@ -3808,7 +3822,7 @@
 
     if (db.sessions.length) {
       html += '<div class="statbar" style="margin-top:22px">' +
-        '<div class="stat hot"><div class="k">Week</div><div class="v">' + (db.active.weekIndex + 1) + '</div></div>' +
+        '<div class="stat hot"><div class="k">Week</div><div class="v">' + programWeek() + '</div></div>' +
         '<div class="stat"><div class="k">Sessions</div><div class="v">' + db.sessions.length + '</div></div>' +
         '<div class="stat"><div class="k">Per week</div><div class="v">' + t.daysPerWeek + '</div></div>' +
       '</div>';
