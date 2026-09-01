@@ -215,9 +215,13 @@
   .sw[aria-checked="true"]::after { transform: translateX(19px); }
 
   /* train screen */
-  .next-card { background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 16px; }
+  .next-card { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 16px; }
+  button.next-card:hover { border-color: var(--accent); }
   .next-card .nc-eye { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--accent-ink); }
   .next-card h3 { font-size: 24px; margin: 3px 0 12px; }
+  .nc-foot { margin-top: 10px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--text-faint); display: flex; align-items: center; gap: 5px; }
+  .nc-foot span { font-size: 15px; line-height: 1; }
+  .sc-sub { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
   .nc-ex { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   .nc-ex:last-of-type { border-bottom: none; }
   .nc-ex .nx-name { font-size: 14.5px; font-weight: 500; }
@@ -518,6 +522,7 @@
     <section class="screen" id="s-pick"></section>
     <section class="screen" id="s-roll"></section>
     <section class="screen" id="s-editor"></section>
+    <section class="screen" id="s-schedule"></section>
     <section class="screen" id="s-summary"></section>
     <section class="screen" id="s-progress"></section>
     <section class="screen" id="s-body"></section>
@@ -1290,6 +1295,7 @@
     pick: document.getElementById("s-pick"),
     roll: document.getElementById("s-roll"),
     editor: document.getElementById("s-editor"),
+    schedule: document.getElementById("s-schedule"),
     summary: document.getElementById("s-summary"),
     progress: document.getElementById("s-progress"),
     body: document.getElementById("s-body"),
@@ -1298,7 +1304,7 @@
   var TAB_SCREENS = { home: 1, progress: 1, body: 1, badges: 1 };
   var TAB_ORDER = ["home", "progress", "body", "badges"];
   // rough "depth" so a plain go() can infer push vs pop direction
-  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, choose: 1, summary: 1, pick: 1, roll: 1, detail: 2, setup: 3, editor: 3 };
+  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, choose: 1, summary: 1, pick: 1, roll: 1, schedule: 1, detail: 2, setup: 3, editor: 3 };
   var cur = null, sliding = false;
   var SCR_RESET = ["anim", "from-right", "from-left", "to-left", "to-right", "behind", "lead", "trail"];
   function snapScreens() {
@@ -2402,19 +2408,20 @@
       '<h2 class="title">Week ' + (db.active.weekIndex + 1) + '</h2>' +
       gritCardHtml();
 
-    // next-workout summary
+    // next-workout summary (tap for the month ahead)
+    var ncFoot = '<div class="nc-foot">See the month ahead <span>›</span></div>';
     if (metcon) {
       var mres = resolveMetcon(t, db.active);
-      html += '<div class="next-card"><div class="nc-eye">Next up · ' + esc(mres.label) + '</div>' +
+      html += '<button class="next-card" id="nc-open"><div class="nc-eye">Next up · ' + esc(mres.label) + '</div>' +
         '<div class="nc-wod">' + esc(mres.title) + '</div>' +
         '<div class="nc-wod-sub">' + esc(mres.subtitle) + '</div>' +
         metconMoves(mres.wod).slice(0, 6).map(function (m) {
           return '<div class="nc-ex"><span class="nx-name">' + esc(moveLine(m)) + '</span></div>';
-        }).join("") +
-      '</div>';
+        }).join("") + ncFoot +
+      '</button>';
     } else {
       var res = resolveSession(t, db.active, eq());
-      html += '<div class="next-card"><div class="nc-eye">Next up · ' + esc(sessionLabel(res)) + '</div>';
+      html += '<button class="next-card" id="nc-open"><div class="nc-eye">Next up · ' + esc(sessionLabel(res)) + '</div>';
       res.exercises.forEach(function (x) {
         var setStr = x.workSets.length + "×" + repRange(x.target, x.repHigh) + (x.assist && x.workSets[0].amrap ? "+" : "");
         html += '<div class="nc-ex"><span class="nx-name">' + esc(x.name) + '</span>' +
@@ -2423,7 +2430,7 @@
             : '<span class="nx-set">' + setStr + '</span>&nbsp;&nbsp;<span class="nx-w">' + fmt(x.weight) + ' ' + U() + '</span>') +
           '</span></div>';
       });
-      html += '</div>';
+      html += ncFoot + '</button>';
     }
 
     html += '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-start">Start working out</button></div>' +
@@ -2456,7 +2463,78 @@
     c.innerHTML = html;
     document.getElementById("h-start").onclick = function () { go("pick"); };
     document.getElementById("h-change").onclick = function () { go("choose"); };
+    var ncOpen = document.getElementById("nc-open");
+    if (ncOpen) ncOpen.onclick = function () { go("schedule"); };
     c.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
+  };
+
+  /* ============================================================ SCHEDULE */
+  // project the next `days` of sessions, advancing progression as if every
+  // session is completed successfully. Returns [{ date, res }].
+  function projectSchedule(days) {
+    var t = tplById(db.active.templateId);
+    if (!t) return [];
+    var sim = JSON.parse(JSON.stringify(db.active));
+    var gap = (7 / (t.daysPerWeek || 3)) * 86400000;
+    var start = Date.now(), date = start, out = [], guard = 0;
+    while (date - start <= days * 86400000 && guard++ < 40) {
+      var res = isMetcon(t) ? resolveMetcon(t, sim) : resolveSession(t, sim, eq());
+      out.push({ date: date, res: res });
+      if (isMetcon(t)) {
+        advanceRotation(sim, t, sim.cycleIndex);
+      } else {
+        var fake = res.exercises.filter(function (x) { return !x.assist; }).map(function (x) {
+          return { exId: x.exId, done: true, made: true, hitTop: true, topWeight: x.weight };
+        });
+        applyResult(t, sim, { dayType: res.dayType, cycleIndex: sim.cycleIndex, exercises: fake }, eq());
+      }
+      date += gap;
+    }
+    return out;
+  }
+
+  renderers.schedule = function () {
+    var c = screens.schedule;
+    if (!db.active) { go("home"); return; }
+    var t = tplById(db.active.templateId);
+    if (!t) { db.active = null; save(); go("choose"); return; }
+    var metcon = isMetcon(t);
+    var sched = projectSchedule(30);
+    var html = '<button class="backlink" id="sc-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
+      '<h2 class="title">The month ahead</h2>' +
+      '<p class="lead">' + esc(t.name) + ' · your next ' + sched.length + ' sessions' +
+      (metcon ? '' : ', weights projected assuming you hit every one') + '.</p>';
+
+    var curWk = weekKey(Date.now()), shownWk = null;
+    sched.forEach(function (item) {
+      var wk = weekKey(item.date);
+      if (wk !== shownWk) {
+        shownWk = wk;
+        var wi = Math.round((wk - curWk) / 604800000);
+        html += '<div class="eyebrow" style="margin-top:16px">' + (wi === 0 ? "This week" : wi === 1 ? "Next week" : "In " + wi + " weeks") + '</div>';
+      }
+      var res = item.res;
+      var title = metcon ? res.wod.name : (res.dayType ? cap(res.dayType) + " day" : "Workout " + res.label);
+      var dlabel = dayKey(item.date) === dayKey(Date.now()) ? "Today"
+        : new Date(item.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+      html += '<div class="day-block"><h4>' + esc(dlabel) + ' · ' + esc(title) + '</h4>';
+      if (metcon) {
+        html += '<div class="sc-sub">' + esc(res.subtitle) + '</div>' +
+          metconMoves(res.wod).slice(0, 5).map(function (m) {
+            return '<div class="ex-line"><span>' + esc(moveLine(m)) + '</span></div>';
+          }).join("");
+      } else {
+        res.exercises.forEach(function (x) {
+          var setStr = x.workSets.length + "×" + repRange(x.target, x.repHigh);
+          html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' + setStr +
+            (x.assist ? '' : '  ·  ' + fmt(x.weight) + U()) + '</span></div>';
+        });
+      }
+      html += '</div>';
+    });
+
+    c.innerHTML = html;
+    document.getElementById("sc-back").onclick = function () { go("home"); };
   };
 
   /* ============================================================ PICK WORKOUT */
@@ -3442,22 +3520,24 @@
     return null;
   }
 
-  // one point per week: heaviest weight actually lifted for that lift that week
+  // one point per week: heaviest weight ACTUALLY lifted for that lift that week.
+  // weeks where the lift wasn't trained are skipped (no phantom points from the
+  // prescribed/next weight); the line is anchored at the starting weight only
+  // when training on this lift began in a later week.
   function weeklySeries(exId, startWeight, startedAt) {
     var byWeek = {};
-    byWeek[weekKey(startedAt)] = startWeight;
     db.sessions.forEach(function (s) {
       var a = (s.actual || []).filter(function (x) {
         return x.exId === exId && x.sets && x.sets.some(function (st) { return st.reps > 0; });
       })[0];
-      var w = a ? a.topWeight
-        : (s.snapshot && s.snapshot[exId] != null ? s.snapshot[exId] : null); // not trained / legacy
-      if (w == null) return;
+      if (!a) return;
       var k = weekKey(s.date);
-      byWeek[k] = byWeek[k] == null ? w : Math.max(byWeek[k], w);
+      byWeek[k] = byWeek[k] == null ? a.topWeight : Math.max(byWeek[k], a.topWeight);
     });
-    return Object.keys(byWeek).map(Number).sort(function (a, b) { return a - b; })
-      .map(function (k) { return { t: k, v: byWeek[k] }; });
+    var weeks = Object.keys(byWeek).map(Number).sort(function (a, b) { return a - b; });
+    var startWk = weekKey(startedAt);
+    if (weeks.length && weeks[0] > startWk) { weeks.unshift(startWk); byWeek[startWk] = startWeight; }
+    return weeks.map(function (k) { return { t: k, v: byWeek[k] }; });
   }
 
   // a chart card: title, sub-line, delta, weekly series. When nowVal is given the
