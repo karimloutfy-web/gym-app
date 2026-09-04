@@ -18,6 +18,38 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 
+<script type="module">
+  /* Social backend (Supabase) — an optional layer. If it fails to load the
+     app still runs fully offline; only the Feed tab needs it. */
+  (async function () {
+    window.RC = window.RC || {};
+    try {
+      var mod = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+      window.RC.sb = mod.createClient(
+        "https://sfskyokfctaqzlbgztjx.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmc2t5b2tmY3RhcXpsYmd6dGp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NTc5ODgsImV4cCI6MjEwNDAzMzk4OH0.M46Y2x8PgvfR9HG5p3BKiNzIXsHSIrSPp8Ruhd_PXqY",
+        { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" } }
+      );
+    } catch (e) {
+      console.warn("Rack Coach: social backend unavailable —", e && e.message);
+    }
+    window.dispatchEvent(new Event("rc-sb-ready"));
+  })();
+</script>
+
+<style>
+  /* social feed */
+  .feed-card { border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px;
+    background: var(--surface); margin: 10px 0; }
+  .feed-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .feed-head b { font-size: 15px; }
+  .feed-head span { font-size: 12px; color: var(--text-faint); white-space: nowrap; }
+  .feed-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+  .feed-lifts { list-style: none; margin: 8px 0 0; padding: 0; }
+  .feed-lifts li { font-size: 13px; color: var(--text); padding: 2px 0;
+    font-variant-numeric: tabular-nums; }
+</style>
+
 <style>
   /* ============================================================
      THEME: "Arcane Teal" — the gem-glow teal from the reference
@@ -546,6 +578,7 @@
     <section class="screen" id="s-progress"></section>
     <section class="screen" id="s-body"></section>
     <section class="screen" id="s-badges"></section>
+    <section class="screen" id="s-feed"></section>
   </main>
 
   <nav class="tabbar" id="tabbar">
@@ -564,6 +597,10 @@
     <button data-tab="badges" aria-selected="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14.5L7 22l5-3 5 3-1.5-7.5"/></svg>
       <span>Badges</span>
+    </button>
+    <button data-tab="feed" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+      <span>Feed</span>
     </button>
   </nav>
 </div>
@@ -1213,7 +1250,10 @@
       body: [],  // [{ id, date, bw, m:{chest,arms,waist,hips,thighs,calves}, note }]
       customPlans: [],     // full template objects authored/duplicated by the user
       customWorkouts: [],  // one-off single sessions (strength or metcon)
-      badges: { earned: {}, seen: {} }   // earned[id] = ts ; seen[id] = 1
+      badges: { earned: {}, seen: {} },  // earned[id] = ts ; seen[id] = 1
+      account: null,       // { userId, displayName } once signed in to the feed
+      pendingPush: [],     // session ids waiting to sync to the feed backend
+      backfilledFor: {}    // userId -> true once existing local history has been published for that account
     };
   }
   var db;
@@ -1229,6 +1269,9 @@
   if (!db.version || db.version < 2) db.version = 2;
   db.sessions = db.sessions || [];
   db.body = Array.isArray(db.body) ? db.body : [];
+  if (db.account && !db.account.userId) db.account = null;
+  db.pendingPush = Array.isArray(db.pendingPush) ? db.pendingPush : [];
+  db.backfilledFor = (db.backfilledFor && typeof db.backfilledFor === "object") ? db.backfilledFor : {};
 
   var warnedSave = false;
   var saveT = null;
@@ -1318,12 +1361,13 @@
     summary: document.getElementById("s-summary"),
     progress: document.getElementById("s-progress"),
     body: document.getElementById("s-body"),
-    badges: document.getElementById("s-badges")
+    badges: document.getElementById("s-badges"),
+    feed: document.getElementById("s-feed")
   };
-  var TAB_SCREENS = { home: 1, progress: 1, body: 1, badges: 1 };
-  var TAB_ORDER = ["home", "progress", "body", "badges"];
+  var TAB_SCREENS = { home: 1, progress: 1, body: 1, badges: 1, feed: 1 };
+  var TAB_ORDER = ["home", "progress", "body", "badges", "feed"];
   // rough "depth" so a plain go() can infer push vs pop direction
-  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, choose: 1, summary: 1, pick: 1, roll: 1, schedule: 1, detail: 2, setup: 3, editor: 3 };
+  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, feed: 0, choose: 1, summary: 1, pick: 1, roll: 1, schedule: 1, detail: 2, setup: 3, editor: 3 };
   var cur = null, sliding = false;
   var SCR_RESET = ["anim", "from-right", "from-left", "to-left", "to-right", "behind", "lead", "trail"];
   function snapScreens() {
@@ -1382,7 +1426,7 @@
   }
   function renderTabs() {
     var tb = document.getElementById("tabbar");
-    var show = (!!db.active || db.sessions.length > 0) && !!TAB_SCREENS[cur];
+    var show = (!!db.active || db.sessions.length > 0 || !!db.account) && !!TAB_SCREENS[cur];
     tb.classList.toggle("show", show);
     if (!show) return;
     tb.querySelectorAll("[data-tab]").forEach(function (b) {
@@ -2505,6 +2549,7 @@
   }
 
   function finishAndCelebrate(sess, cb) {
+    try { rcPublishWorkout(sess); } catch (e) {}
     var fresh = evaluateBadges();
     dismissPlayer(function () { renderCelebration(sess, fresh, cb); });
   }
@@ -4111,6 +4156,12 @@
           '<button data-v="rir" aria-selected="' + (!effortIsRpe()) + '">RIR</button><button data-v="rpe" aria-selected="' + (effortIsRpe()) + '">RPE</button></div></div>' +
       '</div>' +
       (db.active ? '<div class="btn-row"><button class="btn btn-ghost" id="st-change">Switch program</button></div>' : '') +
+      '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
+      (db.account
+        ? '<p style="font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:10px">Signed in as <b>' + esc(db.account.displayName) + '</b>. Finished workouts post to the shared feed.</p>' +
+          '<div class="btn-row"><button class="btn btn-ghost" id="st-signout">Sign out</button></div>'
+        : '<p style="font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:10px">Sign in to share your workouts and see what everyone else is lifting.</p>' +
+          '<div class="btn-row"><button class="btn btn-ghost" id="st-signin">Sign in</button></div>') +
       '<div class="eyebrow" style="margin:18px 0 8px">Your data</div>' +
       '<p style="font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:10px">Saved on this device only — nothing is sent anywhere, and it works offline. It won\'t sync to another phone, and clearing this site\'s data erases it, so export a backup every few weeks and keep the file somewhere safe.</p>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="st-export">Export backup</button><button class="btn btn-ghost" id="st-import">Restore</button></div>' +
@@ -4131,6 +4182,10 @@
     });
     var sc = document.getElementById("st-change");
     if (sc) sc.onclick = function () { closeSheet(); go("choose"); };
+    var siBtn = document.getElementById("st-signin");
+    if (siBtn) siBtn.onclick = function () { closeSheet(); openSignIn(); };
+    var soBtn = document.getElementById("st-signout");
+    if (soBtn) soBtn.onclick = rcSignOut;
     document.getElementById("st-export").onclick = exportData;
     document.getElementById("st-import").onclick = openImport;
     var w = document.getElementById("st-wipe");
@@ -4190,6 +4245,293 @@
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden && run && run.kind === "metcon") metconTick();
   });
+
+  /* ============================================================ SOCIAL / FEED
+     A thin layer over Supabase: email-OTP sign-in, one shared profile per
+     user, and a single global activity feed. The app works fully without it;
+     everything here no-ops when window.RC.sb is absent (offline / blocked). */
+
+  function sb() { return (window.RC && window.RC.sb) || null; }
+
+  var feed = { items: [], loading: false, done: false, error: null, loaded: false };
+  var FEED_PAGE = 25;
+
+  function tidyAuthUrl() {
+    var qs = location.search || "";
+    if (/[?&]error/.test(qs)) {
+      var m = /error_description=([^&]+)/.exec(qs);
+      toast(m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "Sign-in didn't complete — try again");
+    }
+    if (/[?&](code|error|state)=/.test(qs)) history.replaceState(null, "", location.origin + location.pathname);
+  }
+
+  window.addEventListener("rc-sb-ready", function () {
+    var c = sb();
+    if (!c) { if (cur === "feed") renderers.feed(); return; }
+    c.auth.getSession().then(function (r) {
+      var s = r && r.data && r.data.session;
+      if (s && s.user) hydrateAccount(s.user, false);
+      else if (cur === "feed") renderers.feed();
+      tidyAuthUrl();
+    });
+    c.auth.onAuthStateChange(function (evt, session) {
+      if (session && session.user) {
+        tidyAuthUrl();
+        hydrateAccount(session.user, evt === "SIGNED_IN");
+      } else {
+        db.account = null; save();
+        feed = { items: [], loading: false, done: false, error: null, loaded: false };
+        renderTabs();
+        if (cur === "feed") renderers.feed();
+      }
+    });
+  });
+
+  function hydrateAccount(user, navigate) {
+    var c = sb();
+    if (!c) return;
+    c.from("profiles").select("display_name").eq("id", user.id).maybeSingle().then(function (r) {
+      var name = r && r.data && r.data.display_name;
+      if (name) {
+        db.account = { userId: user.id, displayName: name };
+        save();
+        renderTabs();
+        flushPendingPush();
+        backfillHistory();
+        if (navigate) { closeSheet(); toast("Signed in"); go("feed"); }
+        else if (cur === "feed") renderers.feed();
+      } else {
+        promptDisplayName(user);
+      }
+    });
+  }
+
+  function openSignIn() {
+    if (!sb()) { toast("No connection yet — try again in a moment"); return; }
+    openSheet('<h2>Sign in</h2><p class="sh-lead">Sign in with Google to share your workouts to the feed. Nothing is posted without you finishing a session.</p>' +
+      '<div class="btn-row"><button class="btn btn-primary" id="si-google">Continue with Google</button></div>');
+    document.getElementById("si-google").onclick = function () {
+      var btn = this; btn.disabled = true; btn.textContent = "Opening Google…";
+      sb().auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: location.origin + location.pathname }
+      }).then(function (r) {
+        if (r.error) { toast(r.error.message || "Couldn't start Google sign-in"); btn.disabled = false; btn.textContent = "Continue with Google"; }
+        // success => full-page redirect to Google; nothing else to do here
+      });
+    };
+  }
+
+  function googleName(user) {
+    var m = user.user_metadata || {};
+    return (m.full_name || m.name || m.preferred_username || "").toString().trim().slice(0, 30);
+  }
+
+  function promptDisplayName(user) {
+    var suggested = googleName(user);
+    openSheet('<h2>Pick a name</h2><p class="sh-lead">This is how you show up in the feed. You can\'t change it later yet.</p>' +
+      '<input class="num-in" id="dn-in" maxlength="30" autocomplete="off" placeholder="e.g. Karim L" value="' + esc(suggested) + '" style="width:100%;padding:12px;font-size:15px">' +
+      '<div class="btn-row"><button class="btn btn-primary" id="dn-ok">Continue</button></div>');
+    var i = document.getElementById("dn-in");
+    i.focus(); i.select();
+    document.getElementById("dn-ok").onclick = function () {
+      var name = (i.value || "").trim();
+      if (name.length < 2) { toast("A little longer, please"); return; }
+      var btn = this; btn.disabled = true;
+      sb().from("profiles").upsert({ id: user.id, display_name: name }).then(function (r) {
+        if (r.error) { toast("Couldn't save that name"); btn.disabled = false; return; }
+        db.account = { userId: user.id, displayName: name };
+        save(); closeSheet(); renderTabs(); flushPendingPush(); backfillHistory();
+        toast("You're in");
+        go("feed");
+      });
+    };
+  }
+
+  function rcSignOut() {
+    if (sb()) sb().auth.signOut();
+    db.account = null; save();
+    feed = { items: [], loading: false, done: false, error: null, loaded: false };
+    closeSheet(); renderTabs();
+    go("home");
+    toast("Signed out");
+  }
+
+  /* ---- publishing completed workouts ---- */
+
+  function sessProgramName(sess) {
+    if (sess.programName) return sess.programName;
+    var t = sess.templateId ? tplById(sess.templateId) : null;
+    return (t && t.name) || "Workout";
+  }
+
+  function compactSummary(sess) {
+    var lifts = (sess.actual || []).filter(function (a) { return !a.assist; }).map(function (a) {
+      return {
+        name: a.name,
+        weight: a.topWeight || 0,
+        reps: a.topReps || 0,
+        sets: (a.sets || []).length,
+        made: a.made === true
+      };
+    });
+    var out = { lifts: lifts, unit: U(), dayType: sess.dayType || null };
+    if (sess.score) {  // metcon/WOD sessions carry a score instead of lift sets
+      var sc = sess.score, bit = null;
+      if (sc.rounds != null) bit = sc.rounds + " rounds" + (sc.reps ? " +" + sc.reps : "");
+      else if (sc.reps != null) bit = sc.reps + " reps";
+      else if (sc.load != null) bit = fmt(sc.load) + " " + U();
+      else if (sc.timeSec != null) bit = fmtClock(sc.timeSec * 1000) + (sc.cappedOut ? " (capped)" : "");
+      if (bit) out.score = bit + (sc.rx === false ? " · scaled" : "");
+    }
+    return out;
+  }
+
+  function workoutRow(sess) {
+    return {
+      user_id: db.account.userId,
+      client_id: sess.id,
+      completed_at: new Date(sess.date || Date.now()).toISOString(),
+      program_name: sessProgramName(sess),
+      day_label: sess.dayLabel || sess.wodName || null,
+      duration_sec: sess.durationSec || null,
+      summary: compactSummary(sess)
+    };
+  }
+
+  function queuePush(id) {
+    db.pendingPush = db.pendingPush || [];
+    if (db.pendingPush.indexOf(id) < 0) { db.pendingPush.push(id); save(); }
+  }
+  function unqueuePush(id) {
+    if (!db.pendingPush) return;
+    var i = db.pendingPush.indexOf(id);
+    if (i >= 0) { db.pendingPush.splice(i, 1); save(); }
+  }
+
+  function rcPublishWorkout(sess) {
+    if (!sess) return;
+    if (!db.account || !sb()) { queuePush(sess.id); return; }
+    sb().from("workouts").upsert(workoutRow(sess), { onConflict: "user_id,client_id" }).then(function (r) {
+      if (r.error) queuePush(sess.id);
+      else { unqueuePush(sess.id); if (cur === "feed") loadFeed(true); }
+    }, function () { queuePush(sess.id); });
+  }
+
+  function flushPendingPush() {
+    if (!db.account || !sb() || !db.pendingPush || !db.pendingPush.length) return;
+    db.pendingPush.slice().forEach(function (id) {
+      var sess = (db.sessions || []).filter(function (s) { return s.id === id; })[0];
+      if (sess) rcPublishWorkout(sess); else unqueuePush(id);
+    });
+  }
+
+  // one-time-per-account: push existing local history to the feed with its real timestamps
+  function backfillHistory() {
+    if (!db.account || !sb() || db.backfilledFor[db.account.userId]) return;
+    var sessions = db.sessions || [];
+    if (!sessions.length) { db.backfilledFor[db.account.userId] = true; save(); return; }
+    var rows = sessions.map(workoutRow);
+    var CHUNK = 200, i = 0;
+    function next() {
+      if (i >= rows.length) {
+        db.backfilledFor[db.account.userId] = true; save();
+        if (cur === "feed") loadFeed(true);
+        return;
+      }
+      sb().from("workouts").upsert(rows.slice(i, i + CHUNK), { onConflict: "user_id,client_id" }).then(function () {
+        i += CHUNK; next();
+      }, function () { /* leave unflagged — retried on next sign-in */ });
+    }
+    next();
+  }
+
+  /* ---- the feed ---- */
+
+  var loadFeedCalls = [];
+  function loadFeed(reset) {
+    var now = Date.now();
+    loadFeedCalls = loadFeedCalls.filter(function (t) { return now - t < 3000; });
+    loadFeedCalls.push(now);
+    if (loadFeedCalls.length > 8) {
+      console.error("Rack Coach: feed load loop detected — stopped automatically.");
+      feed.loading = false; feed.loaded = true; feed.error = "Couldn't load the feed. Pull to refresh.";
+      if (cur === "feed") renderers.feed();
+      return;
+    }
+    if (feed.loading || !sb() || !db.account) return;
+    if (reset) { feed.items = []; feed.done = false; }
+    feed.loading = true; feed.error = null;
+    if (cur === "feed") renderers.feed();
+    var from = feed.items.length, to = from + FEED_PAGE - 1;
+    sb().from("workouts")
+      .select("id, completed_at, program_name, day_label, duration_sec, summary, profiles(display_name)")
+      .order("completed_at", { ascending: false })
+      .range(from, to)
+      .then(function (r) {
+        feed.loading = false; feed.loaded = true;
+        if (r.error) { feed.error = "Couldn't load the feed. Pull to refresh."; }
+        else {
+          var rows = r.data || [];
+          feed.items = feed.items.concat(rows);
+          if (rows.length < FEED_PAGE) feed.done = true;
+        }
+        if (cur === "feed") renderers.feed();
+      }, function () {
+        feed.loading = false; feed.loaded = true; feed.error = "Couldn't load the feed.";
+        if (cur === "feed") renderers.feed();
+      });
+  }
+
+  function feedItemsHtml(items) {
+    return items.map(function (w) {
+      var who = (w.profiles && w.profiles.display_name) || "Someone";
+      var s = w.summary || {};
+      var unit = s.unit || "kg";
+      var lifts = (s.lifts || []).slice(0, 4).map(function (l) {
+        var wt = l.weight ? fmt(l.weight) + " " + unit : "BW";
+        return '<li>' + esc(l.name) + ' · ' + wt + ' × ' + (l.reps || 0) +
+          (l.sets > 1 ? ' · ' + l.sets + ' sets' : '') + (l.made ? ' ✓' : '') + '</li>';
+      }).join("");
+      var dur = w.duration_sec ? Math.round(w.duration_sec / 60) + " min" : "";
+      var when = relDate(new Date(w.completed_at).getTime());
+      return '<div class="feed-card">' +
+        '<div class="feed-head"><b>' + esc(who) + '</b><span>' + esc(when) + '</span></div>' +
+        '<div class="feed-sub">' + esc(w.program_name || "Workout") +
+          (w.day_label ? ' · ' + esc(w.day_label) : '') + (dur ? ' · ' + dur : '') + '</div>' +
+        (s.score ? '<div class="feed-sub" style="margin-top:4px;font-weight:600;color:var(--accent-ink)">' + esc(s.score) + '</div>' : '') +
+        (lifts ? '<ul class="feed-lifts">' + lifts + '</ul>' : '') +
+      '</div>';
+    }).join("");
+  }
+
+  renderers.feed = function () {
+    var c = screens.feed;
+    if (!db.account) {
+      c.innerHTML = '<h2 class="title">Feed</h2>' +
+        '<p class="lead">See what everyone’s lifting. Sign in with Google to join.</p>' +
+        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="fd-signin">Sign in</button></div>' +
+        (sb() ? '' : '<p class="lead" style="color:var(--text-faint);font-size:12px;margin-top:10px">Waiting for a connection…</p>');
+      var b = document.getElementById("fd-signin");
+      if (b) b.onclick = openSignIn;
+      return;
+    }
+    var body;
+    if (feed.items.length) body = feedItemsHtml(feed.items);
+    else if (feed.loading) body = '<p class="lead">Loading…</p>';
+    else if (feed.error) body = '';
+    else body = '<p class="lead">No workouts yet — finish a session to be the first.</p>';
+
+    var html = '<h2 class="title">Feed</h2><p class="lead">Latest workouts from everyone.</p>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="fd-refresh"' + (feed.loading ? ' disabled' : '') + '>Refresh</button></div>' +
+      '<div id="fd-list">' + body + '</div>' +
+      (feed.error ? '<p class="lead" style="color:var(--miss,#c0392b)">' + esc(feed.error) + '</p>' : '') +
+      (feed.items.length && !feed.done ? '<div class="btn-row"><button class="btn btn-ghost" id="fd-more"' + (feed.loading ? ' disabled' : '') + '>Load more</button></div>' : '');
+    c.innerHTML = html;
+    var rf = document.getElementById("fd-refresh"); if (rf) rf.onclick = function () { loadFeed(true); };
+    var mo = document.getElementById("fd-more"); if (mo) mo.onclick = function () { loadFeed(false); };
+    if (!feed.loaded && !feed.loading) loadFeed(true);
+  };
 
   /* ============================================================ BOOT */
   go("home");
