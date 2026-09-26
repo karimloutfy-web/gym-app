@@ -48,6 +48,15 @@
   .feed-lifts { list-style: none; margin: 8px 0 0; padding: 0; }
   .feed-lifts li { font-size: 13px; color: var(--text); padding: 2px 0;
     font-variant-numeric: tabular-nums; }
+  .avatar { border-radius: 999px; object-fit: cover; display: inline-block; flex: none; background: var(--surface-2); }
+  .avatar-fallback { display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; flex: none; }
+  .feed-who { display: flex; align-items: center; gap: 8px; border: none; background: none; padding: 0;
+    cursor: pointer; text-align: left; color: inherit; font: inherit; }
+  .kudos-btn { margin-top: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text-muted);
+    border-radius: 999px; padding: 5px 12px; font-size: 12.5px; cursor: pointer; }
+  .kudos-btn.given { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+  .kudos-count { margin-top: 8px; font-size: 12px; color: var(--text-faint); }
 </style>
 
 <style>
@@ -1253,7 +1262,8 @@
       badges: { earned: {}, seen: {} },  // earned[id] = ts ; seen[id] = 1
       account: null,       // { userId, displayName } once signed in to the feed
       pendingPush: [],     // session ids waiting to sync to the feed backend
-      backfilledFor: {}    // userId -> true once existing local history has been published for that account
+      backfilledFor: {},   // userId -> true once existing local history has been published for that account
+      knownProfiles: {}    // userId -> { displayName, avatarUrl }; survives sign-out so we never re-ask for a name
     };
   }
   var db;
@@ -1272,6 +1282,8 @@
   if (db.account && !db.account.userId) db.account = null;
   db.pendingPush = Array.isArray(db.pendingPush) ? db.pendingPush : [];
   db.backfilledFor = (db.backfilledFor && typeof db.backfilledFor === "object") ? db.backfilledFor : {};
+  db.knownProfiles = (db.knownProfiles && typeof db.knownProfiles === "object") ? db.knownProfiles : {};
+  if (db.account && db.account.displayName) db.knownProfiles[db.account.userId] = { displayName: db.account.displayName, avatarUrl: db.account.avatarUrl || null };
 
   var warnedSave = false;
   var saveT = null;
@@ -1824,7 +1836,7 @@
     db.sessions.push(sess);
     save();
     lastSummary = sess;
-    run = null;
+    run = null; persistRun();
     finishAndCelebrate(sess, function () { go("summary"); });
   }
 
@@ -2904,6 +2916,37 @@
 
   /* ============================================================ SESSION PLAYER */
   var run = null;
+
+  // the in-progress workout lives in memory, so mirror it to storage: if the OS
+  // evicts the backgrounded app or a new version reloads the page, we pick up
+  // exactly where we left off instead of losing the session.
+  var RUN_KEY = KEY + ".run";
+  var RUN_MAX_AGE = 12 * 60 * 60 * 1000;
+  function persistRun() {
+    try {
+      if (!run) { localStorage.removeItem(RUN_KEY); return; }
+      var snap = {};
+      Object.keys(run).forEach(function (k) { if (k !== "t" && k !== "tick") snap[k] = run[k]; });
+      snap.tId = run.t ? run.t.id : null;
+      localStorage.setItem(RUN_KEY, JSON.stringify(snap));
+    } catch (e) {}
+  }
+  function restoreRun() {
+    var snap;
+    try { snap = JSON.parse(localStorage.getItem(RUN_KEY)); } catch (e) { snap = null; }
+    if (!snap || !snap.startedAt || Date.now() - snap.startedAt > RUN_MAX_AGE) { try { localStorage.removeItem(RUN_KEY); } catch (e) {} return; }
+    var t = snap.tId ? tplById(snap.tId) : null;
+    if (snap.tId && !t) { try { localStorage.removeItem(RUN_KEY); } catch (e) {} return; }
+    delete snap.tId;
+    snap.t = t;
+    run = snap;
+    renderPlayer();
+  }
+  window.RC = window.RC || {};
+  window.RC.workoutActive = function () { return !!run; };
+  document.addEventListener("visibilitychange", function () { if (document.hidden) persistRun(); });
+  window.addEventListener("pagehide", persistRun);
+
   function startPlayer(chosenIdx) {
     var t = tplById(db.active.templateId);
     if (!t) { db.active = null; save(); go("choose"); return; }
@@ -2977,8 +3020,9 @@
 
   function renderPlayer() {
     var root = document.getElementById("player-root");
-    if (!run) { root.innerHTML = ""; return; }
+    if (!run) { root.innerHTML = ""; persistRun(); return; }
     if (run.kind === "metcon") { renderMetconPlayer(); return; }
+    persistRun();
     if (run.i >= run.queue.length) { run.custom ? finishFreestylePlayer() : finishPlayer(); return; }
 
     // build the shell once, then update its parts in place (no full-DOM flash between sets)
@@ -3079,7 +3123,7 @@
   function endWorkoutPrompt() {
     confirmSheet("End this workout?", "Nothing from this session is saved and your program won't advance.", function () {
       if (run && run.tick) { clearInterval(run.tick); run.tick = null; }
-      run = null;
+      run = null; persistRun();
       dismissPlayer(function () { go("home", true); });
     });
   }
@@ -3440,7 +3484,7 @@
     save();
 
     lastSummary = sess;
-    run = null;
+    run = null; persistRun();
     finishAndCelebrate(sess, function () { go("summary"); });
   }
 
@@ -3512,6 +3556,7 @@
   function renderMetconPlayer() {
     var root = document.getElementById("player-root");
     if (!run || run.kind !== "metcon") { root.innerHTML = ""; return; }
+    persistRun();
     var w = run.wod, moves = metconMoves(w);
     var down = metconCountsDown(w);
 
@@ -3664,7 +3709,7 @@
     if (db.active && !run.adhoc && t) advanceRotation(db.active, t, run.chosenIdx);
     save();
     lastSummary = sess;
-    run = null;
+    run = null; persistRun();
     finishAndCelebrate(sess, function () { go("summary"); });
   }
 
@@ -4158,8 +4203,9 @@
       (db.active ? '<div class="btn-row"><button class="btn btn-ghost" id="st-change">Switch program</button></div>' : '') +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
       (db.account
-        ? '<p style="font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:10px">Signed in as <b>' + esc(db.account.displayName) + '</b>. Finished workouts post to the shared feed.</p>' +
-          '<div class="btn-row"><button class="btn btn-ghost" id="st-signout">Sign out</button></div>'
+        ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' + avatarHtml(db.account.avatarUrl, db.account.displayName, 40) +
+            '<p style="font-size:12px;color:var(--text-muted);line-height:1.4;margin:0">Signed in as <b>' + esc(db.account.displayName) + '</b>. Finished workouts post to the shared feed.</p></div>' +
+          '<div class="btn-row"><button class="btn btn-ghost" id="st-editprofile">Edit profile</button><button class="btn btn-ghost" id="st-signout">Sign out</button></div>'
         : '<p style="font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:10px">Sign in to share your workouts and see what everyone else is lifting.</p>' +
           '<div class="btn-row"><button class="btn btn-ghost" id="st-signin">Sign in</button></div>') +
       '<div class="eyebrow" style="margin:18px 0 8px">Your data</div>' +
@@ -4186,6 +4232,8 @@
     if (siBtn) siBtn.onclick = function () { closeSheet(); openSignIn(); };
     var soBtn = document.getElementById("st-signout");
     if (soBtn) soBtn.onclick = rcSignOut;
+    var epBtn = document.getElementById("st-editprofile");
+    if (epBtn) epBtn.onclick = openEditProfile;
     document.getElementById("st-export").onclick = exportData;
     document.getElementById("st-import").onclick = openImport;
     var w = document.getElementById("st-wipe");
@@ -4253,7 +4301,8 @@
 
   function sb() { return (window.RC && window.RC.sb) || null; }
 
-  var feed = { items: [], loading: false, done: false, error: null, loaded: false };
+  var followingIds = null;  // cached array of userIds the signed-in account follows; null = not loaded yet
+  var feed = { items: [], loading: false, done: false, error: null, loaded: false, scope: "everyone" };
   var FEED_PAGE = 25;
 
   function tidyAuthUrl() {
@@ -4277,10 +4326,14 @@
     c.auth.onAuthStateChange(function (evt, session) {
       if (session && session.user) {
         tidyAuthUrl();
-        hydrateAccount(session.user, evt === "SIGNED_IN");
+        var already = db.account && db.account.userId === session.user.id;
+        // Supabase re-emits SIGNED_IN / TOKEN_REFRESHED when the app regains focus;
+        // for an account we already know that's not a new sign-in, so stay put.
+        if (already && evt !== "INITIAL_SESSION" && evt !== "USER_UPDATED") return;
+        hydrateAccount(session.user, evt === "SIGNED_IN" && !already);
       } else {
         db.account = null; save();
-        feed = { items: [], loading: false, done: false, error: null, loaded: false };
+        feed = { items: [], loading: false, done: false, error: null, loaded: false, scope: "everyone" }; followingIds = null;
         renderTabs();
         if (cur === "feed") renderers.feed();
       }
@@ -4290,10 +4343,21 @@
   function hydrateAccount(user, navigate) {
     var c = sb();
     if (!c) return;
-    c.from("profiles").select("display_name").eq("id", user.id).maybeSingle().then(function (r) {
+    c.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle().then(function (r) {
       var name = r && r.data && r.data.display_name;
+      var avatar = (r && r.data && r.data.avatar_url) || null;
+      var known = db.knownProfiles[user.id];
+      // A failed or empty lookup (flaky network, token still refreshing) is not
+      // proof the profile is missing — if this device already knows the name, use
+      // it, and quietly re-save it in case the row really is gone.
+      if (!name && known && known.displayName) {
+        name = known.displayName; avatar = known.avatarUrl || null;
+        if (!(r && r.error)) c.from("profiles").upsert({ id: user.id, display_name: name, avatar_url: avatar }).then(function () {});
+      }
+      if (!name && r && r.error) return;   // couldn't reach the server — try again on the next launch rather than re-asking
       if (name) {
-        db.account = { userId: user.id, displayName: name };
+        db.account = { userId: user.id, displayName: name, avatarUrl: avatar };
+        db.knownProfiles[user.id] = { displayName: name, avatarUrl: avatar };
         save();
         renderTabs();
         flushPendingPush();
@@ -4326,10 +4390,15 @@
     var m = user.user_metadata || {};
     return (m.full_name || m.name || m.preferred_username || "").toString().trim().slice(0, 30);
   }
+  function googleAvatar(user) {
+    var m = user.user_metadata || {};
+    return m.avatar_url || m.picture || null;
+  }
 
   function promptDisplayName(user) {
     var suggested = googleName(user);
-    openSheet('<h2>Pick a name</h2><p class="sh-lead">This is how you show up in the feed. You can\'t change it later yet.</p>' +
+    var avatar = googleAvatar(user);
+    openSheet('<h2>Pick a name</h2><p class="sh-lead">This is how you show up in the feed. You can change it later in Settings.</p>' +
       '<input class="num-in" id="dn-in" maxlength="30" autocomplete="off" placeholder="e.g. Karim L" value="' + esc(suggested) + '" style="width:100%;padding:12px;font-size:15px">' +
       '<div class="btn-row"><button class="btn btn-primary" id="dn-ok">Continue</button></div>');
     var i = document.getElementById("dn-in");
@@ -4338,9 +4407,10 @@
       var name = (i.value || "").trim();
       if (name.length < 2) { toast("A little longer, please"); return; }
       var btn = this; btn.disabled = true;
-      sb().from("profiles").upsert({ id: user.id, display_name: name }).then(function (r) {
+      sb().from("profiles").upsert({ id: user.id, display_name: name, avatar_url: avatar }).then(function (r) {
         if (r.error) { toast("Couldn't save that name"); btn.disabled = false; return; }
-        db.account = { userId: user.id, displayName: name };
+        db.account = { userId: user.id, displayName: name, avatarUrl: avatar };
+        db.knownProfiles[user.id] = { displayName: name, avatarUrl: avatar };
         save(); closeSheet(); renderTabs(); flushPendingPush(); backfillHistory();
         toast("You're in");
         go("feed");
@@ -4351,10 +4421,151 @@
   function rcSignOut() {
     if (sb()) sb().auth.signOut();
     db.account = null; save();
-    feed = { items: [], loading: false, done: false, error: null, loaded: false };
+    feed = { items: [], loading: false, done: false, error: null, loaded: false, scope: "everyone" }; followingIds = null;
     closeSheet(); renderTabs();
     go("home");
     toast("Signed out");
+  }
+
+  function initials(name) {
+    var parts = (name || "").trim().split(/\s+/);
+    return ((parts[0] || "")[0] || "?").toUpperCase() + ((parts[1] || "")[0] || "").toUpperCase();
+  }
+  function avatarHtml(url, name, size) {
+    var s = size || 36;
+    if (url) return '<img class="avatar" src="' + esc(url) + '" width="' + s + '" height="' + s + '" style="width:' + s + 'px;height:' + s + 'px" alt="">';
+    return '<span class="avatar avatar-fallback" style="width:' + s + 'px;height:' + s + 'px;font-size:' + Math.round(s * 0.4) + 'px">' + esc(initials(name)) + '</span>';
+  }
+
+  // downscale to a small square JPEG before upload, so phone photos don't balloon storage
+  function resizeImageFile(file, maxSize, cb) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function () {
+      URL.revokeObjectURL(url);
+      var side = Math.min(img.width, img.height);
+      var sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+      var out = Math.min(maxSize, side);
+      var cv = document.createElement("canvas");
+      cv.width = out; cv.height = out;
+      cv.getContext("2d").drawImage(img, sx, sy, side, side, 0, 0, out, out);
+      cv.toBlob(function (blob) { cb(blob); }, "image/jpeg", 0.85);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+    img.src = url;
+  }
+
+  function uploadAvatar(file) {
+    if (!db.account || !sb()) return;
+    resizeImageFile(file, 256, function (blob) {
+      if (!blob) { toast("Couldn't read that image"); return; }
+      var path = db.account.userId + "/" + Date.now() + ".jpg";
+      sb().storage.from("avatars").upload(path, blob, { contentType: "image/jpeg", upsert: true }).then(function (r) {
+        if (r.error) { toast("Upload failed"); return; }
+        var url = sb().storage.from("avatars").getPublicUrl(path).data.publicUrl;
+        sb().from("profiles").update({ avatar_url: url }).eq("id", db.account.userId).then(function (r2) {
+          if (r2.error) { toast("Couldn't save your photo"); return; }
+          db.account.avatarUrl = url; db.knownProfiles[db.account.userId] = { displayName: db.account.displayName, avatarUrl: url }; save();
+          toast("Photo updated");
+          openEditProfile();
+          if (cur === "feed") loadFeed(true);
+        });
+      });
+    });
+  }
+
+  function openEditProfile() {
+    if (!db.account) return;
+    openSheet('<h2>Edit profile</h2>' +
+      '<div style="display:flex;align-items:center;gap:14px;margin:10px 0 16px">' +
+        '<button id="ep-avatar-btn" style="border:none;background:none;padding:0;cursor:pointer;border-radius:999px">' +
+          avatarHtml(db.account.avatarUrl, db.account.displayName, 64) +
+        '</button>' +
+        '<div><button class="btn btn-ghost" id="ep-avatar-pick">Change photo</button></div>' +
+        '<input type="file" accept="image/*" id="ep-avatar-file" hidden>' +
+      '</div>' +
+      '<input class="num-in" id="ep-name" maxlength="30" autocomplete="off" value="' + esc(db.account.displayName) + '" style="width:100%;padding:12px;font-size:15px">' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="ep-cancel">Cancel</button><button class="btn btn-primary" id="ep-save">Save</button></div>');
+    var pick = function () { document.getElementById("ep-avatar-file").click(); };
+    document.getElementById("ep-avatar-btn").onclick = pick;
+    document.getElementById("ep-avatar-pick").onclick = pick;
+    document.getElementById("ep-avatar-file").onchange = function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (f) uploadAvatar(f);
+    };
+    document.getElementById("ep-cancel").onclick = openSettings;
+    document.getElementById("ep-save").onclick = function () {
+      var name = (document.getElementById("ep-name").value || "").trim();
+      if (name.length < 2) { toast("A little longer, please"); return; }
+      var btn = this; btn.disabled = true;
+      sb().from("profiles").update({ display_name: name }).eq("id", db.account.userId).then(function (r) {
+        if (r.error) { toast("Couldn't save"); btn.disabled = false; return; }
+        db.account.displayName = name; db.knownProfiles[db.account.userId] = { displayName: name, avatarUrl: db.account.avatarUrl || null }; save();
+        closeSheet(); toast("Profile updated");
+        if (cur === "feed") loadFeed(true);
+      });
+    };
+  }
+
+  function toggleFollow(userId, isFollowing, btn) {
+    if (!db.account || !sb()) return;
+    btn.disabled = true;
+    var after = function (nowFollowing) {
+      btn.disabled = false;
+      btn.textContent = nowFollowing ? "Following" : "Follow";
+      btn.className = "btn " + (nowFollowing ? "btn-ghost" : "btn-primary");
+      btn.onclick = function () { toggleFollow(userId, nowFollowing, btn); };
+      if (followingIds) {
+        followingIds = nowFollowing
+          ? (followingIds.indexOf(userId) < 0 ? followingIds.concat([userId]) : followingIds)
+          : followingIds.filter(function (id) { return id !== userId; });
+      }
+      if (feed.scope === "following") loadFeed(true);
+    };
+    if (isFollowing) {
+      sb().from("follows").delete().eq("follower_id", db.account.userId).eq("followee_id", userId).then(function (r) {
+        if (r.error) { toast("Couldn't unfollow"); btn.disabled = false; return; }
+        after(false);
+      });
+    } else {
+      sb().from("follows").insert({ follower_id: db.account.userId, followee_id: userId }).then(function (r) {
+        if (r.error) { toast("Couldn't follow"); btn.disabled = false; return; }
+        after(true);
+      });
+    }
+  }
+
+  function openProfile(userId) {
+    if (!sb() || !db.account) return;
+    var isSelf = userId === db.account.userId;
+    openSheet('<h2>Profile</h2><p class="lead">Loading…</p>');
+    Promise.all([
+      sb().from("profiles").select("display_name, avatar_url").eq("id", userId).maybeSingle(),
+      sb().from("follows").select("follower_id", { count: "exact", head: true }).eq("followee_id", userId),
+      sb().from("follows").select("followee_id", { count: "exact", head: true }).eq("follower_id", userId),
+      isSelf ? Promise.resolve({ data: null }) : sb().from("follows").select("follower_id").eq("follower_id", db.account.userId).eq("followee_id", userId).maybeSingle(),
+      sb().from("workouts").select(WORKOUT_SELECT).eq("user_id", userId).order("completed_at", { ascending: false }).limit(10)
+    ]).then(function (results) {
+      var prof = (results[0] && results[0].data) || {};
+      var name = prof.display_name || "Someone";
+      var followers = results[1].count || 0;
+      var following = results[2].count || 0;
+      var amFollowing = !!(results[3] && results[3].data);
+      var workouts = (results[4] && results[4].data) || [];
+      var html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">' +
+          avatarHtml(prof.avatar_url, name, 56) +
+          '<div><h2 style="margin:0">' + esc(name) + '</h2>' +
+            '<p class="sh-lead" style="margin:2px 0 0">' + followers + ' follower' + (followers === 1 ? '' : 's') + ' · ' + following + ' following</p></div>' +
+        '</div>' +
+        (isSelf ? '' : '<div class="btn-row"><button class="btn ' + (amFollowing ? 'btn-ghost' : 'btn-primary') + '" id="pf-follow">' + (amFollowing ? 'Following' : 'Follow') + '</button></div>') +
+        '<div class="eyebrow" style="margin-top:16px">Recent workouts</div>' +
+        (workouts.length ? feedItemsHtml(workouts, true) : '<p class="lead">No workouts yet.</p>');
+      openSheet(html);
+      var fb = document.getElementById("pf-follow");
+      if (fb) fb.onclick = function () { toggleFollow(userId, amFollowing, fb); };
+    }, function () {
+      openSheet('<h2>Profile</h2><p class="lead">Couldn\'t load this profile.</p>');
+    });
   }
 
   /* ---- publishing completed workouts ---- */
@@ -4449,6 +4660,17 @@
   /* ---- the feed ---- */
 
   var loadFeedCalls = [];
+  var WORKOUT_SELECT = "id, user_id, completed_at, program_name, day_label, duration_sec, summary, profiles(display_name, avatar_url), kudos(user_id)";
+
+  function ensureFollowing(cb) {
+    if (followingIds) { cb(followingIds); return; }
+    if (!db.account || !sb()) { cb([]); return; }
+    sb().from("follows").select("followee_id").eq("follower_id", db.account.userId).then(function (r) {
+      followingIds = (r.data || []).map(function (row) { return row.followee_id; });
+      cb(followingIds);
+    }, function () { cb([]); });
+  }
+
   function loadFeed(reset) {
     var now = Date.now();
     loadFeedCalls = loadFeedCalls.filter(function (t) { return now - t < 3000; });
@@ -4463,12 +4685,17 @@
     if (reset) { feed.items = []; feed.done = false; }
     feed.loading = true; feed.error = null;
     if (cur === "feed") renderers.feed();
-    var from = feed.items.length, to = from + FEED_PAGE - 1;
-    sb().from("workouts")
-      .select("id, completed_at, program_name, day_label, duration_sec, summary, profiles(display_name)")
-      .order("completed_at", { ascending: false })
-      .range(from, to)
-      .then(function (r) {
+
+    function run(ids) {
+      if (feed.scope === "following" && (!ids || !ids.length)) {
+        feed.loading = false; feed.loaded = true; feed.items = []; feed.done = true;
+        if (cur === "feed") renderers.feed();
+        return;
+      }
+      var from = feed.items.length, to = from + FEED_PAGE - 1;
+      var q = sb().from("workouts").select(WORKOUT_SELECT).order("completed_at", { ascending: false }).range(from, to);
+      if (feed.scope === "following") q = q.in("user_id", ids);
+      q.then(function (r) {
         feed.loading = false; feed.loaded = true;
         if (r.error) { feed.error = "Couldn't load the feed. Pull to refresh."; }
         else {
@@ -4481,11 +4708,36 @@
         feed.loading = false; feed.loaded = true; feed.error = "Couldn't load the feed.";
         if (cur === "feed") renderers.feed();
       });
+    }
+
+    if (feed.scope === "following") ensureFollowing(run); else run(null);
   }
 
-  function feedItemsHtml(items) {
+  function toggleKudos(workoutId, el) {
+    if (!db.account || !sb()) return;
+    var item = feed.items.filter(function (w) { return w.id === workoutId; })[0];
+    if (!item) return;
+    item.kudos = item.kudos || [];
+    var mine = item.kudos.filter(function (k) { return k.user_id === db.account.userId; })[0];
+    if (mine) {
+      item.kudos = item.kudos.filter(function (k) { return k.user_id !== db.account.userId; });
+      renderers.feed();
+      sb().from("kudos").delete().eq("workout_id", workoutId).eq("user_id", db.account.userId).then(function (r) {
+        if (r.error) { item.kudos.push({ user_id: db.account.userId }); if (cur === "feed") renderers.feed(); }
+      });
+    } else {
+      item.kudos.push({ user_id: db.account.userId });
+      renderers.feed();
+      sb().from("kudos").insert({ workout_id: workoutId, user_id: db.account.userId }).then(function (r) {
+        if (r.error) { item.kudos = item.kudos.filter(function (k) { return k.user_id !== db.account.userId; }); if (cur === "feed") renderers.feed(); }
+      });
+    }
+  }
+
+  function feedItemsHtml(items, readOnly) {
     return items.map(function (w) {
-      var who = (w.profiles && w.profiles.display_name) || "Someone";
+      var prof = w.profiles || {};
+      var who = prof.display_name || "Someone";
       var s = w.summary || {};
       var unit = s.unit || "kg";
       var lifts = (s.lifts || []).slice(0, 4).map(function (l) {
@@ -4495,14 +4747,32 @@
       }).join("");
       var dur = w.duration_sec ? Math.round(w.duration_sec / 60) + " min" : "";
       var when = relDate(new Date(w.completed_at).getTime());
+      var kudos = w.kudos || [];
+      var gaveKudos = db.account && kudos.some(function (k) { return k.user_id === db.account.userId; });
+      var isMine = db.account && w.user_id === db.account.userId;
       return '<div class="feed-card">' +
-        '<div class="feed-head"><b>' + esc(who) + '</b><span>' + esc(when) + '</span></div>' +
+        '<div class="feed-head">' +
+          '<button class="feed-who" data-profile="' + esc(w.user_id) + '">' + avatarHtml(prof.avatar_url, who, 28) + '<b>' + esc(who) + '</b></button>' +
+          '<span>' + esc(when) + '</span>' +
+        '</div>' +
         '<div class="feed-sub">' + esc(w.program_name || "Workout") +
           (w.day_label ? ' · ' + esc(w.day_label) : '') + (dur ? ' · ' + dur : '') + '</div>' +
         (s.score ? '<div class="feed-sub" style="margin-top:4px;font-weight:600;color:var(--accent-ink)">' + esc(s.score) + '</div>' : '') +
         (lifts ? '<ul class="feed-lifts">' + lifts + '</ul>' : '') +
+        (isMine || readOnly ? (kudos.length ? '<div class="kudos-count">' + kudos.length + ' kudos</div>' : '') :
+          '<button class="kudos-btn' + (gaveKudos ? ' given' : '') + '" data-kudos="' + esc(w.id) + '">' +
+            (gaveKudos ? '★ Kudos' : '☆ Kudos') + (kudos.length ? ' · ' + kudos.length : '') + '</button>') +
       '</div>';
     }).join("");
+  }
+
+  function wireFeedCards(root) {
+    root.querySelectorAll("[data-profile]").forEach(function (b) {
+      b.onclick = function () { openProfile(b.dataset.profile); };
+    });
+    root.querySelectorAll("[data-kudos]").forEach(function (b) {
+      b.onclick = function () { toggleKudos(b.dataset.kudos, b); };
+    });
   }
 
   renderers.feed = function () {
@@ -4520,21 +4790,35 @@
     if (feed.items.length) body = feedItemsHtml(feed.items);
     else if (feed.loading) body = '<p class="lead">Loading…</p>';
     else if (feed.error) body = '';
+    else if (feed.scope === "following") body = '<p class="lead">Follow people to see their workouts here.</p>';
     else body = '<p class="lead">No workouts yet — finish a session to be the first.</p>';
 
-    var html = '<h2 class="title">Feed</h2><p class="lead">Latest workouts from everyone.</p>' +
+    var html = '<h2 class="title">Feed</h2>' +
+      '<div class="mini-seg" data-set="feedscope" style="margin:4px 0 12px">' +
+        '<button data-v="everyone" aria-selected="' + (feed.scope === "everyone") + '">Everyone</button>' +
+        '<button data-v="following" aria-selected="' + (feed.scope === "following") + '">Following</button>' +
+      '</div>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="fd-refresh"' + (feed.loading ? ' disabled' : '') + '>Refresh</button></div>' +
       '<div id="fd-list">' + body + '</div>' +
       (feed.error ? '<p class="lead" style="color:var(--miss,#c0392b)">' + esc(feed.error) + '</p>' : '') +
       (feed.items.length && !feed.done ? '<div class="btn-row"><button class="btn btn-ghost" id="fd-more"' + (feed.loading ? ' disabled' : '') + '>Load more</button></div>' : '');
     c.innerHTML = html;
+    c.querySelectorAll('[data-set="feedscope"] button').forEach(function (btn) {
+      btn.onclick = function () {
+        if (btn.dataset.v === feed.scope) return;
+        feed.scope = btn.dataset.v; feed.loaded = false;
+        loadFeed(true);
+      };
+    });
     var rf = document.getElementById("fd-refresh"); if (rf) rf.onclick = function () { loadFeed(true); };
     var mo = document.getElementById("fd-more"); if (mo) mo.onclick = function () { loadFeed(false); };
+    wireFeedCards(c);
     if (!feed.loaded && !feed.loading) loadFeed(true);
   };
 
   /* ============================================================ BOOT */
   go("home");
+  restoreRun();
 })();
 </script>
 
@@ -4547,7 +4831,13 @@
     navigator.serviceWorker.addEventListener("controllerchange", function () {
       if (reloading || !hadController) return;   // skip the very first claim
       reloading = true;
-      location.reload();
+      // never yank the page out from under a workout (or its summary): if one is
+      // running, wait until the app is next backgrounded with no workout going
+      var busy = function () { return window.RC && window.RC.workoutActive && window.RC.workoutActive(); };
+      if (!busy()) { location.reload(); return; }
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden && !busy()) location.reload();
+      });
     });
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("sw.js").then(function (reg) {
