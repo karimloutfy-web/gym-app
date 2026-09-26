@@ -4660,7 +4660,7 @@
   /* ---- the feed ---- */
 
   var loadFeedCalls = [];
-  var WORKOUT_SELECT = "id, user_id, completed_at, program_name, day_label, duration_sec, summary, profiles(display_name, avatar_url), kudos(user_id)";
+  var WORKOUT_SELECT = "id, user_id, completed_at, program_name, day_label, duration_sec, summary, profiles!workouts_user_id_fkey(display_name, avatar_url), kudos(user_id)";
 
   function ensureFollowing(cb) {
     if (followingIds) { cb(followingIds); return; }
