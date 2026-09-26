@@ -241,9 +241,9 @@
   .lift-row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 13px; margin-bottom: 9px; }
   .lift-row .lr-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .lift-row h4 { font-size: 16px; }
-  .lift-row .mini-seg { display: flex; gap: 2px; padding: 2px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; }
-  .lift-row .mini-seg button { padding: 5px 9px; border-radius: 5px; font-size: 11px; font-weight: 600; color: var(--text-muted); font-family: "Barlow Condensed"; letter-spacing: .04em; text-transform: uppercase; }
-  .lift-row .mini-seg button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .mini-seg { display: flex; gap: 2px; padding: 2px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; }
+  .mini-seg button { padding: 5px 9px; border-radius: 5px; font-size: 11px; font-weight: 600; color: var(--text-muted); font-family: "Barlow Condensed"; letter-spacing: .04em; text-transform: uppercase; }
+  .mini-seg button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
   .lr-inputs { display: flex; gap: 8px; margin-top: 10px; align-items: flex-end; }
   .lr-inputs .fw { flex: 1; }
   .lr-inputs .fw span { font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); font-weight: 700; display: block; margin-bottom: 4px; }
@@ -4457,7 +4457,7 @@
         '<div class="toggle-line"><div class="tl-k">Sex</div><div class="mini-seg" data-set="sex">' +
           '<button data-v="m" aria-selected="' + (db.settings.sex === "m") + '">Male</button><button data-v="f" aria-selected="' + (db.settings.sex === "f") + '">Female</button></div></div>' +
         '<div class="toggle-line"><div class="tl-k">Birth year</div>' +
-          '<input class="num-in mono" id="st-by" inputmode="numeric" maxlength="4" value="' + (db.settings.birthYear || "") + '" placeholder="e.g. 1990" style="width:96px;padding:7px 10px;text-align:center"></div>' +
+          '<input class="num-in mono" id="st-by" inputmode="numeric" maxlength="4" value="' + (db.settings.birthYear || "") + '" placeholder="YYYY" style="width:96px;padding:7px 10px;text-align:center"></div>' +
       '</div>' +
       '<p style="font-size:11.5px;color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat calculator. Kept on this device — not shared to the feed.</p>' +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
@@ -4473,20 +4473,23 @@
       '<p style="font-size:11.5px;color:var(--text-faint);line-height:1.5;margin-top:10px">To keep it on your home screen: Share → Add to Home Screen.</p>' +
       (hasData ? '<div class="btn-row" style="margin-top:16px"><button class="btn btn-danger" id="st-wipe">Erase everything</button></div>' : '')
     );
-    sheetRoot.querySelectorAll('[data-set="unit"] button').forEach(function (b) {
-      b.onclick = function () { db.settings.unit = b.dataset.v; save(); closeSheet(); go(cur); };
-    });
-    sheetRoot.querySelectorAll('[data-set="len"] button').forEach(function (b) {
-      b.onclick = function () { db.settings.lengthUnit = b.dataset.v; save(); openSettings(); };
-    });
-    sheetRoot.querySelectorAll('[data-set="theme"] button').forEach(function (b) {
-      b.onclick = function () { db.settings.theme = b.dataset.v; applyTheme(); save(); openSettings(); };
-    });
-    sheetRoot.querySelectorAll('[data-set="effort"] button').forEach(function (b) {
-      b.onclick = function () { db.settings.effortScale = b.dataset.v; save(); openSettings(); };
-    });
-    sheetRoot.querySelectorAll('[data-set="sex"] button').forEach(function (b) {
-      b.onclick = function () { db.settings.sex = b.dataset.v; save(); openSettings(); };
+    // flip the toggle in place — re-opening the sheet replays its slide-in and jumps back to the top
+    var SET = {
+      unit: function (v) { db.settings.unit = v; go(cur); },   // repaint the screen behind in the new unit
+      len: function (v) { db.settings.lengthUnit = v; go(cur); },
+      theme: function (v) { db.settings.theme = v; applyTheme(); },
+      effort: function (v) { db.settings.effortScale = v; },
+      sex: function (v) { db.settings.sex = v; }
+    };
+    sheetRoot.querySelectorAll("[data-set]").forEach(function (seg) {
+      var apply = SET[seg.dataset.set];
+      if (!apply) return;
+      seg.querySelectorAll("button").forEach(function (b) {
+        b.onclick = function () {
+          seg.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+          apply(b.dataset.v); save();
+        };
+      });
     });
     document.getElementById("st-by").oninput = function () {
       var by = validBirthYear(this.value);
