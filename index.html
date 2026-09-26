@@ -1262,7 +1262,8 @@
       badges: { earned: {}, seen: {} },  // earned[id] = ts ; seen[id] = 1
       account: null,       // { userId, displayName } once signed in to the feed
       pendingPush: [],     // session ids waiting to sync to the feed backend
-      backfilledFor: {}    // userId -> true once existing local history has been published for that account
+      backfilledFor: {},   // userId -> true once existing local history has been published for that account
+      knownProfiles: {}    // userId -> { displayName, avatarUrl }; survives sign-out so we never re-ask for a name
     };
   }
   var db;
@@ -1281,6 +1282,8 @@
   if (db.account && !db.account.userId) db.account = null;
   db.pendingPush = Array.isArray(db.pendingPush) ? db.pendingPush : [];
   db.backfilledFor = (db.backfilledFor && typeof db.backfilledFor === "object") ? db.backfilledFor : {};
+  db.knownProfiles = (db.knownProfiles && typeof db.knownProfiles === "object") ? db.knownProfiles : {};
+  if (db.account && db.account.displayName) db.knownProfiles[db.account.userId] = { displayName: db.account.displayName, avatarUrl: db.account.avatarUrl || null };
 
   var warnedSave = false;
   var saveT = null;
@@ -1833,7 +1836,7 @@
     db.sessions.push(sess);
     save();
     lastSummary = sess;
-    run = null;
+    run = null; persistRun();
     finishAndCelebrate(sess, function () { go("summary"); });
   }
 
@@ -2913,6 +2916,37 @@
 
   /* ============================================================ SESSION PLAYER */
   var run = null;
+
+  // the in-progress workout lives in memory, so mirror it to storage: if the OS
+  // evicts the backgrounded app or a new version reloads the page, we pick up
+  // exactly where we left off instead of losing the session.
+  var RUN_KEY = KEY + ".run";
+  var RUN_MAX_AGE = 12 * 60 * 60 * 1000;
+  function persistRun() {
+    try {
+      if (!run) { localStorage.removeItem(RUN_KEY); return; }
+      var snap = {};
+      Object.keys(run).forEach(function (k) { if (k !== "t" && k !== "tick") snap[k] = run[k]; });
+      snap.tId = run.t ? run.t.id : null;
+      localStorage.setItem(RUN_KEY, JSON.stringify(snap));
+    } catch (e) {}
+  }
+  function restoreRun() {
+    var snap;
+    try { snap = JSON.parse(localStorage.getItem(RUN_KEY)); } catch (e) { snap = null; }
+    if (!snap || !snap.startedAt || Date.now() - snap.startedAt > RUN_MAX_AGE) { try { localStorage.removeItem(RUN_KEY); } catch (e) {} return; }
+    var t = snap.tId ? tplById(snap.tId) : null;
+    if (snap.tId && !t) { try { localStorage.removeItem(RUN_KEY); } catch (e) {} return; }
+    delete snap.tId;
+    snap.t = t;
+    run = snap;
+    renderPlayer();
+  }
+  window.RC = window.RC || {};
+  window.RC.workoutActive = function () { return !!run; };
+  document.addEventListener("visibilitychange", function () { if (document.hidden) persistRun(); });
+  window.addEventListener("pagehide", persistRun);
+
   function startPlayer(chosenIdx) {
     var t = tplById(db.active.templateId);
     if (!t) { db.active = null; save(); go("choose"); return; }
@@ -2986,8 +3020,9 @@
 
   function renderPlayer() {
     var root = document.getElementById("player-root");
-    if (!run) { root.innerHTML = ""; return; }
+    if (!run) { root.innerHTML = ""; persistRun(); return; }
     if (run.kind === "metcon") { renderMetconPlayer(); return; }
+    persistRun();
     if (run.i >= run.queue.length) { run.custom ? finishFreestylePlayer() : finishPlayer(); return; }
 
     // build the shell once, then update its parts in place (no full-DOM flash between sets)
@@ -3088,7 +3123,7 @@
   function endWorkoutPrompt() {
     confirmSheet("End this workout?", "Nothing from this session is saved and your program won't advance.", function () {
       if (run && run.tick) { clearInterval(run.tick); run.tick = null; }
-      run = null;
+      run = null; persistRun();
       dismissPlayer(function () { go("home", true); });
     });
   }
@@ -3449,7 +3484,7 @@
     save();
 
     lastSummary = sess;
-    run = null;
+    run = null; persistRun();
     finishAndCelebrate(sess, function () { go("summary"); });
   }
 
@@ -3521,6 +3556,7 @@
   function renderMetconPlayer() {
     var root = document.getElementById("player-root");
     if (!run || run.kind !== "metcon") { root.innerHTML = ""; return; }
+    persistRun();
     var w = run.wod, moves = metconMoves(w);
     var down = metconCountsDown(w);
 
@@ -3673,7 +3709,7 @@
     if (db.active && !run.adhoc && t) advanceRotation(db.active, t, run.chosenIdx);
     save();
     lastSummary = sess;
-    run = null;
+    run = null; persistRun();
     finishAndCelebrate(sess, function () { go("summary"); });
   }
 
@@ -4290,7 +4326,11 @@
     c.auth.onAuthStateChange(function (evt, session) {
       if (session && session.user) {
         tidyAuthUrl();
-        hydrateAccount(session.user, evt === "SIGNED_IN");
+        var already = db.account && db.account.userId === session.user.id;
+        // Supabase re-emits SIGNED_IN / TOKEN_REFRESHED when the app regains focus;
+        // for an account we already know that's not a new sign-in, so stay put.
+        if (already && evt !== "INITIAL_SESSION" && evt !== "USER_UPDATED") return;
+        hydrateAccount(session.user, evt === "SIGNED_IN" && !already);
       } else {
         db.account = null; save();
         feed = { items: [], loading: false, done: false, error: null, loaded: false, scope: "everyone" }; followingIds = null;
@@ -4305,8 +4345,19 @@
     if (!c) return;
     c.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle().then(function (r) {
       var name = r && r.data && r.data.display_name;
+      var avatar = (r && r.data && r.data.avatar_url) || null;
+      var known = db.knownProfiles[user.id];
+      // A failed or empty lookup (flaky network, token still refreshing) is not
+      // proof the profile is missing — if this device already knows the name, use
+      // it, and quietly re-save it in case the row really is gone.
+      if (!name && known && known.displayName) {
+        name = known.displayName; avatar = known.avatarUrl || null;
+        if (!(r && r.error)) c.from("profiles").upsert({ id: user.id, display_name: name, avatar_url: avatar }).then(function () {});
+      }
+      if (!name && r && r.error) return;   // couldn't reach the server — try again on the next launch rather than re-asking
       if (name) {
-        db.account = { userId: user.id, displayName: name, avatarUrl: (r.data && r.data.avatar_url) || null };
+        db.account = { userId: user.id, displayName: name, avatarUrl: avatar };
+        db.knownProfiles[user.id] = { displayName: name, avatarUrl: avatar };
         save();
         renderTabs();
         flushPendingPush();
@@ -4359,6 +4410,7 @@
       sb().from("profiles").upsert({ id: user.id, display_name: name, avatar_url: avatar }).then(function (r) {
         if (r.error) { toast("Couldn't save that name"); btn.disabled = false; return; }
         db.account = { userId: user.id, displayName: name, avatarUrl: avatar };
+        db.knownProfiles[user.id] = { displayName: name, avatarUrl: avatar };
         save(); closeSheet(); renderTabs(); flushPendingPush(); backfillHistory();
         toast("You're in");
         go("feed");
@@ -4413,7 +4465,7 @@
         var url = sb().storage.from("avatars").getPublicUrl(path).data.publicUrl;
         sb().from("profiles").update({ avatar_url: url }).eq("id", db.account.userId).then(function (r2) {
           if (r2.error) { toast("Couldn't save your photo"); return; }
-          db.account.avatarUrl = url; save();
+          db.account.avatarUrl = url; db.knownProfiles[db.account.userId] = { displayName: db.account.displayName, avatarUrl: url }; save();
           toast("Photo updated");
           openEditProfile();
           if (cur === "feed") loadFeed(true);
@@ -4448,7 +4500,7 @@
       var btn = this; btn.disabled = true;
       sb().from("profiles").update({ display_name: name }).eq("id", db.account.userId).then(function (r) {
         if (r.error) { toast("Couldn't save"); btn.disabled = false; return; }
-        db.account.displayName = name; save();
+        db.account.displayName = name; db.knownProfiles[db.account.userId] = { displayName: name, avatarUrl: db.account.avatarUrl || null }; save();
         closeSheet(); toast("Profile updated");
         if (cur === "feed") loadFeed(true);
       });
@@ -4766,6 +4818,7 @@
 
   /* ============================================================ BOOT */
   go("home");
+  restoreRun();
 })();
 </script>
 
@@ -4778,7 +4831,13 @@
     navigator.serviceWorker.addEventListener("controllerchange", function () {
       if (reloading || !hadController) return;   // skip the very first claim
       reloading = true;
-      location.reload();
+      // never yank the page out from under a workout (or its summary): if one is
+      // running, wait until the app is next backgrounded with no workout going
+      var busy = function () { return window.RC && window.RC.workoutActive && window.RC.workoutActive(); };
+      if (!busy()) { location.reload(); return; }
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden && !busy()) location.reload();
+      });
     });
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("sw.js").then(function (reg) {
