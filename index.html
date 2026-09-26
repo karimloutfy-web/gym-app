@@ -485,6 +485,10 @@
   .sf-i { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--accent); color: var(--accent-ink); font-size: 9px; font-family: Georgia, serif; font-style: italic; margin-left: 3px; vertical-align: 1px; text-transform: none; letter-spacing: 0; }
   .sf-help { display: grid; grid-template-columns: 96px 1fr; gap: 12px; margin-top: 10px; padding: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); }
   .sf-help[hidden] { display: none; }
+  .sf-prof { display: flex; align-items: center; gap: 6px; margin: 2px 0 4px; font-size: 13px; font-weight: 600; }
+  .sf-prof span { color: var(--text-faint); font-weight: 500; font-size: 12px; }
+  .sf-prof button { margin-left: auto; color: var(--accent-ink); font-size: 12.5px; font-weight: 600; }
+  .sf-prof-note { font-size: 11.5px; color: var(--text-faint); margin: 0 0 6px; }
   .sf-help svg { width: 96px; height: 96px; border-radius: 7px; background: var(--surface-2); }
   .sf-help .sh-k { font-family: "Barlow Condensed"; font-weight: 700; font-size: 16px; }
   .sf-help .sh-k span { color: var(--accent-ink); font-weight: 600; font-size: 13px; }
@@ -1290,6 +1294,9 @@
   try { db = JSON.parse(localStorage.getItem(KEY)) || defaults(); }
   catch (e) { db = defaults(); }
   db.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir" }, db.settings || {});
+  // profile basics for the body-fat calculator; kept on this device, never sent to the feed
+  if (db.settings.sex == null && db.settings.bfSex) db.settings.sex = db.settings.bfSex;
+  if (db.settings.birthYear == null && db.settings.bfBirthYear) db.settings.birthYear = db.settings.bfBirthYear;
   db.equipment = Object.assign({ bar: 20, smallestPlate: 1.25, step: 2.5, hasDumbbells: false }, db.equipment || {});
   db.customPlans = Array.isArray(db.customPlans) ? db.customPlans : [];
   db.customWorkouts = Array.isArray(db.customWorkouts) ? db.customWorkouts : [];
@@ -4125,6 +4132,7 @@
     var fat = Math.round(e.bw * e.bf / 10) / 10;
     return { fat: fat, lean: Math.round((e.bw - fat) * 10) / 10 };
   }
+  function validBirthYear(v) { v = parseInt(v, 10); var y = new Date().getFullYear(); return v > 1900 && v <= y - 10 ? v : null; }
   function ageAt(birthYear, t) { return birthYear > 1900 ? new Date(t).getFullYear() - birthYear : null; }
   // -> %BF rounded to 0.1, or null if any required fold / age is missing
   function jpBodyFat(method, sex, age, folds) {
@@ -4241,10 +4249,15 @@
   function openBodyEntry(existing) {
     var e = existing || { id: null, date: Date.now(), bw: null, bf: null, m: {}, note: "" };
     var wStep = U() === "lb" ? 1 : 0.5;
-    // skinfold calculator state: start from this entry's calc, else last-used setup
-    var sf = e.sf ? { method: e.sf.method, sex: e.sf.sex, birthYear: e.sf.birthYear, folds: Object.assign({}, e.sf.folds) }
-      : { method: db.settings.bfMethod || "jp4", sex: db.settings.bfSex || "m", birthYear: db.settings.bfBirthYear || null, folds: {} };
+    // skinfold calculator state: folds + method from this entry's calc (else last-used method);
+    // sex and birth year always come from the profile in Settings
+    var sf = e.sf ? { method: e.sf.method, folds: Object.assign({}, e.sf.folds) } : { method: db.settings.bfMethod || "jp4", folds: {} };
+    if (!db.settings.sex && e.sf) db.settings.sex = e.sf.sex;
+    if (!db.settings.birthYear && e.sf) db.settings.birthYear = e.sf.birthYear;
+    Object.defineProperty(sf, "sex", { get: function () { return db.settings.sex || "m"; } });
+    Object.defineProperty(sf, "birthYear", { get: function () { return db.settings.birthYear || null; } });
     var sfAge = function () { return ageAt(sf.birthYear, e.date); };
+    var profileEdit = !db.settings.sex || !db.settings.birthYear;   // ask inline only when the profile is incomplete
     var sfUsed = !!e.sf;
     var html = '<h2>' + (existing ? "Edit entry · " + shortDate(e.date) : "Log entry") + '</h2>' +
       '<p class="sh-lead">Fill in whatever you measured — blanks are fine.</p>' +
@@ -4276,18 +4289,26 @@
         if (base === "bf") sfUsed = false;   // hand-adjusted: no longer the calculator's number
         var cur = parseFloat(inp.value);
         inp.value = fmt(Math.max(0, (isNaN(cur) ? 0 : cur) + sign * stepv));
+        if (base === "bw") bwChanged(inp);
       };
     });
 
     var bfInp = document.getElementById("be-bf");
     var sfBox = document.getElementById("be-sf");
     bfInp.oninput = function () { sfUsed = false; };
-    document.getElementById("be-bw").oninput = function () { if (sfUsed && document.getElementById("be-sf-out")) sfRecalc(); };
+    // the entry's bodyweight and the calculator's bodyweight are one value — mirror either way
+    function bwChanged(src) {
+      var top = document.getElementById("be-bw"), calc = sfBox.querySelector('[data-sf="bw"]');
+      if (src !== top) top.value = src.value;
+      if (calc && src !== calc) calc.value = src.value;
+      if (document.getElementById("be-sf-out")) sfRecalc();
+    }
+    document.getElementById("be-bw").oninput = function () { bwChanged(this); };
     function sfRecalc() {
       var out = document.getElementById("be-sf-out");
       var bf = jpBodyFat(sf.method, sf.sex, sfAge(), sf.folds);
       if (bf == null) {
-        out.innerHTML = 'Fill in birth year and every fold to calculate.';
+        out.innerHTML = sfAge() ? 'Fill in every fold to calculate.' : 'Add your birth year to calculate.';
         if (sfUsed) { bfInp.value = ""; sfUsed = false; }   // don't leave a stale calculated number behind
         return;
       }
@@ -4300,11 +4321,21 @@
     }
     function sfRender() {
       var h = '<div class="seg-ctl" data-sf-method>' + Object.keys(JP).map(function (k) {
-          return '<button data-v="' + k + '" aria-selected="' + (sf.method === k) + '">JP ' + JP[k].name + '</button>'; }).join("") + '</div>' +
-        '<div class="seg-ctl" data-sf-sex><button data-v="m" aria-selected="' + (sf.sex === "m") + '">Male</button>' +
-          '<button data-v="f" aria-selected="' + (sf.sex === "f") + '">Female</button></div>' +
-        '<div class="meas-grid"><div class="fi"><span>Birth year</span><div class="stepper"><button data-sfb="by-">–</button>' +
-          '<input class="mono" data-sf="by" inputmode="numeric" value="' + (sf.birthYear || "") + '" placeholder="—"><button data-sfb="by+">+</button></div></div>';
+          return '<button data-v="' + k + '" aria-selected="' + (sf.method === k) + '">JP ' + JP[k].name + '</button>'; }).join("") + '</div>';
+      if (profileEdit) {
+        h += '<div class="sf-prof-note">Saved to your profile — you won\'t be asked again.</div>' +
+          '<div class="seg-ctl" data-sf-sex><button data-v="m" aria-selected="' + (db.settings.sex === "m") + '">Male</button>' +
+            '<button data-v="f" aria-selected="' + (db.settings.sex === "f") + '">Female</button></div>';
+      } else {
+        h += '<div class="sf-prof">' + (sf.sex === "f" ? "Female" : "Male") + ' · age ' + sfAge() +
+          ' <span>from your profile</span><button id="be-sf-prof">Change</button></div>';
+      }
+      var bwNow = document.getElementById("be-bw").value;
+      h += '<div class="meas-grid">' +
+        '<div class="fi"><span>Bodyweight (' + U() + ')</span><div class="stepper"><button data-sfb="bw-">–</button>' +
+          '<input class="mono" data-sf="bw" inputmode="decimal" value="' + esc(bwNow) + '" placeholder="—"><button data-sfb="bw+">+</button></div></div>' +
+        (profileEdit ? '<div class="fi"><span>Birth year</span><div class="stepper"><button data-sfb="by-">–</button>' +
+          '<input class="mono" data-sf="by" inputmode="numeric" value="' + (db.settings.birthYear || "") + '" placeholder="—"><button data-sfb="by+">+</button></div></div>' : '');
       JP[sf.method].sites(sf.sex).forEach(function (k) {
         h += '<div class="fi"><span>' + SF_SITES[k] + ' (mm) <button class="sf-i" data-sfi="' + k + '" aria-label="Where to measure ' + SF_SITES[k] + '">i</button></span><div class="stepper"><button data-sfb="' + k + '-">–</button>' +
           '<input class="mono" data-sf="' + k + '" inputmode="decimal" value="' + (sf.folds[k] != null ? fmt(sf.folds[k]) : "") + '" placeholder="—"><button data-sfb="' + k + '+">+</button></div></div>';
@@ -4322,20 +4353,24 @@
         };
       });
       sfBox.querySelectorAll("[data-sf-method] button").forEach(function (b) { b.onclick = function () { sf.method = b.dataset.v; sfRender(); }; });
-      sfBox.querySelectorAll("[data-sf-sex] button").forEach(function (b) { b.onclick = function () { sf.sex = b.dataset.v; sfRender(); }; });
+      sfBox.querySelectorAll("[data-sf-sex] button").forEach(function (b) { b.onclick = function () { db.settings.sex = b.dataset.v; save(); sfRender(); }; });
+      var profBtn = document.getElementById("be-sf-prof");
+      if (profBtn) profBtn.onclick = function () { profileEdit = true; sfRender(); };
       function read(inp) {
         var v = parseFloat(inp.value), k = inp.dataset.sf;
-        if (k === "by") sf.birthYear = v > 1900 && v <= new Date().getFullYear() ? Math.round(v) : null;
+        if (k === "bw") { bwChanged(inp); return; }
+        if (k === "by") { db.settings.birthYear = validBirthYear(inp.value); save(); }
         else if (v > 0) sf.folds[k] = v; else delete sf.folds[k];
       }
-      sfBox.querySelectorAll("[data-sf]").forEach(function (inp) { inp.oninput = function () { read(inp); sfRecalc(); }; });
+      sfBox.querySelectorAll("[data-sf]").forEach(function (inp) { inp.oninput = function () { read(inp); if (inp.dataset.sf !== "bw") sfRecalc(); }; });
       sfBox.querySelectorAll("[data-sfb]").forEach(function (b) {
         b.onclick = function () {
           var key = b.dataset.sfb, base = key.slice(0, -1), sign = key.slice(-1) === "+" ? 1 : -1;
           var inp = sfBox.querySelector('[data-sf="' + base + '"]');
           var cur = parseFloat(inp.value);
-          inp.value = fmt(Math.max(0, (isNaN(cur) ? (base === "by" ? 1990 : 0) : cur) + sign * (base === "by" ? 1 : 0.5)));
-          read(inp); sfRecalc();
+          var st = base === "by" ? 1 : base === "bw" ? wStep : 0.5;
+          inp.value = fmt(Math.max(0, (isNaN(cur) ? (base === "by" ? 1990 : 0) : cur) + sign * st));
+          read(inp); if (base !== "bw") sfRecalc();
         };
       });
       sfRecalc();
@@ -4370,7 +4405,7 @@
         method: sf.method, sex: sf.sex, birthYear: sf.birthYear, age: sfAge(),
         folds: JP[sf.method].sites(sf.sex).reduce(function (o, k) { o[k] = sf.folds[k]; return o; }, {})
       } : null;
-      if (sfSave) { db.settings.bfMethod = sf.method; db.settings.bfSex = sf.sex; db.settings.bfBirthYear = sf.birthYear; }
+      if (sfSave) db.settings.bfMethod = sf.method;
       var rec = { bw: isNaN(bwv) ? null : bwv, bf: isNaN(bfv) ? null : bfv, sf: sfSave, m: m };
       if (existing) {
         Object.assign(e, rec);
@@ -4417,6 +4452,14 @@
           '<button data-v="rir" aria-selected="' + (!effortIsRpe()) + '">RIR</button><button data-v="rpe" aria-selected="' + (effortIsRpe()) + '">RPE</button></div></div>' +
       '</div>' +
       (db.active ? '<div class="btn-row"><button class="btn btn-ghost" id="st-change">Switch program</button></div>' : '') +
+      '<div class="eyebrow" style="margin:18px 0 8px">Profile</div>' +
+      '<div class="day-block">' +
+        '<div class="toggle-line"><div class="tl-k">Sex</div><div class="mini-seg" data-set="sex">' +
+          '<button data-v="m" aria-selected="' + (db.settings.sex === "m") + '">Male</button><button data-v="f" aria-selected="' + (db.settings.sex === "f") + '">Female</button></div></div>' +
+        '<div class="toggle-line"><div class="tl-k">Birth year</div>' +
+          '<input class="num-in mono" id="st-by" inputmode="numeric" maxlength="4" value="' + (db.settings.birthYear || "") + '" placeholder="e.g. 1990" style="width:96px;padding:7px 10px;text-align:center"></div>' +
+      '</div>' +
+      '<p style="font-size:11.5px;color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat calculator. Kept on this device — not shared to the feed.</p>' +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
       (db.account
         ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' + avatarHtml(db.account.avatarUrl, db.account.displayName, 40) +
@@ -4442,6 +4485,13 @@
     sheetRoot.querySelectorAll('[data-set="effort"] button').forEach(function (b) {
       b.onclick = function () { db.settings.effortScale = b.dataset.v; save(); openSettings(); };
     });
+    sheetRoot.querySelectorAll('[data-set="sex"] button').forEach(function (b) {
+      b.onclick = function () { db.settings.sex = b.dataset.v; save(); openSettings(); };
+    });
+    document.getElementById("st-by").oninput = function () {
+      var by = validBirthYear(this.value);
+      if (by || !this.value.trim()) { db.settings.birthYear = by; save(); }
+    };
     var sc = document.getElementById("st-change");
     if (sc) sc.onclick = function () { closeSheet(); go("choose"); };
     var siBtn = document.getElementById("st-signin");
