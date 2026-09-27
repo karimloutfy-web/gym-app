@@ -317,6 +317,11 @@
   .home-secondary { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line-strong); }
   .btn.btn-lg { height: 58px; font-size: var(--fs-lg); }
   .home-links { display: flex; gap: 9px; margin-top: 10px; }
+  .rest-ex { margin-top: 8px; }
+  .rest-ex .rx-k { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--text-faint); }
+  .rx-reset { min-height: 44px; padding: 0 10px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
+  .rs-rule { margin-top: 10px; font-size: var(--fs-xs); color: var(--text-faint); text-align: center; }
+  .rs-rule button { min-height: 44px; padding: 0 4px; color: var(--accent-ink); font-size: var(--fs-xs); font-weight: 600; }
   .rest-sel { min-height: 44px; min-width: 96px; padding: 0 30px 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text);
     font-family: "IBM Plex Mono", monospace; -webkit-appearance: none; appearance: none; text-align: center;
     background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
@@ -1324,7 +1329,7 @@
   function defaults() {
     return {
       version: 2,
-      settings: { unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir", restWarm: 60, restWork: 180 },
+      settings: { unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir", restWarm: 60, restWork: 180, restByEx: {} },
       equipment: { bar: 20, smallestPlate: 1.25, step: 2.5, hasDumbbells: false },
       active: null,
       sessions: [],
@@ -1341,7 +1346,8 @@
   var db;
   try { db = JSON.parse(localStorage.getItem(KEY)) || defaults(); }
   catch (e) { db = defaults(); }
-  db.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir", restWarm: 60, restWork: 180 }, db.settings || {});
+  db.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir", restWarm: 60, restWork: 180, restByEx: {} }, db.settings || {});
+  if (!db.settings.restByEx || typeof db.settings.restByEx !== "object") db.settings.restByEx = {};
   // profile basics for the body-fat calculator; kept on this device, never sent to the feed
   if (db.settings.sex == null && db.settings.bfSex) db.settings.sex = db.settings.bfSex;
   if (db.settings.birthYear == null && db.settings.bfBirthYear) db.settings.birthYear = db.settings.bfBirthYear;
@@ -3560,17 +3566,28 @@
     if ((step.kind === "warm" || step.kind === "work") && reps > 0 && secs > 0 && run.i < run.queue.length) {
       run.restUntil = Date.now() + secs * 1000;
       run.restTotal = secs;
-      run.restAfter = { name: step.name, weight: step.assist ? null : weight, reps: reps, warm: step.kind === "warm" };
+      run.restLen = secs;   // the length this exercise's rest is set to; ±0:30 changes it and it's remembered
+      run.restAfter = { name: step.name, exId: step.exId, weight: step.assist ? null : weight, reps: reps, warm: step.kind === "warm" };
       scheduleRestChime(secs);
     }
     renderPlayer();
   }
 
   /* ---------- rest timer ---------- */
-  // compound barbell lifts get 3 min, everything else 90 s
-  // seconds of rest after this step, from Settings (0 = off)
+  // seconds of rest after this step (0 = off): the exercise's remembered time, else the Settings default
+  function restKind(step) { return step.kind === "warm" ? "warm" : "work"; }
+  function restDefault(kind) { return +(kind === "warm" ? db.settings.restWarm : db.settings.restWork) || 0; }
+  function restOverride(exId, kind) { var o = db.settings.restByEx[exId]; return o && o[kind] != null ? o[kind] : null; }
   function restSecondsFor(step) {
-    return +(step.kind === "warm" ? db.settings.restWarm : db.settings.restWork) || 0;
+    var kind = restKind(step), o = restOverride(step.exId, kind);
+    return o != null ? o : restDefault(kind);
+  }
+  // remember (or forget, when it matches the default) an exercise's rest length
+  function rememberRest(exId, kind, sec) {
+    var map = db.settings.restByEx, o = map[exId] || {};
+    if (sec == null || sec === restDefault(kind)) delete o[kind]; else o[kind] = sec;
+    if (Object.keys(o).length) map[exId] = o; else delete map[exId];
+    save();
   }
   var REST_WARM_OPTS = [0, 30, 45, 60, 90, 120];
   var REST_WORK_OPTS = [60, 90, 120, 150, 180, 240, 300];
@@ -3606,10 +3623,15 @@
   }
   function cancelRestChime() { if (run && run.restOsc) { try { run.restOsc.stop(); } catch (e) {} run.restOsc = null; } }
   function adjustRest(deltaSec) {
+    var a = run.restAfter || {};
+    var len = Math.round(((run.restLen || run.restTotal) + deltaSec) / 15) * 15;
+    run.restLen = len;
+    // a rest cut to nothing is a one-off skip, not "never rest after this exercise"
+    if (a.exId && len >= 15) rememberRest(a.exId, a.warm ? "warm" : "work", len);
     var left = Math.max(0, run.restUntil - Date.now()) / 1000 + deltaSec;
     if (left <= 0) { endRest(); return; }
     run.restUntil = Date.now() + left * 1000;
-    run.restTotal = Math.max(run.restTotal, Math.ceil(left));
+    run.restTotal = Math.max(Math.ceil(left), len);   // the ring measures against the new length
     scheduleRestChime(left);
     renderPlayer();
   }
@@ -3645,6 +3667,14 @@
         '<circle id="rs-ring" cx="60" cy="60" r="54" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="0" transform="rotate(-90 60 60)"/></svg>' +
         '<div class="rs-clock" id="rs-clock"></div></div>' +
       '<div class="rs-adj"><button class="btn btn-ghost sm" id="rs-minus" aria-label="30 seconds less">−0:30</button><button class="btn btn-ghost sm" id="rs-plus" aria-label="30 seconds more">+0:30</button></div>' +
+      (function () {
+        if (!a.exId) return '';
+        var kind = a.warm ? "warm" : "work", o = restOverride(a.exId, kind);
+        var what = esc(a.name) + (a.warm ? ' warm-ups' : '');
+        return o != null
+          ? '<div class="rs-rule">' + restLabel(o) + ' remembered for ' + what + ' · <button id="rs-reset">Use default (' + restLabel(restDefault(kind)) + ')</button></div>'
+          : '<div class="rs-rule">Adjust to remember a rest time for ' + what + '</div>';
+      })() +
       '<div class="rs-next"><span>Up next</span><b>' + esc(next.name) + '</b>' + esc(nextLine) + '</div>';
     document.getElementById("pl-actions").innerHTML =
       '<div class="pl-prow">' +
@@ -3655,6 +3685,12 @@
     document.getElementById("rs-minus").onclick = function () { adjustRest(-30); };
     document.getElementById("rs-plus").onclick = function () { adjustRest(30); };
     document.getElementById("rs-undo").onclick = function () { cancelRestChime(); run.restUntil = null; stepBack(); };
+    var rr = document.getElementById("rs-reset");
+    if (rr) rr.onclick = function () {
+      rememberRest(a.exId, a.warm ? "warm" : "work", null);
+      toast(a.name + " back to the default rest");
+      renderRest(next);
+    };
     restTick();
     if (!run.tick) run.tick = setInterval(restTick, 250);
   }
@@ -4677,6 +4713,18 @@
 
   /* ============================================================ SETTINGS */
   document.getElementById("btn-settings").onclick = openSettings;
+  function restByExHtml() {
+    var ids = Object.keys(db.settings.restByEx).filter(function (id) { return EX[id]; })
+      .sort(function (x, y) { return EX[x].name.localeCompare(EX[y].name); });
+    if (!ids.length) return '';
+    return '<div class="day-block rest-ex"><div class="rx-k">Per exercise</div>' + ids.map(function (id) {
+      var o = db.settings.restByEx[id], bits = [];
+      if (o.warm != null) bits.push("warm-ups " + restLabel(o.warm));
+      if (o.work != null) bits.push("sets " + restLabel(o.work));
+      return '<div class="toggle-line"><div class="tl-k">' + esc(EX[id].name) + '<p>' + bits.join(" · ") + '</p></div>' +
+        '<button class="rx-reset" data-rest-reset="' + id + '">Reset</button></div>';
+    }).join("") + '</div>';
+  }
   function restSelect(key, opts) {
     var cur = +db.settings[key] || 0;
     if (opts.indexOf(cur) < 0) opts = opts.concat([cur]).sort(function (a, b) { return a - b; });
@@ -4703,7 +4751,8 @@
         '<div class="toggle-line"><div class="tl-k">After warm-ups</div>' + restSelect("restWarm", REST_WARM_OPTS) + '</div>' +
         '<div class="toggle-line"><div class="tl-k">After working sets</div>' + restSelect("restWork", REST_WORK_OPTS) + '</div>' +
       '</div>' +
-      '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Starts automatically after each set. You can still add or cut 30 s, or skip it, mid-rest.</p>' +
+      restByExHtml() +
+      '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Starts automatically after each set. Adding or cutting 30 s mid-rest remembers that time for the exercise.</p>' +
       '<div class="eyebrow" style="margin:18px 0 8px">Profile</div>' +
       '<div class="day-block">' +
         '<div class="toggle-line"><div class="tl-k">Sex</div><div class="mini-seg" data-set="sex">' +
@@ -4745,6 +4794,14 @@
     });
     sheetRoot.querySelectorAll("[data-rest]").forEach(function (sel) {
       sel.onchange = function () { db.settings[sel.dataset.rest] = +sel.value; save(); };
+    });
+    sheetRoot.querySelectorAll("[data-rest-reset]").forEach(function (b) {
+      b.onclick = function () {
+        delete db.settings.restByEx[b.dataset.restReset]; save();
+        var row = b.closest(".toggle-line"), box = b.closest(".rest-ex");
+        row.remove();
+        if (!box.querySelector(".toggle-line")) box.remove();
+      };
     });
     document.getElementById("st-by").oninput = function () {
       var by = validBirthYear(this.value);
