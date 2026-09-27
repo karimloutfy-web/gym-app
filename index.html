@@ -317,6 +317,10 @@
   .home-secondary { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line-strong); }
   .btn.btn-lg { height: 58px; font-size: var(--fs-lg); }
   .home-links { display: flex; gap: 9px; margin-top: 10px; }
+  .rest-sel { min-height: 44px; min-width: 96px; padding: 0 30px 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text);
+    font-family: "IBM Plex Mono", monospace; -webkit-appearance: none; appearance: none; text-align: center;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
   .filter-chips { display: flex; gap: 6px; overflow-x: auto; margin: 4px -16px 0; padding: 4px 16px 2px; scrollbar-width: none; }
   .filter-chips::-webkit-scrollbar { display: none; }
   .filter-chips button { flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; }
@@ -1320,7 +1324,7 @@
   function defaults() {
     return {
       version: 2,
-      settings: { unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir" },
+      settings: { unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir", restWarm: 60, restWork: 180 },
       equipment: { bar: 20, smallestPlate: 1.25, step: 2.5, hasDumbbells: false },
       active: null,
       sessions: [],
@@ -1337,7 +1341,7 @@
   var db;
   try { db = JSON.parse(localStorage.getItem(KEY)) || defaults(); }
   catch (e) { db = defaults(); }
-  db.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir" }, db.settings || {});
+  db.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir", restWarm: 60, restWork: 180 }, db.settings || {});
   // profile basics for the body-fat calculator; kept on this device, never sent to the feed
   if (db.settings.sex == null && db.settings.bfSex) db.settings.sex = db.settings.bfSex;
   if (db.settings.birthYear == null && db.settings.bfBirthYear) db.settings.birthYear = db.settings.bfBirthYear;
@@ -3551,12 +3555,12 @@
     }
     run.pendingRir = null;
     run.i++;
-    // rest after a real work set (not warm-ups or skips) when there's more to do
-    if (step.kind === "work" && reps > 0 && run.i < run.queue.length) {
-      var secs = restSecondsFor(step);
+    // rest after a completed warm-up or work set (not skips) when there's more to do
+    var secs = restSecondsFor(step);
+    if ((step.kind === "warm" || step.kind === "work") && reps > 0 && secs > 0 && run.i < run.queue.length) {
       run.restUntil = Date.now() + secs * 1000;
       run.restTotal = secs;
-      run.restAfter = { name: step.name, weight: step.assist ? null : weight, reps: reps };
+      run.restAfter = { name: step.name, weight: step.assist ? null : weight, reps: reps, warm: step.kind === "warm" };
       scheduleRestChime(secs);
     }
     renderPlayer();
@@ -3564,10 +3568,13 @@
 
   /* ---------- rest timer ---------- */
   // compound barbell lifts get 3 min, everything else 90 s
+  // seconds of rest after this step, from Settings (0 = off)
   function restSecondsFor(step) {
-    var ex = EX[step.exId];
-    return (ex && ex.bar && !step.assist) ? 180 : 90;
+    return +(step.kind === "warm" ? db.settings.restWarm : db.settings.restWork) || 0;
   }
+  var REST_WARM_OPTS = [0, 30, 45, 60, 90, 120];
+  var REST_WORK_OPTS = [60, 90, 120, 150, 180, 240, 300];
+  function restLabel(sec) { return sec ? fmtClock(sec * 1000) : "Off"; }
   function warmPos(step) {
     var list = run.queue.filter(function (q) { return q.xi === step.xi && q.kind === "warm"; });
     return { n: list.indexOf(step) + 1, of: list.length };
@@ -3632,7 +3639,7 @@
       : "Set " + next.setNo + " of " + next.setCount + " · " + fmt(next.weight) + " " + U() + " × " + repRange(next.reps, next.repHigh);
     document.getElementById("pl-body").innerHTML =
       '<div class="rs-saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' +
-        'Set saved · ' + esc(a.name || "") + (a.weight != null ? ' ' + fmt(a.weight) + ' ' + U() : '') + ' × ' + (a.reps || 0) + '</div>' +
+        (a.warm ? 'Warm-up done · ' : 'Set saved · ') + esc(a.name || "") + (a.weight != null ? ' ' + fmt(a.weight) + ' ' + U() : '') + ' × ' + (a.reps || 0) + '</div>' +
       '<div class="rs-k">Rest</div>' +
       '<div class="rs-dial"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--line)" stroke-width="6"/>' +
         '<circle id="rs-ring" cx="60" cy="60" r="54" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="0" transform="rotate(-90 60 60)"/></svg>' +
@@ -4670,6 +4677,12 @@
 
   /* ============================================================ SETTINGS */
   document.getElementById("btn-settings").onclick = openSettings;
+  function restSelect(key, opts) {
+    var cur = +db.settings[key] || 0;
+    if (opts.indexOf(cur) < 0) opts = opts.concat([cur]).sort(function (a, b) { return a - b; });
+    return '<select class="rest-sel" data-rest="' + key + '" aria-label="' + (key === "restWarm" ? "Rest after warm-ups" : "Rest after working sets") + '">' +
+      opts.map(function (v) { return '<option value="' + v + '"' + (v === cur ? ' selected' : '') + '>' + restLabel(v) + '</option>'; }).join("") + '</select>';
+  }
   function openSettings() {
     var hasData = db.sessions.length > 0 || db.active;
     openSheet(
@@ -4685,6 +4698,12 @@
           '<button data-v="rir" aria-selected="' + (!effortIsRpe()) + '">RIR</button><button data-v="rpe" aria-selected="' + (effortIsRpe()) + '">RPE</button></div></div>' +
       '</div>' +
       (db.active ? '<div class="btn-row"><button class="btn btn-ghost" id="st-change">Switch program</button></div>' : '') +
+      '<div class="eyebrow" style="margin:18px 0 8px">Rest timer</div>' +
+      '<div class="day-block">' +
+        '<div class="toggle-line"><div class="tl-k">After warm-ups</div>' + restSelect("restWarm", REST_WARM_OPTS) + '</div>' +
+        '<div class="toggle-line"><div class="tl-k">After working sets</div>' + restSelect("restWork", REST_WORK_OPTS) + '</div>' +
+      '</div>' +
+      '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Starts automatically after each set. You can still add or cut 30 s, or skip it, mid-rest.</p>' +
       '<div class="eyebrow" style="margin:18px 0 8px">Profile</div>' +
       '<div class="day-block">' +
         '<div class="toggle-line"><div class="tl-k">Sex</div><div class="mini-seg" data-set="sex">' +
@@ -4723,6 +4742,9 @@
           apply(b.dataset.v); save();
         };
       });
+    });
+    sheetRoot.querySelectorAll("[data-rest]").forEach(function (sel) {
+      sel.onchange = function () { db.settings[sel.dataset.rest] = +sel.value; save(); };
     });
     document.getElementById("st-by").oninput = function () {
       var by = validBirthYear(this.value);
