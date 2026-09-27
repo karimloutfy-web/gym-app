@@ -39,6 +39,9 @@
 
 <style>
   /* social feed */
+  .feed-preview { position: relative; margin-top: 18px; opacity: .55; pointer-events: none; user-select: none;
+    -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent); }
+  .feed-preview .fp-k { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--text-faint); }
   .feed-card { border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px;
     background: var(--surface); margin: 10px 0; }
   .feed-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -162,7 +165,7 @@
   .brand .mark { width: 9px; height: 9px; border-radius: 2px; background: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
   .spacer { flex: 1; }
   .pos-chip { font-family: "IBM Plex Mono", monospace; font-size: var(--fs-xs); color: var(--text-muted); border: 1px solid var(--line-strong); border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
-  .icon-btn { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: var(--text-muted); border: 1px solid transparent; }
+  .icon-btn { width: 44px; height: 44px; border-radius: 9px; display: grid; place-items: center; color: var(--text-muted); border: 1px solid transparent; }
   .icon-btn:hover { background: var(--surface-2); color: var(--text); }
   .icon-btn svg { width: 19px; height: 19px; }
 
@@ -217,7 +220,7 @@
   .btn-danger { background: transparent; color: var(--miss); border: 1px solid color-mix(in srgb, var(--miss) 40%, var(--line)); }
   .btn-row { display: flex; gap: 9px; margin-top: 14px; }
   .btn-row .btn { flex: 1; }
-  .btn.sm { height: 40px; font-size: var(--fs-sm); padding: 0 13px; width: auto; }
+  .btn.sm { height: 44px; font-size: var(--fs-sm); padding: 0 13px; width: auto; }
 
   .backlink { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); font-size: var(--fs-sm); margin-bottom: 14px; }
   .backlink svg { width: 15px; height: 15px; }
@@ -230,6 +233,7 @@
   .ex-line:last-child { border-bottom: none; }
   .ex-line .scheme { font-family: "IBM Plex Mono", monospace; color: var(--text-muted); font-size: var(--fs-sm); }
   .ex-line .wt { font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+  .ex-line .scheme .wt { display: inline-block; min-width: 7ch; text-align: right; }   /* keeps the sets column lined up */
 
   .rule-box { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--line)); border-radius: var(--radius-sm); padding: 12px 13px; font-size: var(--fs-sm); color: var(--text); margin: 4px 0 16px; }
   .rule-box b { font-family: "Barlow Condensed"; letter-spacing: .04em; text-transform: uppercase; font-size: var(--fs-sm); color: var(--accent-ink); display: block; margin-bottom: 4px; }
@@ -305,13 +309,19 @@
   .home-hero .lead { margin-bottom: 22px; }
   .h-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
   .h-prog { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: var(--fs-xl); line-height: 1; display: inline-flex; align-items: center; gap: 7px; }
-  .h-info { width: 22px; height: 22px; color: var(--text-faint); flex: none; }
+  .h-info { position: relative; width: 22px; height: 22px; color: var(--text-faint); flex: none; }
+  .h-info::after, .sf-i::after { content: ""; position: absolute; inset: -11px; }   /* 44pt tap area, same look */
   .h-info svg { width: 100%; height: 100%; }
   .h-info:hover { color: var(--accent-ink); }
   .h-week { font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
   .home-secondary { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line-strong); }
   .btn.btn-lg { height: 58px; font-size: var(--fs-lg); }
   .home-links { display: flex; gap: 9px; margin-top: 10px; }
+  .filter-chips { display: flex; gap: 6px; overflow-x: auto; margin: 4px -16px 0; padding: 4px 16px 2px; scrollbar-width: none; }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chips button { flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; }
+  .filter-chips button[aria-selected="true"] { background: var(--text); border-color: var(--text); color: var(--bg); }
+  .filter-all { display: block; margin: 14px auto 0; min-height: 44px; padding: 0 12px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
   .home-alt { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
   .home-alt button { min-height: 44px; padding: 0 8px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
   .home-alt span { color: var(--text-faint); }
@@ -384,7 +394,7 @@
   .pl-actions .pl-cw { width: 100%; height: 44px; font-size: var(--fs-sm); }
   .pl-effort { display: flex; align-items: center; gap: 6px; }
   .pl-effort .pe-k { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--text-faint); margin-right: 2px; white-space: nowrap; }
-  .pe-chip { flex: 1; height: 38px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: var(--fs-sm); font-weight: 500; }
+  .pe-chip { flex: 1; height: 44px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: var(--fs-sm); font-weight: 500; }
   .pe-chip.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
   .pl-prow { display: flex; gap: 9px; }
   .pl-prow .pl-done { flex: 1; height: 60px; font-size: var(--fs-lg); }
@@ -499,7 +509,7 @@
   .bf-calc .seg-ctl button[aria-selected="true"] { background: var(--surface-2); }
   .bf-calc .meas-grid { margin: 8px 0 0; }
   .bf-calc .stepper { background: var(--surface); }
-  .sf-i { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--accent); color: var(--accent-ink); font-size: var(--fs-xs); font-family: Georgia, serif; font-style: italic; margin-left: 3px; vertical-align: 1px; text-transform: none; letter-spacing: 0; }
+  .sf-i { position: relative; display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--accent); color: var(--accent-ink); font-size: var(--fs-xs); font-family: Georgia, serif; font-style: italic; margin-left: 3px; vertical-align: 1px; text-transform: none; letter-spacing: 0; }
   .sf-help { display: grid; grid-template-columns: 96px 1fr; gap: 12px; margin-top: 10px; padding: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); }
   .sf-help[hidden] { display: none; }
   .sf-prof { display: flex; align-items: center; gap: 6px; margin: 2px 0 4px; font-size: var(--fs-sm); font-weight: 600; }
@@ -540,7 +550,7 @@
   .adj-grid { display: flex; gap: 10px; margin: 14px 0; }
   .adj-grid .ag { flex: 1; text-align: center; }
   .adj-grid .ag .lab { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .1em; color: var(--text-faint); font-weight: 700; margin-bottom: 6px; }
-  .stepper { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface-2); overflow: hidden; }
+  .stepper { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface-2); overflow: hidden; }
   .stepper button { height: 46px; font-size: var(--fs-lg); color: var(--text-muted); font-family: "Barlow Condensed"; }
   .stepper button:active { background: var(--accent-soft); color: var(--accent-ink); }
   .stepper input { width: 100%; height: 46px; text-align: center; border: none; background: transparent; font-family: "IBM Plex Mono", monospace; font-size: var(--fs-md); font-weight: 500; -moz-appearance: textfield; }
@@ -570,6 +580,20 @@
   .badge-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 2px; }
   .badge-cell span { font-size: var(--fs-xs); text-align: center; color: var(--text-faint); line-height: 1.15; max-width: 74px; }
   .badge-cell.got span { color: var(--text-muted); font-weight: 600; }
+  .badge-cell em { font-style: normal; font-size: var(--fs-xs); color: var(--text-faint); font-variant-numeric: tabular-nums; margin-top: -2px; }
+  .badge-more { display: block; margin: 0 auto; min-height: 44px; padding: 0 12px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
+  .badge-next { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 4px; }
+  .bn-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); text-align: left; width: 100%; }
+  .bn-row .badge-svg { width: 44px; height: 44px; flex: none; }
+  .bn-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .bn-t b { font-size: var(--fs-md); }
+  .bn-t > span { font-size: var(--fs-sm); color: var(--text-muted); }
+  .bn-n { font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bn-bar { display: block; height: 5px; border-radius: 999px; background: var(--line); overflow: hidden; margin-top: 4px; }
+  .bn-bar > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+  .bd-prog { display: flex; align-items: center; gap: 10px; max-width: 260px; margin: 0 auto 8px; }
+  .bd-prog .bn-bar { flex: 1; margin: 0; }
+  .bd-prog span { font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
   .badge-svg { width: 52px; height: 52px; }
   .badge-svg.locked { opacity: .55; }
   .badge-detail { display: flex; justify-content: center; margin: 2px 0 8px; }
@@ -652,7 +676,7 @@
       <span>Badges</span>
     </button>
     <button data-tab="feed" aria-selected="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.6c2.6.2 4.4 1.9 5 5.4"/></svg>
       <span>Feed</span>
     </button>
   </nav>
@@ -1509,6 +1533,7 @@
 
   /* ============================================================ CHOOSE */
   var renderers = {};
+  var chooseFilter = "all";
   renderers.choose = function () {
     var c = screens.choose;
     var html = '<button class="backlink" id="ch-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</button>' +
@@ -1528,12 +1553,22 @@
         '<div class="best">Best for: ' + esc(t.bestFor) + '</div>' +
       '</button>';
     }
-    GROUPS.forEach(function (g) {
-      var inGroup = TEMPLATES.filter(function (t) { return (t.style || tplKind(t)) === g[0]; });
-      if (!inGroup.length) return;
+    var inGroupOf = function (g) { return TEMPLATES.filter(function (t) { return (t.style || tplKind(t)) === g[0]; }); };
+    var live = GROUPS.filter(function (g) { return inGroupOf(g).length; });
+    if (!live.some(function (g) { return g[0] === chooseFilter; })) chooseFilter = "all";
+    // jump straight to a kind of training instead of scrolling past all of them
+    html += '<div class="filter-chips" role="tablist">' +
+      [["all", "All"]].concat(live.map(function (g) { return [g[0], g[0] === "barbell" ? "Strength" : g[1]]; })).map(function (f) {
+        return '<button role="tab" data-filter="' + f[0] + '" aria-selected="' + (chooseFilter === f[0]) + '">' + esc(f[1]) + '</button>';
+      }).join("") + '</div>';
+    live.forEach(function (g) {
+      if (chooseFilter !== "all" && chooseFilter !== g[0]) return;
       html += '<div class="eyebrow" style="margin-top:18px">' + g[1] + '</div>';
-      inGroup.forEach(function (t) { html += card(t); });
+      inGroupOf(g).forEach(function (t) { html += card(t); });
     });
+    if (chooseFilter !== "all") {
+      html += '<button class="filter-all" data-filter="all">Show all programs</button>';
+    } else {
     if (db.customPlans.length) {
       html += '<div class="eyebrow" style="margin-top:18px">Your plans</div>';
       db.customPlans.forEach(function (t) { html += card(t); });
@@ -1558,13 +1593,19 @@
         '<button class="btn btn-ghost" id="ch-dup">Duplicate a program to tweak</button>' +
         '<button class="btn btn-ghost" id="ch-new-workout">Build a one-off workout</button>' +
       '</div>';
+    }
 
     c.innerHTML = html;
     document.getElementById("ch-back").onclick = function () { go("home"); };
+    c.querySelectorAll("[data-filter]").forEach(function (b) {
+      b.onclick = function () { chooseFilter = b.dataset.filter; renderers.choose(); c.scrollTop = 0; };
+    });
     var chRoll = document.getElementById("ch-roll");
     if (chRoll) chRoll.onclick = function () { go("roll"); };
-    document.getElementById("ch-dup").onclick = openDuplicatePicker;
-    document.getElementById("ch-new-workout").onclick = function () { startWorkoutBuilder(); };
+    var chDup = document.getElementById("ch-dup");
+    if (chDup) chDup.onclick = openDuplicatePicker;
+    var chNew = document.getElementById("ch-new-workout");
+    if (chNew) chNew.onclick = function () { startWorkoutBuilder(); };
     c.querySelectorAll("[data-tpl]").forEach(function (b) {
       b.onclick = function () { draft = null; showDetail(b.dataset.tpl); };
     });
@@ -2042,6 +2083,7 @@
       options: optionDefaults(t),
       equipment: Object.assign({}, db.equipment),
       trainingDays: defaultTrainingDays(t.daysPerWeek || 3),
+      startMode: "light",   // new lifters shouldn't have to test 5 lifts before their first session
       inputs: {}
     };
     (t.anchors || []).forEach(function (id) { draft.inputs[id] = { mode: "reptest", weight: "", reps: "" }; });
@@ -2149,7 +2191,7 @@
     }
 
     var html = '<button class="backlink" id="su-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' + esc(t.name) + '</button>' +
-      '<h2 class="title">Set it up</h2><p class="lead">Tell it your bar and plates, then set a starting weight for each lift — either do a hard max-rep set and let it calculate, or type the number if you already know it.</p>';
+      '<h2 class="title">Set it up</h2><p class="lead">Tell it your bar and plates and where to start. The program adds weight as you go, so starting light is fine.</p>';
 
     // equipment
     html += '<div class="field"><label>Barbell weight (' + U() + ')</label><div class="seg-ctl" data-eq="bar">' +
@@ -2160,8 +2202,18 @@
       }).join("") + '</div><p style="font-size: var(--fs-xs);color:var(--text-faint);margin-top:6px">Weights round to the nearest ' + fmt(e.smallestPlate * 2) + ' ' + U() + ' (one plate on each side).</p></div>';
 
     // lifts
-    html += '<div class="eyebrow" style="margin-top:22px">Starting weights</div>';
-    t.anchors.forEach(function (id) {
+    var light = draft.startMode === "light";
+    html += '<div class="eyebrow" style="margin-top:22px">Starting weights</div>' +
+      '<div class="seg-ctl" data-start-mode style="margin-bottom:10px">' +
+        '<button data-v="light" aria-selected="' + light + '">Start me light</button>' +
+        '<button data-v="custom" aria-selected="' + !light + '">Set my own</button></div>';
+    if (light) {
+      html += '<div class="day-block">' + t.anchors.map(function (id) {
+        return '<div class="ex-line"><span>' + esc(EX[id].name) + '</span><span class="scheme">' + fmt(computeStart(t, id)) + ' ' + U() + '</span></div>';
+      }).join("") + '</div>' +
+      '<p class="lr-result" style="margin:-2px 0 0">New to these lifts? Start here — the bar alone (double for deadlifts) — and it adds weight every session. Already lifting? Pick “Set my own”.</p>';
+    }
+    if (!light) t.anchors.forEach(function (id) {
       var inp = draft.inputs[id];
       var res = computeStart(t, id);
       html += '<div class="lift-row" data-lift="' + id + '">' +
@@ -2207,6 +2259,9 @@
     c.querySelectorAll('[data-eq="plate"] button').forEach(function (b) {
       b.onclick = function () { draft.equipment.smallestPlate = +b.dataset.v; draft.equipment.step = +b.dataset.v * 2; renderers.setup(); };
     });
+    c.querySelectorAll('[data-start-mode] button').forEach(function (b) {
+      b.onclick = function () { draft.startMode = b.dataset.v; renderers.setup(); };
+    });
     c.querySelectorAll('[data-mode] button').forEach(function (b) {
       b.onclick = function () {
         var id = b.closest('[data-mode]').dataset.mode;
@@ -2242,6 +2297,7 @@
   function computeStart(t, id) {
     var inp = draft.inputs[id];
     var e = draft.equipment;
+    if (draft.startMode === "light") return roundLoad(id === "deadlift" ? e.bar * 2 : e.bar, e);
     var w = parseFloat(inp.weight);
     if (inp.mode === "direct") {
       if (isNaN(w) || w <= 0) return null;
@@ -2531,28 +2587,60 @@
   var CAT_LABEL = { consistency: "Consistency", volume: "Volume", strength: "Strength", variety: "Variety", crossfit: "Conditioning", hyrox: "Hyrox", roller: "Roller", effort: "Effort", time: "Time & season", body: "Body" };
   var CAT_ORDER = ["consistency", "strength", "volume", "crossfit", "hyrox", "effort", "variety", "time", "roller", "body"];
 
+  // { have, need } for a locked badge that can report it, else null
+  function badgeProgress(b, ctx) {
+    if (!b.progress) return null;
+    try { var p = b.progress(ctx || badgeContext()); return p && p.need > 0 ? p : null; } catch (e) { return null; }
+  }
+  function progressText(p) { return fmt(Math.floor(p.have)) + " / " + fmt(p.need); }
+  var badgeOpenCats = {};   // categories expanded past their first row
   renderers.badges = function () {
     var c = screens.badges;
     var earned = db.badges.earned || {};
+    var ctx = badgeContext();
     var total = BADGES.length, got = BADGES.filter(function (b) { return earned[b.id]; }).length;
     var html = '<h2 class="title">Badges</h2>' +
       '<p class="lead"><b>' + got + '</b> / ' + total + ' earned</p>';
+
+    // the few you're closest to — something concrete to aim for next
+    var close = BADGES.filter(function (b) { return !earned[b.id]; })
+      .map(function (b) { var p = badgeProgress(b, ctx); return p && p.have > 0 ? { b: b, p: p, r: p.have / p.need } : null; })
+      .filter(Boolean).sort(function (x, y) { return y.r - x.r; }).slice(0, 3);
+    if (close.length) {
+      html += '<div class="eyebrow" style="margin-top:6px">Closest to unlocking</div><div class="badge-next">' +
+        close.map(function (x) {
+          return '<button class="bn-row" data-badge="' + x.b.id + '">' + badgeSVG(x.b.glyph, x.b.tier, false) +
+            '<span class="bn-t"><b>' + esc(x.b.name) + '</b><span>' + esc(x.b.desc) + '</span>' +
+            '<i class="bn-bar"><i style="width:' + Math.round(x.r * 100) + '%"></i></i></span>' +
+            '<span class="bn-n">' + progressText(x.p) + '</span></button>';
+        }).join("") + '</div>';
+    }
+
     CAT_ORDER.forEach(function (cat) {
       var list = BADGES.filter(function (b) { return b.cat === cat; });
       if (!list.length) return;
       var g = list.filter(function (b) { return earned[b.id]; }).length;
+      // earned first, then the rest in ladder order; one row unless expanded
+      var ordered = list.filter(function (b) { return earned[b.id]; }).concat(list.filter(function (b) { return !earned[b.id]; }));
+      var open = !!badgeOpenCats[cat];
+      var shown = open ? ordered : ordered.slice(0, 4);
       html += '<div class="eyebrow" style="margin-top:16px">' + esc(CAT_LABEL[cat] || cat) + ' <span style="text-transform:none;color:var(--text-faint);font-weight:500">' + g + '/' + list.length + '</span></div>' +
         '<div class="badge-grid">';
-      list.forEach(function (b) {
+      shown.forEach(function (b) {
+        var p = earned[b.id] ? null : badgeProgress(b, ctx);
         html += '<button class="badge-cell' + (earned[b.id] ? ' got' : '') + '" data-badge="' + b.id + '">' +
           badgeSVG(b.glyph, b.tier, !!earned[b.id]) +
-          '<span>' + esc(earned[b.id] ? b.name : "Locked") + '</span></button>';
+          '<span>' + esc(b.name) + '</span>' + (p ? '<em>' + progressText(p) + '</em>' : '') + '</button>';
       });
       html += '</div>';
+      if (ordered.length > 4) html += '<button class="badge-more" data-cat="' + cat + '">' + (open ? 'Show less' : 'Show all ' + ordered.length) + '</button>';
     });
     c.innerHTML = html;
     c.querySelectorAll("[data-badge]").forEach(function (el) {
       el.onclick = function () { openBadgeSheet(el.dataset.badge); };
+    });
+    c.querySelectorAll("[data-cat]").forEach(function (el) {
+      el.onclick = function () { badgeOpenCats[el.dataset.cat] = !badgeOpenCats[el.dataset.cat]; var y = c.scrollTop; renderers.badges(); c.scrollTop = y; };
     });
   };
 
@@ -2637,10 +2725,14 @@
     if (!b) return;
     var ts = db.badges.earned[id];
     openSheet('<div class="badge-detail">' + badgeSVG(b.glyph, b.tier, !!ts) + '</div>' +
-      '<h2 style="text-align:center">' + esc(ts ? b.name : "Locked") + '</h2>' +
+      '<h2 style="text-align:center">' + esc(b.name) + '</h2>' +
       '<p class="sh-lead" style="text-align:center">' + esc(b.desc) + '</p>' +
+      (function () {
+        var p = ts ? null : badgeProgress(b);
+        return p ? '<div class="bd-prog"><i class="bn-bar"><i style="width:' + Math.round(p.have / p.need * 100) + '%"></i></i><span>' + progressText(p) + '</span></div>' : '';
+      })() +
       '<p style="text-align:center;font-size: var(--fs-sm);color:var(--text-faint)">' +
-        (ts ? "Earned " + relDate(ts) + " · " + cap(b.tier) : cap(b.tier) + " badge") + '</p>' +
+        (ts ? "Earned " + relDate(ts) + " · " + cap(b.tier) : "Locked · " + cap(b.tier) + " badge") + '</p>' +
       '<div class="btn-row"><button class="btn btn-primary" id="bd-ok">Close</button></div>');
     document.getElementById("bd-ok").onclick = closeSheet;
   }
@@ -4198,8 +4290,8 @@
       '<path d="' + area + '" fill="var(--accent)" fill-opacity="0.10"/>' +
       '<path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
       dots +
-      '<text x="' + padX + '" y="10" fill="var(--text-faint)" font-size="10" font-family="IBM Plex Mono, monospace">' + fmt(mx) + '</text>' +
-      '<text x="' + padX + '" y="' + h + '" fill="var(--text-faint)" font-size="10" font-family="IBM Plex Mono, monospace">' + fmt(mn) + '</text>' +
+      '<text x="' + padX + '" y="10" fill="var(--text-faint)" font-size="11" font-family="IBM Plex Mono, monospace">' + fmt(mx) + '</text>' +
+      '<text x="' + padX + '" y="' + h + '" fill="var(--text-faint)" font-size="11" font-family="IBM Plex Mono, monospace">' + fmt(mn) + '</text>' +
       '</svg>';
   }
 
@@ -5189,10 +5281,20 @@
   renderers.feed = function () {
     var c = screens.feed;
     if (!db.account) {
+      // a faded preview of what the feed looks like, so signing in has an obvious payoff
+      var ago = function (h) { return new Date(Date.now() - h * 3600000).toISOString(); };
+      var sample = [
+        { id: "x1", user_id: "x1", completed_at: ago(2), program_name: "Starting Strength", day_label: "A", duration_sec: 3300,
+          profiles: { display_name: "Example lifter" }, kudos: [{}, {}, {}],
+          summary: { unit: U(), lifts: [{ name: "Back Squat", weight: U() === "lb" ? 225 : 100, reps: 5, sets: 3, made: true }, { name: "Overhead Press", weight: U() === "lb" ? 95 : 42.5, reps: 5, sets: 3, made: true }] } },
+        { id: "x2", user_id: "x2", completed_at: ago(5), program_name: "CrossFit Benchmarks", day_label: "Fran", duration_sec: 540,
+          profiles: { display_name: "Example athlete" }, kudos: [{}, {}], summary: { score: "4:12 · RX" } }
+      ];
       c.innerHTML = '<h2 class="title">Feed</h2>' +
-        '<p class="lead">See what everyone’s lifting. Sign in with Google to join.</p>' +
-        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="fd-signin">Sign in</button></div>' +
-        (sb() ? '' : '<p class="lead" style="color:var(--text-faint);font-size: var(--fs-sm);margin-top:10px">Waiting for a connection…</p>');
+        '<p class="lead">See what everyone’s lifting, follow friends and give kudos. Sign in with Google to join.</p>' +
+        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="fd-signin">Sign in with Google</button></div>' +
+        (sb() ? '' : '<p class="lead" style="color:var(--text-faint);font-size: var(--fs-sm);margin-top:10px">Waiting for a connection…</p>') +
+        '<div class="feed-preview" aria-hidden="true"><div class="fp-k">Preview</div>' + feedItemsHtml(sample, true) + '</div>';
       var b = document.getElementById("fd-signin");
       if (b) b.onclick = openSignIn;
       return;

@@ -1,6 +1,6 @@
 /* Rack Coach — badge catalogue (151 achievements).
    Plain synchronous script: sets a global the main IIFE reads at boot.
-   Each entry: { id, name, desc, cat, tier, glyph, check(ctx) -> boolean }
+   Each entry: { id, name, desc, cat, tier, glyph, check(ctx) -> boolean, progress?(ctx) -> { have, need } }
    ctx = { stats, sessions, active, body, customPlans, customWorkouts }
    `stats` is the precomputed bundle from computeStats() in index.html.
    Bump sw.js CACHE when this file changes. */
@@ -23,7 +23,9 @@
         cat: cfg.cat,
         glyph: cfg.glyph,
         tier: tierFor(i, cfg.steps.length),
-        check: function (ctx) { return (cfg.stat(ctx) || 0) >= thr; }
+        check: function (ctx) { return (cfg.stat(ctx) || 0) >= thr; },
+        // how far along a locked badge is: { have, need }
+        progress: function (ctx) { return { have: Math.min(cfg.stat(ctx) || 0, thr), need: thr }; }
       };
     });
   }
