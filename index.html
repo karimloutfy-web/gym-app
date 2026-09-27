@@ -143,6 +143,7 @@
   }
   .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
   button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+  [hidden] { display: none !important; }   /* the hidden attribute always wins over component display styles */
   input, select { font: inherit; color: inherit; }
   /* iOS zooms the page when focusing a field under 16px — keep every editable field at 16px */
   input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea:not([readonly]) { font-size: 16px !important; }
@@ -481,6 +482,7 @@
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
   }
   .tabbar.show { display: flex; }
+  body:has(.tabbar.show) .toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
   .tabbar button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; color: var(--text-faint); border-radius: 10px; }
   .tabbar button svg { width: 22px; height: 22px; }
   .tabbar button span { font-family: "Barlow Condensed"; font-weight: 600; font-size: var(--fs-xs); letter-spacing: .07em; text-transform: uppercase; }
@@ -581,12 +583,33 @@
   .pc-row span { flex: 1; }
   .pc-row button { min-height: 44px; padding: 0 6px; color: var(--accent-ink); font-weight: 600; font-size: var(--fs-sm); white-space: nowrap; }
   .pc-saved { font-size: var(--fs-sm); color: var(--text-muted); text-align: center; margin: 10px 0; }
+  .pl-rr { display: flex; gap: 8px; }
+  .pl-rr .pl-done { flex: 1; }
+  .pl-rr-b { width: 52px; flex: none; font-size: var(--fs-xl); }
+  .ep-create { width: 100%; margin: 0 0 10px; }
+  .ep-head { position: sticky; top: -8px; z-index: 1; background: var(--surface); padding: 4px 0 10px; }
+  .ep-head input { font-family: "Archivo", system-ui, sans-serif; }
+  .pt-table { width: 100%; max-width: 360px; margin: 14px auto 0; }
+  .pt-row { display: grid; grid-template-columns: 34px 1fr 1fr 44px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .pt-row.pt-bw { grid-template-columns: 34px 1fr 44px; }
+  .pt-row .num-in { text-align: center; }
+  .pt-h { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--text-faint); margin-bottom: 2px; }
+  .pt-row > span:first-child { font-family: "IBM Plex Mono", monospace; color: var(--text-muted); text-align: center; }
+  .pt-del { width: 44px; height: 44px; color: var(--text-faint); }
   .lv-title { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: var(--fs-2xl); margin-top: 8px; }
   .lv-list { width: 100%; max-width: 340px; margin: 14px auto 0; text-align: left; }
   .lv-list div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
   .lv-list div span:last-child { color: var(--text-muted); font-variant-numeric: tabular-nums; }
-  .pe-row { padding: 8px 0; border-bottom: 1px solid var(--line); }
-  .pe-row:last-of-type { border-bottom: none; }
+  .pe-day { padding: 0 13px; }
+  .pe-dhead { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; text-align: left; }
+  .pe-dhead b { font-family: "Barlow Condensed", sans-serif; font-size: var(--fs-lg); letter-spacing: .02em; }
+  .pe-dhead span { flex: 1; font-size: var(--fs-sm); color: var(--text-muted); }
+  .pe-dhead svg { width: 18px; height: 18px; color: var(--text-faint); transition: transform .2s; }
+  .pe-day.open .pe-dhead svg { transform: rotate(180deg); }
+  .pe-row { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; padding: 6px 0; border-top: 1px solid var(--line); text-align: left; }
+  .pe-n { flex: 1; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: var(--fs-md); font-weight: 600; }
+  .pe-s { font-family: "IBM Plex Mono", monospace; font-size: var(--fs-sm); color: var(--text-muted); }
+  .pe-chev { width: 16px; height: 16px; color: var(--text-faint); flex: none; }
   .pe-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .pe-name { flex: 1; min-height: 44px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; text-align: left; font-size: var(--fs-md); font-weight: 600; color: var(--text); }
   .pe-fixed { min-height: 32px; }
@@ -1017,6 +1040,7 @@
   }
 
   function genWarmups(work, eq) {
+    if (work <= eq.bar) return [];   // working with the empty bar — nothing lighter to warm up with
     if (work <= eq.bar + eq.step * 1.5) return [{ weight: eq.bar, reps: 5 }];
     var out = [{ weight: eq.bar, reps: 5 }, { weight: eq.bar, reps: 5 }];
     [[0.55, 5], [0.7, 3], [0.85, 2]].forEach(function (p) {
@@ -1225,12 +1249,12 @@
   }
   function touched(t) { t.updatedAt = Date.now(); if (db.active && db.active.templateId === t.id && db.active.order) db.active.order = {}; }
 
-  function tplAddSlot(t, dayIdx, exId, sets, reps, weight, lifts) {
+  function tplAddSlot(t, dayIdx, exId, sets, reps, weight, lifts, repHigh) {
     var slot = { exId: exId, sets: sets, reps: reps, added: true };
-    if (isDouble(t)) slot.repHigh = reps;
+    if (isDouble(t)) slot.repHigh = repHigh && repHigh > reps ? repHigh : reps;
     if (weight != null && !(EX[exId] && EX[exId].bw)) slot.seedLoad = weight;
     t.microcycle[dayIdx].slots.push(slot);
-    ensureProgression(t, exId, reps);
+    ensureProgression(t, exId, slot.repHigh || reps);
     seedLift(lifts, exId, weight);
     touched(t);
     return t.microcycle[dayIdx].slots.length - 1;
@@ -1512,6 +1536,9 @@
   if (db.account && !db.account.userId) db.account = null;
   db.pendingPush = Array.isArray(db.pendingPush) ? db.pendingPush : [];
   db.backfilledFor = (db.backfilledFor && typeof db.backfilledFor === "object") ? db.backfilledFor : {};
+  // exercises you've created live alongside the built-in list
+  db.customExercises = Array.isArray(db.customExercises) ? db.customExercises : [];
+  db.customExercises.forEach(function (x) { EX[x.id] = { name: x.name, bar: !!x.bar, bw: !!x.bw, grp: x.grp || "Other", custom: true }; });
   db.knownProfiles = (db.knownProfiles && typeof db.knownProfiles === "object") ? db.knownProfiles : {};
   if (db.account && db.account.displayName) db.knownProfiles[db.account.userId] = { displayName: db.account.displayName, avatarUrl: db.account.avatarUrl || null };
 
@@ -1544,7 +1571,7 @@
   }
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
   // human label for a resolved session ("Workout A" / "Volume day")
-  function sessionLabel(res) { return res.dayType ? cap(res.dayType) + " day" : "Workout " + res.label; }
+  function sessionLabel(res) { return res.dayType ? cap(res.dayType) + " day" : dayTitle(res.label); }
 
   // "8" or "8–12" for a double-progression rep range
   function repRange(lo, hi) { return hi && hi > lo ? lo + "–" + hi : String(lo); }
@@ -1575,8 +1602,8 @@
   function sessionTitle(s) {
     if (s.kind === "metcon") return s.wodName || s.dayLabel || "Workout";
     if (s.kind === "freestyle") return s.dayLabel || "Workout";
-    var d = s.dayLabel || "";
-    return /^[A-Z]$/.test(d) ? "Workout " + d : d ? cap(d) + " day" : "Workout";
+    if (s.dayType) return cap(s.dayType) + " day";
+    return s.dayLabel ? dayTitle(s.dayLabel) : "Workout";
   }
   function quoteHtml() {
     var q = QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length];
@@ -1750,7 +1777,7 @@
     html += '<div class="eyebrow" style="margin-top:22px">Make your own</div>' +
       '<div class="home-links" style="flex-direction:column;gap:8px">' +
         '<button class="btn btn-ghost" id="ch-dup">Duplicate a program to tweak</button>' +
-        '<button class="btn btn-ghost" id="ch-new-workout">Build a one-off workout</button>' +
+        '<button class="btn btn-ghost" id="ch-new-workout">Plan a workout</button>' +
       '</div>';
     }
 
@@ -1855,27 +1882,35 @@
         : "Swap, add or remove exercises, and change sets and reps.") + '</p>' +
       (st.context === "setup" ? '' : '<div class="field"><label>Name</label><input class="ed-name" id="ed-name" value="' + esc(t.name) + '"></div>');
     var anyLocked = false, anyFixed = false;
+    // days collapse to one line so a 6-day program isn't eight screens of steppers
+    var total = t.microcycle.reduce(function (n, d) { return n + d.slots.length; }, 0);
+    if (!st.open) { st.open = {}; if (total <= 8) t.microcycle.forEach(function (d, di) { st.open[di] = true; }); }
     t.microcycle.forEach(function (day, di) {
-      html += '<div class="day-block"><h4>' + esc(/^[A-Z]$/.test(day.label) ? "Workout " + day.label : day.label) + '</h4>';
-      day.slots.forEach(function (slot, si) {
-        var locked = slotLocked(t, slot), canSwap = slotSwappable(slot);
-        if (locked) anyLocked = true;
-        if (!canSwap) anyFixed = true;
-        var tag = slot.added ? '<span class="pe-tag">added</span>' : slot.swappedFrom ? '<span class="pe-tag">swapped</span>' : '';
-        html += '<div class="pe-row" data-di="' + di + '" data-si="' + si + '">' +
-          '<div class="pe-top">' + (locked ? LOCK_SVG : '') +
-            (canSwap ? '<button class="pe-name" data-swap="1">' + esc(slotName(slot)) + tag + '<span class="pe-sw">Swap</span></button>'
-                     : '<span class="pe-name pe-fixed">' + esc(slotName(slot)) + tag + '</span>') +
-            (locked ? '' : '<button class="pe-del" data-del="1" aria-label="Remove ' + esc(slotName(slot)) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>') +
-          '</div>' +
-          '<div class="ed-nums">' + numStep("sets", slot.sets, 1, 10) + numStep("reps", slot.reps, 1, 30) +
-            (isDbl ? numStep("repHigh", slot.repHigh || slot.reps, 1, 40) : "") + '</div>' +
-        '</div>';
+      var dch = orig && orig.microcycle[di] ? dayChanges(day, orig.microcycle[di]) : 0;
+      var open = !!st.open[di];
+      html += '<div class="day-block pe-day' + (open ? ' open' : '') + '">' +
+        '<button class="pe-dhead" data-day="' + di + '" aria-expanded="' + open + '"><b>' + esc(dayTitle(day.label)) + '</b>' +
+          '<span>' + day.slots.length + ' exercise' + (day.slots.length === 1 ? '' : 's') + (dch ? ' · ' + dch + ' change' + (dch === 1 ? '' : 's') : '') + '</span>' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>';
+      day.slots.forEach(function (slot) {
+        if (slotLocked(t, slot)) anyLocked = true;
+        if (!slotSwappable(slot)) anyFixed = true;
       });
-      html += '<button class="pe-add" data-add="' + di + '">+ Add exercise</button></div>';
+      if (open) {
+        day.slots.forEach(function (slot, si) {
+          var locked = slotLocked(t, slot);
+          var tag = slot.added ? '<span class="pe-tag">added</span>' : slot.swappedFrom ? '<span class="pe-tag">swapped</span>' : '';
+          html += '<button class="pe-row" data-di="' + di + '" data-si="' + si + '">' + (locked ? LOCK_SVG : '') +
+            '<span class="pe-n">' + esc(slotName(slot)) + tag + '</span>' +
+            '<span class="pe-s">' + slot.sets + '×' + repRange(slot.reps, slot.repHigh) + '</span>' +
+            '<svg class="pe-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
+        });
+        html += '<button class="pe-add" data-add="' + di + '">+ Add exercise</button>';
+      }
+      html += '</div>';
     });
     if (anyLocked) html += '<p class="pe-note">' + LOCK_SVG + ' Locked lifts drive the program’s progression, so they can’t be removed' +
-      (anyFixed ? '. Ones without a Swap button are tied to another lift’s weight, so they stay as they are.' : ' — but you can swap them.') + '</p>';
+      (anyFixed ? '. Some are tied to another lift’s weight, so they can’t be swapped either.' : ' — but you can swap them.') + '</p>';
     if (orig && ch.any) html += '<div class="btn-row"><button class="btn btn-ghost" id="ed-reset">Reset to original</button></div>';
     if (st.context === "library") html += '<div class="btn-row"><button class="btn btn-ghost" id="ed-delete">Delete this program</button></div>';
     html += '<div class="btn-row"><button class="btn btn-primary" id="ed-save">' + (st.context === "setup" ? "Done" : "Save changes") + '</button></div>';
@@ -1885,27 +1920,19 @@
     if (nameIn) nameIn.oninput = function () { t.name = this.value; };
     var keepScroll = function () { var y = c.scrollTop; renderers.editor(); c.scrollTop = y; };
     document.getElementById("ed-back").onclick = function () { var ctx = st.context; editorState = null; go(ctx === "setup" ? "setup" : ctx === "active" ? "home" : "choose", true); };
+    c.querySelectorAll("[data-day]").forEach(function (b) {
+      b.onclick = function () { st.open[+b.dataset.day] = !st.open[+b.dataset.day]; keepScroll(); };
+    });
     c.querySelectorAll(".pe-row").forEach(function (row) {
-      var di = +row.dataset.di, si = +row.dataset.si;
-      var slot = t.microcycle[di].slots[si];
-      var sw = row.querySelector("[data-swap]");
-      if (sw) sw.onclick = function () {
-        pickExercise("Swap " + slotName(slot), function (exId) { tplSwapSlot(t, di, si, exId, null, null); closeSheet(); keepScroll(); });
-      };
-      var del = row.querySelector("[data-del]");
-      if (del) del.onclick = function () { var nm = slotName(slot); tplRemoveSlot(t, di, si); keepScroll(); toast(nm + " removed"); };
-      row.querySelectorAll("[data-num]").forEach(function (grp) {
-        var f = grp.dataset.num;
-        grp.querySelector("[data-d='-']").onclick = function () { slot[f] = Math.max(1, (slot[f] || slot.reps) - 1); keepScroll(); };
-        grp.querySelector("[data-d='+']").onclick = function () { slot[f] = (slot[f] || slot.reps) + 1; keepScroll(); };
-      });
+      row.onclick = function () { openSlotSheet(t, +row.dataset.di, +row.dataset.si, keepScroll); };
     });
     c.querySelectorAll("[data-add]").forEach(function (b) {
       var di = +b.dataset.add;
       b.onclick = function () {
-        pickExercise("Add to " + (/^[A-Z]$/.test(t.microcycle[di].label) ? "Workout " + t.microcycle[di].label : t.microcycle[di].label), function (exId) {
-          openSetsConfig(exId, { cta: "Add exercise", onBack: null, onDone: function (sets, reps, w) {
-            tplAddSlot(t, di, exId, sets, reps, w, null); closeSheet(); keepScroll();
+        pickExercise("Add to " + dayTitle(t.microcycle[di].label), function (exId) {
+          var dbl = isDouble(t);
+          openSetsConfig(exId, { cta: "Add exercise", range: dbl, repHigh: dbl ? 12 : null, onBack: null, onDone: function (sets, reps, w, perm, rh) {
+            tplAddSlot(t, di, exId, sets, reps, w, null, rh); closeSheet(); keepScroll();
           } });
         });
       };
@@ -1944,6 +1971,40 @@
     };
   }
 
+  function dayChanges(day, od) {
+    var added = 0, swapped = 0, kept = 0;
+    day.slots.forEach(function (sl) { if (sl.added) added++; else kept++; if (sl.swappedFrom) swapped++; });
+    var numbers = day.slots.some(function (sl, i) { var o = od.slots[i]; return o && !sl.added && (o.sets !== sl.sets || o.reps !== sl.reps || (o.repHigh || null) !== (sl.repHigh || null)); });
+    return added + swapped + Math.max(0, od.slots.length - kept) + (numbers ? 1 : 0);
+  }
+  // one exercise in the editor: sets / reps / range, swap, remove
+  function openSlotSheet(t, di, si, rerender) {
+    var slot = t.microcycle[di].slots[si];
+    var locked = slotLocked(t, slot), canSwap = slotSwappable(slot);
+    var draw = function () {
+      openSheet('<h2>' + esc(slotName(slot)) + '</h2>' +
+        '<p class="sh-lead">' + esc(dayTitle(t.microcycle[di].label)) + (locked ? ' · locked — this lift drives the program’s progression' : '') + '</p>' +
+        '<div class="ed-nums" style="margin:6px 0 14px">' + numStep("sets", slot.sets) + numStep("reps", slot.reps) +
+          (isDouble(t) ? numStep("repHigh", slot.repHigh || slot.reps) : "") + '</div>' +
+        (canSwap ? '<div class="btn-row"><button class="btn btn-ghost" id="ss-swap">Swap exercise</button></div>' : '') +
+        (locked ? '' : '<div class="btn-row"><button class="btn btn-ghost" id="ss-del" style="color:var(--miss)">Remove from ' + esc(dayTitle(t.microcycle[di].label)) + '</button></div>') +
+        '<div class="btn-row"><button class="btn btn-primary" id="ss-done">Done</button></div>');
+      sheetRoot.querySelectorAll("[data-num]").forEach(function (grp) {
+        var f = grp.dataset.num;
+        grp.querySelector("[data-d='-']").onclick = function () { slot[f] = Math.max(1, (slot[f] || slot.reps) - 1); touched(t); draw(); };
+        grp.querySelector("[data-d='+']").onclick = function () { slot[f] = (slot[f] || slot.reps) + 1; touched(t); draw(); };
+      });
+      var sw = document.getElementById("ss-swap");
+      if (sw) sw.onclick = function () {
+        pickExercise("Swap " + slotName(slot), function (exId) { tplSwapSlot(t, di, si, exId, null, null); closeSheet(); rerender(); });
+      };
+      var del = document.getElementById("ss-del");
+      if (del) del.onclick = function () { var nm = slotName(slot); tplRemoveSlot(t, di, si); closeSheet(); rerender(); toast(nm + " removed"); };
+      document.getElementById("ss-done").onclick = function () { closeSheet(); rerender(); };
+    };
+    draw();
+  }
+
   // a swapped-in lift starts from the weight of the lift it replaced, not the empty bar
   function seedSwappedLifts(t, lifts) {
     t.microcycle.forEach(function (d) { d.slots.forEach(function (sl) {
@@ -1951,31 +2012,81 @@
     }); });
   }
 
+  // the exercises you've logged most recently, newest first
+  function recentExIds(n) {
+    var seen = {}, out = [];
+    db.sessions.slice().sort(function (a, b) { return b.date - a.date; }).forEach(function (s) {
+      (s.actual || []).forEach(function (a) { if (EX[a.exId] && a.sets && a.sets.length && !seen[a.exId]) { seen[a.exId] = 1; out.push(a.exId); } });
+    });
+    return out.slice(0, n);
+  }
   // searchable, grouped exercise list shared by the editor and the workout player
   function pickExercise(title, cb) {
     var groups = {};
     Object.keys(EX).forEach(function (id) { var g = EX[id].grp || "Other"; (groups[g] = groups[g] || []).push(id); });
     var order = ["Push", "Pull", "Legs", "Arms", "Core"];
+    var item = function (id) {
+      var lp = lastPerformance(id);
+      return '<button class="pick-item" data-ex="' + id + '"><span>' + esc(EX[id].name) + '</span>' +
+        '<span class="k2">' + (lp ? (lp.weight ? fmt(lp.weight) + ' ' + U() + ' × ' + lp.reps : lp.reps + ' reps') : (EX[id].bw ? "bodyweight" : EX[id].bar ? "barbell" : "weighted")) + '</span></button>';
+    };
+    var recent = recentExIds(6);
     var html = '<h2>' + esc(title) + '</h2>' +
-      '<input class="num-in" id="ep-search" placeholder="Search exercises" autocomplete="off" style="margin-bottom:12px"><div id="ep-list">';
+      '<div class="ep-head"><input class="num-in" id="ep-search" placeholder="Search exercises" autocomplete="off"></div>' +
+      '<button class="btn btn-ghost ep-create" id="ep-create-q" hidden></button>' +
+      (recent.length ? '<div id="ep-recent"><div class="eyebrow" style="margin:4px 0 6px">Recent</div>' + recent.map(item).join("") + '</div>' : '') +
+      '<div id="ep-list">';
     order.concat(Object.keys(groups).filter(function (g) { return order.indexOf(g) < 0; })).forEach(function (g) {
       if (!groups[g]) return;
-      html += '<div class="eyebrow" style="margin:12px 0 6px">' + esc(g) + '</div>';
-      groups[g].forEach(function (id) {
-        var lp = lastPerformance(id);
-        html += '<button class="pick-item" data-ex="' + id + '"><span>' + esc(EX[id].name) + '</span>' +
-          '<span class="k2">' + (lp ? (lp.weight ? fmt(lp.weight) + ' ' + U() + ' × ' + lp.reps : lp.reps + ' reps') : (EX[id].bw ? "bodyweight" : EX[id].bar ? "barbell" : "weighted")) + '</span></button>';
-      });
+      html += '<div class="eyebrow" style="margin:12px 0 6px">' + esc(g) + '</div>' + groups[g].map(item).join("");
     });
-    openSheet(html + '</div><div class="btn-row"><button class="btn btn-ghost" id="ep-cancel">Cancel</button></div>');
-    var search = document.getElementById("ep-search");
+    openSheet(html + '</div><div class="btn-row"><button class="btn btn-ghost" id="ep-create">Create an exercise</button></div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="ep-cancel">Cancel</button></div>');
+    var search = document.getElementById("ep-search"), createQ = document.getElementById("ep-create-q"), rec = document.getElementById("ep-recent");
     search.oninput = function () {
-      var q = search.value.trim().toLowerCase();
-      sheetRoot.querySelectorAll(".pick-item").forEach(function (b) { b.style.display = !q || EX[b.dataset.ex].name.toLowerCase().indexOf(q) >= 0 ? "" : "none"; });
+      var q = search.value.trim().toLowerCase(), shown = 0;
+      sheetRoot.querySelectorAll("#ep-list .pick-item").forEach(function (b) {
+        var on = !q || EX[b.dataset.ex].name.toLowerCase().indexOf(q) >= 0; b.style.display = on ? "" : "none"; if (on) shown++;
+      });
       sheetRoot.querySelectorAll("#ep-list .eyebrow").forEach(function (h) { h.style.display = q ? "none" : ""; });
+      if (rec) rec.hidden = !!q;
+      createQ.hidden = !q || shown > 0;
+      createQ.textContent = "Create “" + search.value.trim() + "”";
     };
+    var create = function (name) { openCreateExercise(name, function (id) { cb(id); }); };
+    createQ.onclick = function () { create(search.value.trim()); };
+    document.getElementById("ep-create").onclick = function () { create(search.value.trim()); };
     document.getElementById("ep-cancel").onclick = closeSheet;
     sheetRoot.querySelectorAll(".pick-item").forEach(function (b) { b.onclick = function () { cb(b.dataset.ex); }; });
+  }
+  function openCreateExercise(name, cb) {
+    var kind = "weights", grp = "Push";
+    var seg = function (id, opts, cur) { return '<div class="seg-ctl" id="' + id + '">' + opts.map(function (o) { return '<button data-v="' + o[0] + '" aria-selected="' + (o[0] === cur) + '">' + o[1] + '</button>'; }).join("") + '</div>'; };
+    openSheet('<h2>Create an exercise</h2><p class="sh-lead">It works like any other exercise — last-time numbers, progression and history.</p>' +
+      '<div class="field"><label>Name</label><input class="ed-name" id="cx-name" maxlength="40" value="' + esc(name || "") + '" placeholder="Hip abduction machine"></div>' +
+      '<div class="field"><label>Type</label>' + seg("cx-kind", [["barbell", "Barbell"], ["weights", "Weights / machine"], ["bw", "Bodyweight"]], kind) + '</div>' +
+      '<div class="field"><label>Muscle group</label>' + seg("cx-grp", [["Push", "Push"], ["Pull", "Pull"], ["Legs", "Legs"], ["Arms", "Arms"], ["Core", "Core"]], grp) + '</div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="cx-cancel">Cancel</button><button class="btn btn-primary" id="cx-ok">Create</button></div>');
+    ["cx-kind", "cx-grp"].forEach(function (id) {
+      document.getElementById(id).querySelectorAll("button").forEach(function (b) {
+        b.onclick = function () {
+          if (id === "cx-kind") kind = b.dataset.v; else grp = b.dataset.v;
+          document.getElementById(id).querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+        };
+      });
+    });
+    document.getElementById("cx-cancel").onclick = closeSheet;
+    document.getElementById("cx-ok").onclick = function () {
+      var nm = document.getElementById("cx-name").value.trim();
+      if (nm.length < 2) { toast("Give it a name"); return; }
+      var clash = Object.keys(EX).filter(function (k) { return EX[k].name.toLowerCase() === nm.toLowerCase(); })[0];
+      if (clash) { cb(clash); return; }   // it already exists — just use it
+      var x = { id: "cx-" + uid(), name: nm, bar: kind === "barbell", bw: kind === "bw", grp: grp };
+      db.customExercises.push(x);
+      EX[x.id] = { name: x.name, bar: x.bar, bw: x.bw, grp: x.grp, custom: true };
+      save();
+      cb(x.id);
+    };
   }
 
   // sets / reps / weight for an exercise, pre-filled from last time.
@@ -1993,7 +2104,8 @@
     openSheet('<h2>' + esc(ex.name) + '</h2><p class="sh-lead">' + esc(hint) + '</p>' +
       '<div class="field-inline">' +
         '<div class="fi"><span>Sets</span><div class="stepper"><button data-f="s-">–</button><input class="mono" id="ac-s" inputmode="numeric" value="' + sets + '"><button data-f="s+">+</button></div></div>' +
-        '<div class="fi"><span>Reps</span><div class="stepper"><button data-f="r-">–</button><input class="mono" id="ac-r" inputmode="numeric" value="' + reps + '"><button data-f="r+">+</button></div></div>' +
+        '<div class="fi"><span>' + (opts.range ? 'Reps from' : 'Reps') + '</span><div class="stepper"><button data-f="r-">–</button><input class="mono" id="ac-r" inputmode="numeric" value="' + reps + '"><button data-f="r+">+</button></div></div>' +
+        (opts.range ? '<div class="fi"><span>Up to</span><div class="stepper"><button data-f="h-">–</button><input class="mono" id="ac-h" inputmode="numeric" value="' + (opts.repHigh || reps + 4) + '"><button data-f="h+">+</button></div></div>' : '') +
         (isBw ? '' : '<div class="fi"><span>Weight (' + U() + ')</span><div class="stepper"><button data-f="w-">–</button><input class="mono" id="ac-w" inputmode="decimal" value="' + fmt(w) + '"><button data-f="w+">+</button></div></div>') +
       '</div>' +
       (opts.choice ? '<div class="eyebrow" style="margin:12px 0 6px">Keep it</div><div class="seg-ctl" id="ac-keep">' +
@@ -2008,6 +2120,9 @@
         if (f === "s+") si.value = Math.min(10, (parseInt(si.value, 10) || 1) + 1);
         if (f === "r-") ri.value = Math.max(1, (parseInt(ri.value, 10) || 1) - 1);
         if (f === "r+") ri.value = (parseInt(ri.value, 10) || 1) + 1;
+        var hi = document.getElementById("ac-h");
+        if (f === "h-" && hi) hi.value = Math.max(1, (parseInt(hi.value, 10) || 1) - 1);
+        if (f === "h+" && hi) hi.value = (parseInt(hi.value, 10) || 1) + 1;
         if (f === "w-" && wi) wi.value = fmt(Math.max(0, (parseFloat(wi.value) || 0) - wStep));
         if (f === "w+" && wi) wi.value = fmt((parseFloat(wi.value) || 0) + wStep);
       };
@@ -2028,7 +2143,8 @@
       var rN = Math.max(1, parseInt(document.getElementById("ac-r").value, 10) || 8);
       var wN = isBw ? null : (parseFloat(document.getElementById("ac-w").value) || 0);
       if (ex.bar && wN != null) wN = roundLoad(wN, eq());
-      opts.onDone(sN, rN, wN, permanent);
+      var hEl = document.getElementById("ac-h"), hN = hEl ? parseInt(hEl.value, 10) || null : null;
+      opts.onDone(sN, rN, wN, permanent, hN && hN > rN ? hN : null);
     };
   }
 
@@ -2387,6 +2503,7 @@
   }
 
   var draft = null;
+  var BEGINNER_PROGRAMS = ["starting-strength", "stronglifts-5x5"];
   function startSetup(tplId) {
     var t = tplById(tplId);
     draft = {
@@ -2395,7 +2512,8 @@
       options: optionDefaults(t),
       equipment: Object.assign({}, db.equipment),
       trainingDays: defaultTrainingDays(t.daysPerWeek || 3),
-      startMode: "light",   // new lifters shouldn't have to test 5 lifts before their first session
+      // beginner programs start light; intermediate ones start from what you can already lift
+      startMode: BEGINNER_PROGRAMS.indexOf(t.basedOn || t.id) >= 0 ? "light" : "custom",
       inputs: {}
     };
     (t.anchors || []).forEach(function (id) { draft.inputs[id] = { mode: "reptest", weight: "", reps: "" }; });
@@ -3211,13 +3329,11 @@
       item("se-past", "Log a past workout", "Already trained? Record it") +
       (t && !isMetcon(t) && t.microcycle.length > 1 ? item("se-day", "A different day of " + esc(t.name), "Skip ahead or repeat a day") : '') +
       (WOD_POOL.length ? item("se-roll", "Roll a random WOD", "A CrossFit or Hyrox piece to do now") : '') +
-      savedWorkoutsHtml() +
-      '<div class="btn-row"><button class="btn btn-ghost" id="se-build">Build a workout to save</button></div>');
+      savedWorkoutsHtml());
     document.getElementById("se-empty").onclick = function () { closeSheet(); startEmptyWorkout(null); };
     document.getElementById("se-past").onclick = openPastSheet;
     var sd = document.getElementById("se-day"); if (sd) sd.onclick = function () { closeSheet(); go("pick"); };
     var sr = document.getElementById("se-roll"); if (sr) sr.onclick = function () { closeSheet(); go("roll"); };
-    document.getElementById("se-build").onclick = function () { closeSheet(); startWorkoutBuilder(); };
     wireSavedWorkouts(sheetRoot);
   }
   function pad2(n) { return (n < 10 ? "0" : "") + n; }
@@ -3418,7 +3534,7 @@
       var res = resolveSession(t, { options: db.active.options, cycleIndex: idx, weekIndex: db.active.weekIndex, lifts: db.active.lifts }, eq());
       html += '<button class="pick-card' + (suggested ? ' suggested' : '') + '" data-idx="' + idx + '">' +
         (suggested ? '<span class="pk-badge">Up next</span>' : '') +
-        '<h3>' + (res.dayType ? esc(cap(res.dayType) + " day") : "Workout " + esc(res.label)) + '</h3>' +
+        '<h3>' + esc(sessionLabel(res)) + '</h3>' +
         (res.dayType ? '' : '<div class="pk-dtype">' + res.exercises.length + ' exercises</div>') +
         '<div class="pk-ex">' + res.exercises.map(function (x) {
           return esc(x.name) + (x.assist ? '' : ' <span class="pk-w">' + fmt(x.weight) + U() + '</span>');
@@ -3555,12 +3671,14 @@
     });
     return q;
   }
-  function makeRunExercise(exId, sets, reps, weight, progressing, slotIdx) {
+  function makeRunExercise(exId, sets, reps, weight, progressing, slotIdx, repHigh) {
     var ex = EX[exId], isBw = !!ex.bw, w = isBw ? 0 : (weight || 0);
+    var hi = repHigh && repHigh > reps ? repHigh : null;
     return {
       exId: exId, name: ex.name, slotIdx: slotIdx != null ? slotIdx : null, adhoc: !progressing, assist: isBw, bw: isBw,
-      target: reps, weight: w, warmups: (ex.bar && !isBw) ? genWarmups(w, eq()) : [],
-      workSets: Array.from({ length: sets }, function () { return { weight: isBw ? null : w, reps: reps }; })
+      target: reps, repHigh: hi, weight: w,
+      warmups: (ex.bar && !isBw && !run.past) ? genWarmups(w, eq()) : [],   // no warm-ups when logging after the fact
+      workSets: Array.from({ length: sets }, function () { return { weight: isBw ? null : w, reps: reps, repHigh: hi }; })
     };
   }
   function resultFor(x) {
@@ -3568,31 +3686,31 @@
   }
 
   // insert a new exercise at the end of the current run; `permanent` also adds it to this program day
-  function addExerciseToRun(exId, sets, reps, weight, permanent) {
+  function addExerciseToRun(exId, sets, reps, weight, permanent, repHigh) {
     var dayIdx = runDayIdx(), slotIdx = null;
     if (permanent && programRun()) {
       run.t = ensureOwnActive();
-      slotIdx = tplAddSlot(run.t, dayIdx, exId, sets, reps, weight, db.active.lifts);
+      slotIdx = tplAddSlot(run.t, dayIdx, exId, sets, reps, weight, db.active.lifts, repHigh);
     }
     var progressing = !!(slotIdx != null && run.t.progression && run.t.progression[exId]);
-    var x = makeRunExercise(exId, sets, reps, weight, progressing, slotIdx);
+    var x = makeRunExercise(exId, sets, reps, weight, progressing, slotIdx, repHigh);
     var xi = run.res.exercises.length;
     run.res.exercises.push(x);
     run.results.push(resultFor(x));
     run.queue = run.queue.concat(queueFor(x, xi));
-    if (programRun() || permanent) (run.mods = run.mods || []).push({ type: "add", exId: exId, name: x.name, sets: sets, reps: reps, weight: weight,
+    if (programRun() || permanent) (run.mods = run.mods || []).push({ type: "add", exId: exId, name: x.name, sets: sets, reps: reps, repHigh: repHigh || null, weight: weight,
       dayIdx: dayIdx, slotIdx: slotIdx, permanent: slotIdx != null });
     renderPlayer();
   }
 
   // replace the current exercise (before any of its work sets are logged)
-  function swapCurrentExercise(exId, sets, reps, weight, permanent) {
+  function swapCurrentExercise(exId, sets, reps, weight, permanent, repHigh) {
     var xi = run.queue[run.i].xi, old = run.res.exercises[xi];
     var dayIdx = runDayIdx(), slotIdx = old.slotIdx;
     var keep = !!(permanent && programRun() && slotIdx != null && !old.adhoc);
     if (keep) { run.t = ensureOwnActive(); tplSwapSlot(run.t, dayIdx, slotIdx, exId, weight, db.active.lifts); }
     var progressing = !!(keep && run.t.progression && run.t.progression[exId]);
-    var x = makeRunExercise(exId, sets, reps, weight, progressing, slotIdx);
+    var x = makeRunExercise(exId, sets, reps, weight, progressing, slotIdx, repHigh);
     run.res.exercises[xi] = x;
     run.results[xi] = resultFor(x);
     var before = run.queue.slice(0, run.i), after = run.queue.slice(run.i).filter(function (q) { return q.xi !== xi; });
@@ -3602,13 +3720,24 @@
     renderPlayer();
   }
 
+  // how the running program would prescribe this exercise, if it already uses it somewhere
+  function programPrescription(exId) {
+    if (!programRun()) return {};
+    var sl = slotFor(run.t, exId);
+    return sl ? { sets: sl.sets, reps: sl.reps, repHigh: sl.repHigh || null } : {};
+  }
   function openAddFlow() {
     pickExercise("Add an exercise", function (exId) {
+      if (run.res.exercises.some(function (x, xi) { return x.exId === exId && run.queue.some(function (q, qi) { return q.xi === xi && qi >= run.i; }); })) {
+        toast(EX[exId].name + " is already coming up in this workout"); return;
+      }
+      var pp = programPrescription(exId), range = programRun() && isDouble(run.t);
       openSetsConfig(exId, {
-        cta: "Add to workout",
+        cta: "Add to workout", sets: pp.sets, reps: pp.reps,
+        range: range, repHigh: pp.repHigh || (range ? (pp.reps || 8) + 4 : null),
         choice: programRun() ? { every: "Every " + dayTitle(run.res.label) } : null,
         onBack: openAddFlow,
-        onDone: function (s, r, w, perm) { closeSheet(); addExerciseToRun(exId, s, r, w, perm); toast(EX[exId].name + (perm ? " added to " + dayTitle(run.res.label) : " added")); }
+        onDone: function (s, r, w, perm, rh) { closeSheet(); addExerciseToRun(exId, s, r, w, perm, rh); toast(EX[exId].name + (perm ? " added to " + dayTitle(run.res.label) : " added")); }
       });
     });
   }
@@ -3619,10 +3748,11 @@
       var fromSlot = cur.slotIdx != null && !cur.adhoc;
       openSetsConfig(exId, {
         cta: "Swap in", sets: cur.workSets.length, reps: cur.target,
+        range: !!cur.repHigh, repHigh: cur.repHigh,
         weight: (db.active && db.active.lifts && db.active.lifts[exId]) ? db.active.lifts[exId].weight : null,
         choice: programRun() && fromSlot ? { every: "Every " + dayTitle(run.res.label) } : null,
         onBack: openSwapFlow,
-        onDone: function (s, r, w, perm) { closeSheet(); swapCurrentExercise(exId, s, r, w, perm); toast("Swapped for " + EX[exId].name); }
+        onDone: function (s, r, w, perm, rh) { closeSheet(); swapCurrentExercise(exId, s, r, w, perm, rh); toast("Swapped for " + EX[exId].name); }
       });
     });
   }
@@ -3676,7 +3806,12 @@
       plNew.classList.add("show");            // then slide up
     }
 
-    if (run.i >= run.queue.length) { renderLiveEnd(); return; }
+    if (run.i >= run.queue.length) {
+      if (run.restUntil && Date.now() < run.restUntil) { renderRest(null); return; }
+      run.restUntil = null; renderLiveEnd(); return;
+    }
+    // logging after the fact: type every set of an exercise at once instead of tapping through them
+    if (run.past && run.queue[run.i].kind === "work") { renderPastTable(run.queue[run.i].xi); return; }
     var step = run.queue[run.i];
     paintRail(step);
     if (run.past) document.getElementById("pl-count").textContent = "Logging · " + shortDate(run.past.date);
@@ -3704,12 +3839,14 @@
         '<div class="pl-sub">' +
         '<div class="pl-x-reps">× ' + repRange(step.reps, step.repHigh) + (step.amrap ? '+' : '') + ' reps</div>' +
         (step.topSet ? '<div class="pl-tag top">Top set — make it count</div>' : '') +
-        ((EX[step.exId] && EX[step.exId].bar && (step.kind === "warm" || step.kind === "work") && plateStr(step.weight)) ? '<div class="pl-hint">' + plateStr(step.weight) + '</div>' : (step.repHigh ? '<div class="pl-hint">Top of the range on every set.</div>' : '')) +
+        ((EX[step.exId] && EX[step.exId].bar && (step.kind === "warm" || step.kind === "work") && plateStr(step.weight)) ? '<div class="pl-hint">' + plateStr(step.weight) + '</div>' : '') +
+        (isRangeSet(step) ? '<div class="pl-hint">' + rangeHint(step) + '</div>' : '') +
         '</div>';
     }
     document.getElementById("pl-body").innerHTML = body;
 
     var doneLabel = step.kind === "warm" ? "Warm-up done" : "Set done";
+    var ranged = isRangeSet(step), rr = ranged ? pendingReps(step) : null;
     var effortStrip = "";
     if (step.kind === "work") {
       var liftLogs = db.sessions.filter(function (x) { return !x.kind || x.kind === "barbell" || x.kind === "bodybuilding" || x.kind === "freestyle"; }).length;
@@ -3722,12 +3859,18 @@
     }
     document.getElementById("pl-actions").innerHTML =
       effortStrip +
-      '<div class="pl-prow">' +
-        '<button class="btn btn-ghost pl-back" id="pl-back"' + (run.i <= 0 ? ' disabled' : '') + '>Back</button>' +
-        '<button class="btn btn-primary pl-done" id="pl-done">' + doneLabel + '</button>' +
-      '</div>' +
+      (ranged
+        // range sets: the rep picker gets the full width; Back joins the small buttons below
+        ? '<div class="pl-rr"><button class="btn btn-ghost pl-rr-b" id="pl-rr-minus" aria-label="One rep fewer">−</button>' +
+            '<button class="btn btn-primary pl-done" id="pl-done">Set done · ' + rr + ' reps</button>' +
+            '<button class="btn btn-ghost pl-rr-b" id="pl-rr-plus" aria-label="One rep more">+</button></div>'
+        : '<div class="pl-prow">' +
+            '<button class="btn btn-ghost pl-back" id="pl-back"' + (run.i <= 0 ? ' disabled' : '') + '>Back</button>' +
+            '<button class="btn btn-primary pl-done" id="pl-done">' + doneLabel + '</button>' +
+          '</div>') +
       (!step.assist ? '<button class="btn btn-ghost pl-cw" id="pl-cw">Change weight</button>' : '') +
       '<div class="row2">' +
+        (ranged ? '<button class="btn btn-ghost sm" id="pl-back"' + (run.i <= 0 ? ' disabled' : '') + '>Back</button>' : '') +
         (step.kind === "work" && !step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log different</button>' : '') +
         (step.assist ? '<button class="btn btn-ghost sm" id="pl-adjust">Log reps</button>' : '') +
         '<button class="btn btn-ghost sm" id="pl-skip">Skip set</button>' +
@@ -3743,8 +3886,18 @@
         eff.querySelectorAll("[data-rir]").forEach(function (x) { x.classList.toggle("on", +x.dataset.rir === run.pendingRir); });
       };
     });
-    // a range set's prescription is "top of the range" — "Set done" logs that; fell short → "Log different"
-    document.getElementById("pl-done").onclick = function () { recordSet(step, step.weight, step.repHigh || step.reps, true); };
+    // range sets log the reps you pick (defaulting to what you did on this set last time), so the
+    // weight only climbs once you've genuinely reached the top of the range
+    document.getElementById("pl-done").onclick = function () { recordSet(step, step.weight, ranged ? pendingReps(step) : (step.repHigh || step.reps), true); };
+    if (ranged) {
+      var bump = function (d) {
+        var v = Math.max(1, pendingReps(step) + d);
+        run.pendingReps = { i: run.i, v: v };
+        document.getElementById("pl-done").textContent = "Set done · " + v + " reps";
+      };
+      document.getElementById("pl-rr-minus").onclick = function () { bump(-1); };
+      document.getElementById("pl-rr-plus").onclick = function () { bump(1); };
+    }
     document.getElementById("pl-skip").onclick = function () { recordSet(step, step.weight, 0, false); };
     var adj = document.getElementById("pl-adjust");
     if (adj) adj.onclick = function () { openAdjust(step); };
@@ -3752,8 +3905,30 @@
     if (cw) cw.onclick = function () { openChangeWeight(step); };
   }
 
+  function isRangeSet(step) { return step.kind === "work" && step.repHigh && step.repHigh > step.reps && !step.amrap; }
+  // reps you did on this set number last time you did this exercise
+  function lastSetReps(exId, setNo) {
+    var best = null, bestDate = -1;
+    db.sessions.forEach(function (s) {
+      if (s.date <= bestDate) return;
+      (s.actual || []).forEach(function (a) {
+        if (a.exId === exId && a.sets && a.sets[setNo - 1] && a.sets[setNo - 1].reps > 0) { best = a.sets[setNo - 1].reps; bestDate = s.date; }
+      });
+    });
+    return best;
+  }
+  function pendingReps(step) {
+    if (run.pendingReps && run.pendingReps.i === run.i) return run.pendingReps.v;
+    var last = lastSetReps(step.exId, step.setNo);
+    return last != null ? Math.min(step.repHigh, Math.max(step.reps, last)) : step.reps;
+  }
+  function rangeHint(step) {
+    var last = lastSetReps(step.exId, step.setNo);
+    return "Aim for " + step.repHigh + " — the weight goes up when every set hits it." + (last != null ? " Last time: " + last + "." : "");
+  }
+
   function endWorkoutPrompt() {
-    confirmSheet("End this workout?", "Nothing from this session is saved and your program won't advance.", function () {
+    confirmSheet("End this workout?", "Nothing from this session is saved" + (programRun() ? " and your program won't advance." : "."), function () {
       if (run && run.tick) { clearInterval(run.tick); run.tick = null; }
       run = null; persistRun();
       dismissPlayer(function () { go("home", true); });
@@ -3961,10 +4136,11 @@
         rir: (run.pendingRir == null ? null : run.pendingRir) });
     }
     run.pendingRir = null;
+    run.pendingReps = null;
     run.i++;
     // rest after a completed warm-up or work set (not skips) when there's more to do
     var secs = restSecondsFor(step);
-    if ((step.kind === "warm" || step.kind === "work") && reps > 0 && secs > 0 && run.i < run.queue.length) {
+    if ((step.kind === "warm" || step.kind === "work") && reps > 0 && secs > 0 && (run.i < run.queue.length || (run.custom && step.kind === "work"))) {
       run.restUntil = Date.now() + secs * 1000;
       run.restTotal = secs;
       run.restLen = secs;   // the length this exercise's rest is set to; ±0:30 changes it and it's remembered
@@ -3993,6 +4169,46 @@
       (logged.length ? '<button class="btn btn-ghost pl-cw" id="lv-finish">Finish workout</button>' : '');
     document.getElementById("lv-add").onclick = openAddFlow;
     var f = document.getElementById("lv-finish"); if (f) f.onclick = finishFreestylePlayer;
+  }
+
+  function renderPastTable(xi) {
+    if (run.tick) { clearInterval(run.tick); run.tick = null; }
+    var x = run.res.exercises[xi], bw = !!x.assist;
+    var items = run.queue.filter(function (q, idx) { return idx >= run.i && q.xi === xi && q.kind === "work"; });
+    if (!run.pastRows || run.pastRows.xi !== xi) run.pastRows = { xi: xi, rows: items.map(function (q) { return { w: q.weight, r: q.reps }; }) };
+    var rows = run.pastRows.rows;
+    paintRail(items[0]);
+    document.getElementById("pl-count").textContent = "Logging · " + shortDate(run.past.date);
+    document.getElementById("pl-body").innerHTML =
+      '<div class="pl-ex">' + esc(x.name) + '</div>' +
+      '<div class="pt-table">' +
+        '<div class="pt-row pt-h' + (bw ? ' pt-bw' : '') + '"><span>Set</span>' + (bw ? '' : '<span>' + U() + '</span>') + '<span>Reps</span><span></span></div>' +
+        rows.map(function (r, i) {
+          return '<div class="pt-row' + (bw ? ' pt-bw' : '') + '"><span>' + (i + 1) + '</span>' +
+            (bw ? '' : '<input class="num-in mono" data-pt="w" data-i="' + i + '" inputmode="decimal" value="' + fmt(r.w) + '" aria-label="Set ' + (i + 1) + ' weight">') +
+            '<input class="num-in mono" data-pt="r" data-i="' + i + '" inputmode="numeric" value="' + r.r + '" aria-label="Set ' + (i + 1) + ' reps">' +
+            (rows.length > 1 ? '<button class="pt-del" data-pt-del="' + i + '" aria-label="Remove set ' + (i + 1) + '">✕</button>' : '<span></span>') + '</div>';
+        }).join("") +
+        '<button class="pe-add" id="pt-add">+ Add set</button>' +
+      '</div>';
+    document.getElementById("pl-actions").innerHTML =
+      '<button class="btn btn-primary pl-done" id="pt-save" style="width:100%">Save ' + esc(x.name) + '</button>' +
+      '<button class="btn btn-ghost pl-cw" id="pt-skip">Skip this exercise</button>';
+    document.querySelectorAll("[data-pt]").forEach(function (inp) {
+      inp.oninput = function () { var r = rows[+inp.dataset.i], v = parseFloat(inp.value); if (inp.dataset.pt === "w") r.w = isNaN(v) ? 0 : v; else r.r = isNaN(v) ? 0 : Math.round(v); persistRun(); };
+    });
+    document.querySelectorAll("[data-pt-del]").forEach(function (b) { b.onclick = function () { rows.splice(+b.dataset.ptDel, 1); renderPlayer(); }; });
+    document.getElementById("pt-add").onclick = function () { var l = rows[rows.length - 1]; rows.push({ w: l.w, r: l.r }); renderPlayer(); };
+    var commit = function (keep) {
+      run.results[xi].sets = keep ? rows.filter(function (r) { return r.r > 0; }).map(function (r) {
+        return { weight: bw ? null : r.w, reps: r.r, target: x.target, repHigh: x.repHigh || null, made: r.r >= x.target, amrap: false, rir: null };
+      }) : [];
+      run.queue = run.queue.filter(function (q, idx) { return idx < run.i || q.xi !== xi; });
+      run.pastRows = null;
+      renderPlayer();
+    };
+    document.getElementById("pt-save").onclick = function () { commit(true); };
+    document.getElementById("pt-skip").onclick = function () { commit(false); };
   }
 
   function workoutNameFor(ts) { var h = new Date(ts).getHours(); return h < 11 ? "Morning workout" : h < 17 ? "Afternoon workout" : "Evening workout"; }
@@ -4087,7 +4303,7 @@
   }
   function renderRest(next) {
     var a = run.restAfter || {};
-    var nextLine = next.kind === "warm" ? "Warm-up " + warmPos(next).n + " of " + warmPos(next).of
+    var nextLine = !next ? "Pick it when you're ready" : next.kind === "warm" ? "Warm-up " + warmPos(next).n + " of " + warmPos(next).of
       : next.assist ? "Set " + next.setNo + " of " + next.setCount + " · " + repRange(next.target, next.repHigh) + " reps"
       : "Set " + next.setNo + " of " + next.setCount + " · " + fmt(next.weight) + " " + U() + " × " + repRange(next.reps, next.repHigh);
     document.getElementById("pl-body").innerHTML =
@@ -4106,7 +4322,7 @@
           ? '<div class="rs-rule">' + restLabel(o) + ' remembered for ' + what + ' · <button id="rs-reset">Use default (' + restLabel(restDefault(kind)) + ')</button></div>'
           : '<div class="rs-rule">Adjust to remember a rest time for ' + what + '</div>';
       })() +
-      '<div class="rs-next"><span>Up next</span><b>' + esc(next.name) + '</b>' + esc(nextLine) + '</div>';
+      '<div class="rs-next"><span>Up next</span><b>' + esc(next ? next.name : "Your next exercise") + '</b>' + esc(nextLine) + '</div>';
     document.getElementById("pl-actions").innerHTML =
       '<div class="pl-prow">' +
         '<button class="btn btn-ghost pl-back" id="rs-undo">Undo set</button>' +
@@ -4582,7 +4798,7 @@
     c.querySelectorAll("[data-pc-keep]").forEach(function (b) {
       b.onclick = function () {
         var m = s.mods[+b.dataset.pcKeep], t = ensureOwnActive(), w = weightUsed(s, m.exId, m.weight);
-        if (m.type === "add") m.slotIdx = tplAddSlot(t, s.dayIdx, m.exId, m.sets, m.reps, w, db.active.lifts);
+        if (m.type === "add") m.slotIdx = tplAddSlot(t, s.dayIdx, m.exId, m.sets, m.reps, w, db.active.lifts, m.repHigh);
         else tplSwapSlot(t, s.dayIdx, m.slotIdx, m.exId, w, db.active.lifts);
         m.permanent = true; redo();
       };
