@@ -570,18 +570,47 @@
 
   /* custom-content editor */
   .ed-name { width: 100%; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: var(--fs-md); font-family: inherit; }
+  .se-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; min-height: 56px; padding: 10px 12px; margin-bottom: 8px; text-align: left;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+  .se-item b { font-size: var(--fs-md); }
+  .se-item span { font-size: var(--fs-sm); color: var(--text-muted); }
+  button.rec-row { width: 100%; text-align: left; }
+  .pc-box { padding: 4px 13px; }
+  .pc-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
+  .pc-row:last-child { border-bottom: none; }
+  .pc-row span { flex: 1; }
+  .pc-row button { min-height: 44px; padding: 0 6px; color: var(--accent-ink); font-weight: 600; font-size: var(--fs-sm); white-space: nowrap; }
+  .pc-saved { font-size: var(--fs-sm); color: var(--text-muted); text-align: center; margin: 10px 0; }
+  .lv-title { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: var(--fs-2xl); margin-top: 8px; }
+  .lv-list { width: 100%; max-width: 340px; margin: 14px auto 0; text-align: left; }
+  .lv-list div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
+  .lv-list div span:last-child { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .pe-row { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .pe-row:last-of-type { border-bottom: none; }
+  .pe-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .pe-name { flex: 1; min-height: 44px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; text-align: left; font-size: var(--fs-md); font-weight: 600; color: var(--text); }
+  .pe-fixed { min-height: 32px; }
+  .pe-sw { margin-left: auto; font-size: var(--fs-sm); color: var(--accent-ink); font-weight: 600; }
+  .pe-tag { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-ink); background: var(--accent-soft); padding: 2px 6px; border-radius: 5px; }
+  .pe-lock { width: 16px; height: 16px; flex: none; color: var(--text-faint); vertical-align: -3px; }
+  .pe-del { width: 44px; height: 44px; display: grid; place-items: center; color: var(--text-faint); flex: none; }
+  .pe-del svg { width: 18px; height: 18px; }
+  .pe-add { min-height: 44px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
+  .pe-note { font-size: var(--fs-xs); color: var(--text-faint); line-height: 1.5; margin: 4px 0 8px; }
+  .su-custom h3 { font-size: var(--fs-lg); }
+  .ac-note { font-size: var(--fs-xs); color: var(--text-faint); margin-top: 6px; line-height: 1.45; }
   .ed-slot { display: flex; align-items: center; gap: 8px; padding: 6px 0; flex-wrap: wrap; }
   .ed-ex { flex: 1; min-width: 110px; text-align: left; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text); font-size: var(--fs-sm); }
-  .ed-nums { display: flex; gap: 6px; }
+  .ed-nums { display: flex; gap: 10px; flex-wrap: wrap; }
   .ed-cap { flex: 1; min-width: 100px; font-size: var(--fs-sm); color: var(--text-muted); }
-  .ns { display: inline-flex; flex-direction: column; align-items: center; }
+  .ns { display: inline-grid; grid-template-columns: 40px minmax(34px, auto) 40px; grid-template-rows: 44px auto; align-items: center; }
   .ns > span, .ns b { font-family: "IBM Plex Mono", monospace; }
   .ns { position: relative; }
-  .ns button { width: 30px; height: 32px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font-size: var(--fs-md); }
+  .ns button { width: 40px; height: 44px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font-size: var(--fs-md); }
   .ns button:first-of-type { border-radius: 7px 0 0 7px; }
   .ns button:last-of-type { border-radius: 0 7px 7px 0; }
-  .ns b { display: inline-grid; place-items: center; min-width: 34px; height: 32px; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); font-size: var(--fs-sm); font-weight: 600; }
-  .ns i { font-style: normal; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin-top: 3px; }
+  .ns b { display: inline-grid; place-items: center; min-width: 34px; height: 44px; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); font-size: var(--fs-sm); font-weight: 600; }
+  .ns i { grid-column: 1 / -1; text-align: center; font-style: normal; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin-top: 3px; }
   .mp-list { max-height: 46vh; overflow-y: auto; margin: 4px 0 10px; }
 
   /* badges */
@@ -1155,6 +1184,126 @@
     if (active.cycleIndex % len === 0) active.weekIndex++;
   }
 
+  /* ============================================== PROGRAM CUSTOMISATION */
+  // Texas Method's alternating press slots aren't real exercises — show them by what they do
+  var ALT_NAMES = { press_primary: "Bench or press (alternates weekly)", press_secondary: "Press or bench (alternates weekly)" };
+  function slotName(slot) { return ALT_NAMES[slot.exId] || (EX[slot.exId] ? EX[slot.exId].name : slot.exId); }
+  // lifts that carry the program's structure can be swapped but never deleted;
+  // alternating and %-of-another-lift slots can't even be swapped
+  // (slot.anchor marks a main-lift position that has had its exercise swapped)
+  function slotLocked(t, slot) { return !!(ALT_NAMES[slot.exId] || slot.pctOfAnchor || slot.topSet || slot.anchor || (t.anchors || []).indexOf(slot.exId) >= 0); }
+  function slotSwappable(slot) { return !ALT_NAMES[slot.exId] && !slot.pctOfAnchor; }
+  // added exercises go up by the smallest jump the equipment allows
+  function addedIncrement(exId) { return (EX[exId] && EX[exId].bar) ? eq().step : (U() === "lb" ? 5 : 2.5); }
+  function seedLift(lifts, exId, weight) {
+    if (!lifts || lifts[exId] || (EX[exId] && EX[exId].bw) || weight == null) return;
+    var w = roundFor(exId, weight, eq());
+    lifts[exId] = { weight: w, start: w, failCount: 0, history: [{ t: Date.now(), w: w }] };
+  }
+  function ensureProgression(t, exId, reps) {
+    if (EX[exId] && EX[exId].bw) return;
+    t.progression = t.progression || {};
+    if (t.progression[exId]) return;
+    t.progression[exId] = isDouble(t)
+      ? { increment: addedIncrement(exId), repHigh: reps || null, failRule: { misses: 3, pct: 0.9 } }
+      : { increment: addedIncrement(exId), failRule: { misses: 3, pct: 0.9 } };
+  }
+  // every real exercise a template can put in front of you (alternating slots expand to bench + press)
+  function usedExIds(t) {
+    var u = {};
+    t.microcycle.forEach(function (d) { (d.slots || []).forEach(function (sl) {
+      if (ALT_NAMES[sl.exId]) { u.bench = 1; u.press = 1; } else u[sl.exId] = 1;
+      if (sl.optionId) (t.options || []).forEach(function (o) { if (o.id === sl.optionId && o.ifOff && o.ifOff.replaceExId) u[o.ifOff.replaceExId] = 1; });
+    }); });
+    return u;
+  }
+  // drop main lifts and progression rules for exercises the program no longer contains
+  function pruneAnchors(t) {
+    var u = usedExIds(t);
+    t.anchors = (t.anchors || []).filter(function (id) { return u[id]; });
+    if (t.progression) Object.keys(t.progression).forEach(function (id) { if (!u[id]) delete t.progression[id]; });
+  }
+  function touched(t) { t.updatedAt = Date.now(); if (db.active && db.active.templateId === t.id && db.active.order) db.active.order = {}; }
+
+  function tplAddSlot(t, dayIdx, exId, sets, reps, weight, lifts) {
+    var slot = { exId: exId, sets: sets, reps: reps, added: true };
+    if (isDouble(t)) slot.repHigh = reps;
+    if (weight != null && !(EX[exId] && EX[exId].bw)) slot.seedLoad = weight;
+    t.microcycle[dayIdx].slots.push(slot);
+    ensureProgression(t, exId, reps);
+    seedLift(lifts, exId, weight);
+    touched(t);
+    return t.microcycle[dayIdx].slots.length - 1;
+  }
+  function tplSwapSlot(t, dayIdx, slotIdx, exId, weight, lifts) {
+    var slot = t.microcycle[dayIdx].slots[slotIdx];
+    var was = slot.exId;
+    if (was === exId) return;
+    if (!slot.swappedFrom) slot.swappedFrom = was; else if (slot.swappedFrom === exId) delete slot.swappedFrom;
+    slot.exId = exId;
+    var wasProg = t.progression && t.progression[was];
+    if (wasProg && !t.progression[exId] && !(EX[exId] && EX[exId].bw)) t.progression[exId] = deepClone(wasProg);
+    // a main-lift position stays a main lift whatever goes in it
+    if (slot.anchor || (t.anchors || []).indexOf(was) >= 0) slot.anchor = true;
+    if (slot.anchor && EX[exId] && EX[exId].bar && t.anchors.indexOf(exId) < 0) t.anchors = t.anchors.concat([exId]);
+    if (weight == null && lifts && lifts[was]) weight = lifts[was].weight;
+    if (t.progression && t.progression[exId]) seedLift(lifts, exId, weight);
+    if (weight != null) slot.seedLoad = weight;   // otherwise keep the old slot's starting-load hint
+    pruneAnchors(t);
+    touched(t);
+  }
+  function tplRemoveSlot(t, dayIdx, slotIdx) {
+    t.microcycle[dayIdx].slots.splice(slotIdx, 1);
+    pruneAnchors(t);
+    touched(t);
+  }
+  function findSlot(t, dayIdx, exId) {
+    var slots = t.microcycle[dayIdx].slots;
+    for (var i = slots.length - 1; i >= 0; i--) if (slots[i].exId === exId) return i;
+    return -1;
+  }
+  // a fresh, editable copy that remembers which built-in it came from
+  function personalCopy(src) {
+    var copy = deepClone(src);
+    copy.id = "cust-" + uid();
+    copy.custom = true;
+    copy.basedOn = src.basedOn || src.id;
+    copy.name = /\(yours\)$/.test(src.name) ? src.name : src.name + " (yours)";
+    copy.createdAt = copy.updatedAt = Date.now();
+    return copy;
+  }
+  // built-in programs are read-only, so the first change quietly moves you onto your own copy
+  function ensureOwnActive() {
+    var t = tplById(db.active.templateId);
+    if (t.custom) return t;
+    var copy = personalCopy(t);
+    db.customPlans.push(copy);
+    db.active.templateId = copy.id;
+    save();
+    return copy;
+  }
+  function originalOf(t) { return t && t.basedOn ? tplById(t.basedOn) : null; }
+
+  // most recent logged performance of an exercise, anywhere in history
+  function lastPerformance(exId) {
+    var best = null;
+    db.sessions.forEach(function (s) {
+      (s.actual || []).forEach(function (a) {
+        if (a.exId !== exId || !a.sets || !a.sets.length) return;
+        if (best && best.date >= s.date) return;
+        var target = a.sets[0].target || a.sets[0].reps;
+        best = { date: s.date, sets: a.sets.length, reps: target, weight: a.topWeight || 0, topReps: a.topReps,
+          allHit: a.sets.every(function (x) { return x.reps >= (x.target || x.reps); }) };
+      });
+    });
+    return best;
+  }
+  // hit every rep last time → a small jump; otherwise repeat the weight
+  function suggestedWeight(exId, lp) {
+    if (!lp || !lp.weight) return null;
+    return lp.allHit ? roundFor(exId, lp.weight + addedIncrement(exId), eq()) : lp.weight;
+  }
+
   /* ============================================================ SELF TEST */
   function runSelfTest() {
     var out = [], ok = true;
@@ -1388,7 +1537,7 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function shortDate(t) { return new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" }); }
   function relDate(t) {
-    var d = Math.floor((Date.now() - t) / 86400000);
+    var d = Math.round((dayKey(Date.now()) - dayKey(t)) / 86400000);   // calendar days, not 24-hour blocks
     if (d <= 0) return "today"; if (d === 1) return "yesterday";
     if (d < 7) return d + " days ago";
     return shortDate(t);
@@ -1641,14 +1790,11 @@
         copy.id = "cust-" + uid();
         copy.custom = true;
         copy.basedOn = src.id;
-        copy.name = "My " + src.name;
-        copy.author = "You";
+        copy.name = src.name + " (yours)";
         copy.createdAt = Date.now();
         copy.updatedAt = Date.now();
-        db.customPlans.push(copy);
-        save();
         closeSheet();
-        editorState = { mode: "plan", planId: copy.id };
+        editorState = { mode: "plan", plan: copy, context: "library" };
         go("editor");
       };
     });
@@ -1673,71 +1819,216 @@
     return renderWorkoutBuilder(c);
   };
 
+  // editorState (plan): { mode: "plan", plan, context: "setup" | "active" | "library" }
+  // `plan` is a working copy; nothing is written back until Done / Save.
+  function planChanges(t, orig) {
+    var added = 0, swapped = 0, removed = 0;
+    if (!orig) return { added: 0, swapped: 0, removed: 0, any: false };
+    t.microcycle.forEach(function (d, di) {
+      var kept = 0;
+      d.slots.forEach(function (sl) { if (sl.added) added++; else kept++; if (sl.swappedFrom) swapped++; });
+      var o = orig.microcycle[di]; if (o) removed += Math.max(0, o.slots.length - kept);
+    });
+    var any = JSON.stringify(t.microcycle) !== JSON.stringify(orig.microcycle);
+    return { added: added, swapped: swapped, removed: removed, any: any };
+  }
+  function changeText(ch) {
+    var bits = [];
+    if (ch.swapped) bits.push(ch.swapped + " swapped");
+    if (ch.added) bits.push(ch.added + " added");
+    if (ch.removed) bits.push(ch.removed + " removed");
+    return bits.length ? bits.join(" · ") : (ch.any ? "Sets and reps changed" : "No changes");
+  }
+  var LOCK_SVG = '<svg class="pe-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Locked"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>';
+
   function renderPlanEditor(c) {
-    var t = tplById(editorState.planId);
+    var st = editorState, t = st.plan;
     if (!t) { editorState = null; go("choose"); return; }
-    var isDbl = t.progressionMode === "double";
-    var html = '<button class="backlink" id="ed-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Programs</button>' +
-      '<h2 class="title">Edit program</h2>' +
-      '<div class="field"><label>Name</label><input class="ed-name" id="ed-name" value="' + esc(t.name) + '"></div>' +
-      '<p class="lead">Change exercises, sets and reps. Day structure and progression rules stay as the original.</p>';
+    var orig = st.context === "setup" ? tplById(draft.templateId) : originalOf(t) || (t.custom ? null : tplById(t.id));
+    var ch = planChanges(t, orig);
+    var isDbl = isDouble(t);
+    var back = st.context === "setup" ? "Set it up" : st.context === "active" ? "Home" : "Programs";
+    var html = '<button class="backlink" id="ed-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' + back + '</button>' +
+      '<h2 class="title">' + (st.context === "setup" ? "Make it yours" : "Edit program") + '</h2>' +
+      '<p class="lead">' + (st.context === "setup" ? "Optional. Swap, add or remove exercises — the original program stays available."
+        : st.context === "active" ? "Changes apply from your next workout. Your history and working weights carry over."
+        : "Swap, add or remove exercises, and change sets and reps.") + '</p>' +
+      (st.context === "setup" ? '' : '<div class="field"><label>Name</label><input class="ed-name" id="ed-name" value="' + esc(t.name) + '"></div>');
+    var anyLocked = false, anyFixed = false;
     t.microcycle.forEach(function (day, di) {
-      html += '<div class="day-block"><h4>' + esc(day.label) + '</h4>';
+      html += '<div class="day-block"><h4>' + esc(/^[A-Z]$/.test(day.label) ? "Workout " + day.label : day.label) + '</h4>';
       day.slots.forEach(function (slot, si) {
-        var ex = EX[slot.exId] || { name: slot.exId };
-        html += '<div class="ed-slot" data-di="' + di + '" data-si="' + si + '">' +
-          '<button class="ed-ex" data-pick="1">' + esc(ex.name) + '</button>' +
-          '<div class="ed-nums">' +
-            numStep("sets", slot.sets, 1, 10) +
-            numStep("reps", slot.reps, 1, 30) +
-            (isDbl ? numStep("repHigh", slot.repHigh || slot.reps, 1, 40) : "") +
+        var locked = slotLocked(t, slot), canSwap = slotSwappable(slot);
+        if (locked) anyLocked = true;
+        if (!canSwap) anyFixed = true;
+        var tag = slot.added ? '<span class="pe-tag">added</span>' : slot.swappedFrom ? '<span class="pe-tag">swapped</span>' : '';
+        html += '<div class="pe-row" data-di="' + di + '" data-si="' + si + '">' +
+          '<div class="pe-top">' + (locked ? LOCK_SVG : '') +
+            (canSwap ? '<button class="pe-name" data-swap="1">' + esc(slotName(slot)) + tag + '<span class="pe-sw">Swap</span></button>'
+                     : '<span class="pe-name pe-fixed">' + esc(slotName(slot)) + tag + '</span>') +
+            (locked ? '' : '<button class="pe-del" data-del="1" aria-label="Remove ' + esc(slotName(slot)) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>') +
           '</div>' +
+          '<div class="ed-nums">' + numStep("sets", slot.sets, 1, 10) + numStep("reps", slot.reps, 1, 30) +
+            (isDbl ? numStep("repHigh", slot.repHigh || slot.reps, 1, 40) : "") + '</div>' +
         '</div>';
       });
-      html += '</div>';
+      html += '<button class="pe-add" data-add="' + di + '">+ Add exercise</button></div>';
     });
-    html += '<div class="btn-row"><button class="btn btn-ghost" id="ed-delete">Delete this program</button></div>' +
-      '<div class="btn-row"><button class="btn btn-primary" id="ed-save">Save</button></div>';
+    if (anyLocked) html += '<p class="pe-note">' + LOCK_SVG + ' Locked lifts drive the program’s progression, so they can’t be removed' +
+      (anyFixed ? '. Ones without a Swap button are tied to another lift’s weight, so they stay as they are.' : ' — but you can swap them.') + '</p>';
+    if (orig && ch.any) html += '<div class="btn-row"><button class="btn btn-ghost" id="ed-reset">Reset to original</button></div>';
+    if (st.context === "library") html += '<div class="btn-row"><button class="btn btn-ghost" id="ed-delete">Delete this program</button></div>';
+    html += '<div class="btn-row"><button class="btn btn-primary" id="ed-save">' + (st.context === "setup" ? "Done" : "Save changes") + '</button></div>';
     c.innerHTML = html;
 
-    document.getElementById("ed-back").onclick = function () { go("choose"); };
-    document.getElementById("ed-name").oninput = function () { t.name = this.value; };
-    c.querySelectorAll(".ed-slot").forEach(function (row) {
+    var nameIn = document.getElementById("ed-name");
+    if (nameIn) nameIn.oninput = function () { t.name = this.value; };
+    var keepScroll = function () { var y = c.scrollTop; renderers.editor(); c.scrollTop = y; };
+    document.getElementById("ed-back").onclick = function () { var ctx = st.context; editorState = null; go(ctx === "setup" ? "setup" : ctx === "active" ? "home" : "choose", true); };
+    c.querySelectorAll(".pe-row").forEach(function (row) {
       var di = +row.dataset.di, si = +row.dataset.si;
       var slot = t.microcycle[di].slots[si];
-      row.querySelector("[data-pick]").onclick = function () {
-        openMovePicker(false, function (exId) {
-          var wasProg = t.progression && t.progression[slot.exId];
-          slot.exId = exId;
-          // keep the swapped-in lift progressing like the one it replaced
-          if (wasProg && t.progression && !t.progression[exId] && !(EX[exId] && EX[exId].bw)) {
-            t.progression[exId] = deepClone(wasProg);
-            if (EX[exId] && EX[exId].bar && t.anchors && t.anchors.indexOf(exId) < 0) t.anchors = t.anchors.concat([exId]);
-          }
-          renderers.editor();
-        });
+      var sw = row.querySelector("[data-swap]");
+      if (sw) sw.onclick = function () {
+        pickExercise("Swap " + slotName(slot), function (exId) { tplSwapSlot(t, di, si, exId, null, null); closeSheet(); keepScroll(); });
       };
+      var del = row.querySelector("[data-del]");
+      if (del) del.onclick = function () { var nm = slotName(slot); tplRemoveSlot(t, di, si); keepScroll(); toast(nm + " removed"); };
       row.querySelectorAll("[data-num]").forEach(function (grp) {
         var f = grp.dataset.num;
-        grp.querySelector("[data-d='-']").onclick = function () { slot[f] = Math.max(1, (slot[f] || slot.reps) - 1); renderers.editor(); };
-        grp.querySelector("[data-d='+']").onclick = function () { slot[f] = (slot[f] || slot.reps) + 1; renderers.editor(); };
+        grp.querySelector("[data-d='-']").onclick = function () { slot[f] = Math.max(1, (slot[f] || slot.reps) - 1); keepScroll(); };
+        grp.querySelector("[data-d='+']").onclick = function () { slot[f] = (slot[f] || slot.reps) + 1; keepScroll(); };
       });
     });
-    document.getElementById("ed-save").onclick = function () {
-      t.name = document.getElementById("ed-name").value.trim() || t.name;
-      t.updatedAt = Date.now();
-      save();
-      toast("Saved");
-      go("choose");
+    c.querySelectorAll("[data-add]").forEach(function (b) {
+      var di = +b.dataset.add;
+      b.onclick = function () {
+        pickExercise("Add to " + (/^[A-Z]$/.test(t.microcycle[di].label) ? "Workout " + t.microcycle[di].label : t.microcycle[di].label), function (exId) {
+          openSetsConfig(exId, { cta: "Add exercise", onBack: null, onDone: function (sets, reps, w) {
+            tplAddSlot(t, di, exId, sets, reps, w, null); closeSheet(); keepScroll();
+          } });
+        });
+      };
+    });
+    var rs = document.getElementById("ed-reset");
+    if (rs) rs.onclick = function () {
+      ["microcycle", "progression", "anchors", "options"].forEach(function (k) { t[k] = deepClone(orig[k] || (k === "options" ? [] : {})); });
+      keepScroll(); toast("Back to the original");
     };
-    document.getElementById("ed-delete").onclick = function () {
+    var dl = document.getElementById("ed-delete");
+    if (dl) dl.onclick = function () {
       if (db.active && db.active.templateId === t.id) { toast("Switch to another program first"); return; }
-      confirmSheet("Delete this program?", "The editable copy is removed. Built-in programs aren't affected.", function () {
+      confirmSheet("Delete this program?", "Your copy is removed. Built-in programs aren't affected.", function () {
         db.customPlans = db.customPlans.filter(function (p) { return p.id !== t.id; });
-        save();
-        editorState = null;
-        go("choose");
+        save(); editorState = null; go("choose");
+      }, "Delete");
+    };
+    document.getElementById("ed-save").onclick = function () {
+      if (nameIn) t.name = nameIn.value.trim() || t.name;
+      if (st.context === "setup") {
+        draft.customTpl = planChanges(t, orig).any ? t : null;
+        editorState = null; go("setup", true); return;
+      }
+      pruneAnchors(t); t.updatedAt = Date.now();
+      var i = db.customPlans.map(function (p) { return p.id; }).indexOf(t.id);
+      if (i >= 0) db.customPlans[i] = t; else db.customPlans.push(t);
+      if (st.context === "active") {
+        db.active.templateId = t.id;
+        db.active.order = {};
+        seedSwappedLifts(t, db.active.lifts);
+        seedExtraLifts(t, db.active.lifts, eq());
+      }
+      save(); editorState = null;
+      toast(st.context === "active" ? "Program updated" : "Saved");
+      go(st.context === "active" ? "home" : "choose", true);
+    };
+  }
+
+  // a swapped-in lift starts from the weight of the lift it replaced, not the empty bar
+  function seedSwappedLifts(t, lifts) {
+    t.microcycle.forEach(function (d) { d.slots.forEach(function (sl) {
+      if (sl.swappedFrom && !lifts[sl.exId] && lifts[sl.swappedFrom] && t.progression && t.progression[sl.exId]) seedLift(lifts, sl.exId, lifts[sl.swappedFrom].weight);
+    }); });
+  }
+
+  // searchable, grouped exercise list shared by the editor and the workout player
+  function pickExercise(title, cb) {
+    var groups = {};
+    Object.keys(EX).forEach(function (id) { var g = EX[id].grp || "Other"; (groups[g] = groups[g] || []).push(id); });
+    var order = ["Push", "Pull", "Legs", "Arms", "Core"];
+    var html = '<h2>' + esc(title) + '</h2>' +
+      '<input class="num-in" id="ep-search" placeholder="Search exercises" autocomplete="off" style="margin-bottom:12px"><div id="ep-list">';
+    order.concat(Object.keys(groups).filter(function (g) { return order.indexOf(g) < 0; })).forEach(function (g) {
+      if (!groups[g]) return;
+      html += '<div class="eyebrow" style="margin:12px 0 6px">' + esc(g) + '</div>';
+      groups[g].forEach(function (id) {
+        var lp = lastPerformance(id);
+        html += '<button class="pick-item" data-ex="' + id + '"><span>' + esc(EX[id].name) + '</span>' +
+          '<span class="k2">' + (lp ? (lp.weight ? fmt(lp.weight) + ' ' + U() + ' × ' + lp.reps : lp.reps + ' reps') : (EX[id].bw ? "bodyweight" : EX[id].bar ? "barbell" : "weighted")) + '</span></button>';
       });
+    });
+    openSheet(html + '</div><div class="btn-row"><button class="btn btn-ghost" id="ep-cancel">Cancel</button></div>');
+    var search = document.getElementById("ep-search");
+    search.oninput = function () {
+      var q = search.value.trim().toLowerCase();
+      sheetRoot.querySelectorAll(".pick-item").forEach(function (b) { b.style.display = !q || EX[b.dataset.ex].name.toLowerCase().indexOf(q) >= 0 ? "" : "none"; });
+      sheetRoot.querySelectorAll("#ep-list .eyebrow").forEach(function (h) { h.style.display = q ? "none" : ""; });
+    };
+    document.getElementById("ep-cancel").onclick = closeSheet;
+    sheetRoot.querySelectorAll(".pick-item").forEach(function (b) { b.onclick = function () { cb(b.dataset.ex); }; });
+  }
+
+  // sets / reps / weight for an exercise, pre-filled from last time.
+  // opts: { cta, sets?, reps?, weight?, choice?: { every: "Every workout A" }, onBack?, onDone(sets, reps, weight, permanent) }
+  function openSetsConfig(exId, opts) {
+    var ex = EX[exId], isBw = !!ex.bw;
+    var wStep = ex.bar ? eq().step : (U() === "lb" ? 5 : 2.5);
+    var lp = lastPerformance(exId), sug = suggestedWeight(exId, lp);
+    var progW = db.active && db.active.lifts && db.active.lifts[exId] ? db.active.lifts[exId].weight : null;
+    var sets = opts.sets || (lp && lp.sets) || 3, reps = opts.reps || (lp && lp.reps) || (isBw ? 10 : 8);
+    var w = opts.weight != null ? opts.weight : progW != null ? progW : sug != null ? sug : (ex.bar ? eq().bar : (U() === "lb" ? 20 : 10));
+    var hint = lp ? 'Last time: ' + lp.sets + ' × ' + lp.reps + (lp.weight ? ' @ ' + fmt(lp.weight) + ' ' + U() : '') + ' · ' + shortDate(lp.date) +
+        (sug != null && sug !== lp.weight ? ' — try ' + fmt(sug) + ' ' + U() : '') : 'First time logging this one.';
+    var permanent = false;
+    openSheet('<h2>' + esc(ex.name) + '</h2><p class="sh-lead">' + esc(hint) + '</p>' +
+      '<div class="field-inline">' +
+        '<div class="fi"><span>Sets</span><div class="stepper"><button data-f="s-">–</button><input class="mono" id="ac-s" inputmode="numeric" value="' + sets + '"><button data-f="s+">+</button></div></div>' +
+        '<div class="fi"><span>Reps</span><div class="stepper"><button data-f="r-">–</button><input class="mono" id="ac-r" inputmode="numeric" value="' + reps + '"><button data-f="r+">+</button></div></div>' +
+        (isBw ? '' : '<div class="fi"><span>Weight (' + U() + ')</span><div class="stepper"><button data-f="w-">–</button><input class="mono" id="ac-w" inputmode="decimal" value="' + fmt(w) + '"><button data-f="w+">+</button></div></div>') +
+      '</div>' +
+      (opts.choice ? '<div class="eyebrow" style="margin:12px 0 6px">Keep it</div><div class="seg-ctl" id="ac-keep">' +
+        '<button data-v="0" aria-selected="true">Just today</button><button data-v="1" aria-selected="false">' + esc(opts.choice.every) + '</button></div>' +
+        '<p class="ac-note" id="ac-note">Only this workout. You can still keep it from the summary.</p>' : '') +
+      '<div class="btn-row">' + (opts.onBack ? '<button class="btn btn-ghost" id="ac-cancel">Back</button>' : '<button class="btn btn-ghost" id="ac-cancel">Cancel</button>') +
+        '<button class="btn btn-primary" id="ac-add">' + esc(opts.cta) + '</button></div>');
+    sheetRoot.querySelectorAll("[data-f]").forEach(function (b) {
+      b.onclick = function () {
+        var f = b.dataset.f, si = document.getElementById("ac-s"), ri = document.getElementById("ac-r"), wi = document.getElementById("ac-w");
+        if (f === "s-") si.value = Math.max(1, (parseInt(si.value, 10) || 1) - 1);
+        if (f === "s+") si.value = Math.min(10, (parseInt(si.value, 10) || 1) + 1);
+        if (f === "r-") ri.value = Math.max(1, (parseInt(ri.value, 10) || 1) - 1);
+        if (f === "r+") ri.value = (parseInt(ri.value, 10) || 1) + 1;
+        if (f === "w-" && wi) wi.value = fmt(Math.max(0, (parseFloat(wi.value) || 0) - wStep));
+        if (f === "w+" && wi) wi.value = fmt((parseFloat(wi.value) || 0) + wStep);
+      };
+    });
+    var keep = document.getElementById("ac-keep");
+    if (keep) keep.querySelectorAll("button").forEach(function (b) {
+      b.onclick = function () {
+        permanent = b.dataset.v === "1";
+        keep.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+        document.getElementById("ac-note").textContent = permanent
+          ? "Saved to your copy of the program. It goes up " + fmt(addedIncrement(exId)) + " " + U() + " when you hit every rep."
+          : "Only this workout. You can still keep it from the summary.";
+      };
+    });
+    document.getElementById("ac-cancel").onclick = opts.onBack || closeSheet;
+    document.getElementById("ac-add").onclick = function () {
+      var sN = Math.max(1, parseInt(document.getElementById("ac-s").value, 10) || 3);
+      var rN = Math.max(1, parseInt(document.getElementById("ac-r").value, 10) || 8);
+      var wN = isBw ? null : (parseFloat(document.getElementById("ac-w").value) || 0);
+      if (ex.bar && wN != null) wN = roundLoad(wN, eq());
+      opts.onDone(sN, rN, wN, permanent);
     };
   }
 
@@ -1874,6 +2165,7 @@
     if (!cw) return;
     openSheet('<h2>' + esc(cw.name) + '</h2>' +
       '<p class="sh-lead">' + (cw.kind === "metcon" ? esc(metconSubtitle(cw.wod)) : (cw.exercises || []).length + ' exercises') + '</p>' +
+      (cw.kind === "metcon" ? '' : '<p class="sh-lead" style="margin-top:-6px">' + (cw.exercises || []).map(function (x) { return (EX[x.exId] || { name: x.exId }).name + ' ' + x.sets + '×' + x.reps; }).map(esc).join(" · ") + '</p>') +
       '<div class="btn-row"><button class="btn btn-primary" id="cw-run">Do this workout</button></div>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="cw-edit">Edit</button><button class="btn btn-ghost" id="cw-del">Delete</button></div>');
     document.getElementById("cw-run").onclick = function () { closeSheet(); runCustomWorkout(cw); };
@@ -1926,19 +2218,22 @@
   }
 
   function finishFreestylePlayer() {
+    if (!run.results.some(function (r) { return r.sets.length; })) { toast("Log at least one set first"); return; }
+    if (run.tick) { clearInterval(run.tick); run.tick = null; }
     var sess = {
-      id: uid(), date: run.startedAt, kind: "freestyle",
+      id: uid(), date: run.past ? run.past.date : run.startedAt, kind: "freestyle", past: !!run.past,
       templateId: null, programName: run.freestyleName, customWorkoutId: run.customWorkoutId,
       dayLabel: run.freestyleName, weekIndex: 0, dayType: null,
-      durationSec: Math.round((Date.now() - run.startedAt) / 1000),
+      durationSec: run.past ? run.past.durationSec : Math.round((Date.now() - run.startedAt) / 1000),
       snapshot: {}, notes: [],
       actual: run.results.map(function (r) {
         var top = r.sets.reduce(function (m, s) { return (s.weight || 0) >= (m.weight || 0) ? s : m; }, r.sets[0] || {});
         return { exId: r.exId, name: r.name, assist: r.assist, adhoc: true, made: null,
           sets: r.sets, topWeight: (top && top.weight) || 0, topReps: (top && top.reps) || 0 };
-      })
+      }).filter(function (a) { return a.sets.length; })
     };
     db.sessions.push(sess);
+    db.sessions.sort(function (a, b) { return a.date - b.date; });   // a past log slots into history by its date
     save();
     lastSummary = sess;
     run = null; persistRun();
@@ -2001,7 +2296,7 @@
     document.getElementById("d-back").onclick = function () { go("choose"); };
     document.getElementById("d-use").onclick = function () { startSetup(t.id); };
     var de = document.getElementById("d-edit");
-    if (de) de.onclick = function () { editorState = { mode: "plan", planId: t.id }; go("editor"); };
+    if (de) de.onclick = function () { editorState = { mode: "plan", plan: deepClone(t), context: "library" }; go("editor"); };
   };
 
   function progressionRuleText(t) {
@@ -2062,9 +2357,16 @@
         html += '</div>';
       });
     }
-    html += '<div class="btn-row"><button class="btn btn-ghost" id="pi-switch">Switch program</button><button class="btn btn-primary" id="pi-close">Done</button></div>';
+    html += (isMetcon(t) ? '' : '<div class="btn-row"><button class="btn btn-ghost" id="pi-edit">Edit program</button></div>') +
+      '<div class="btn-row"><button class="btn btn-ghost" id="pi-switch">Switch program</button><button class="btn btn-primary" id="pi-close">Done</button></div>';
     openSheet(html);
     document.getElementById("pi-close").onclick = closeSheet;
+    var pe = document.getElementById("pi-edit");
+    if (pe) pe.onclick = function () {
+      closeSheet();
+      editorState = { mode: "plan", plan: t.custom ? deepClone(t) : personalCopy(t), context: "active" };
+      go("editor");
+    };
     document.getElementById("pi-switch").onclick = function () { closeSheet(); go("choose"); };
   }
 
@@ -2182,7 +2484,8 @@
 
   renderers.setup = function () {
     if (!draft) { go("choose"); return; }
-    var t = tplById(draft.templateId);
+    var t = draft.customTpl || tplById(draft.templateId);
+    (t.anchors || []).forEach(function (id) { if (!draft.inputs[id]) draft.inputs[id] = { mode: "reptest", weight: "", reps: "" }; });
     var c = screens.setup;
     var e = draft.equipment;
     var target = t.daysPerWeek || 3;
@@ -2254,6 +2557,13 @@
       html += '</div>';
     }
 
+    // optional: tailor the exercises before starting
+    var base = tplById(draft.templateId), chg = draft.customTpl ? planChanges(draft.customTpl, base) : null;
+    html += '<div class="eyebrow" style="margin-top:22px">Exercises</div>' +
+      (chg && chg.any
+        ? '<div class="day-block"><div class="toggle-line"><div class="tl-k">Customised<p>' + esc(changeText(chg)) + '</p></div><button class="rx-reset" id="su-custom">Edit</button></div></div>'
+        : '<button class="prog-card su-custom" id="su-custom"><h3>Make it yours</h3><p>Optional — swap, add or remove exercises before you start.</p></button>');
+
     html += dayPickerHtml(draft.trainingDays, target);
 
     var ready = daysOk && t.anchors.every(function (id) { return computeStart(t, id) != null; });
@@ -2302,6 +2612,10 @@
       };
     });
     document.getElementById("su-start").onclick = function () { commitProgram(); };
+    document.getElementById("su-custom").onclick = function () {
+      editorState = { mode: "plan", plan: draft.customTpl || personalCopy(tplById(draft.templateId)), context: "setup" };
+      go("editor");
+    };
   };
 
   function computeStart(t, id) {
@@ -2319,7 +2633,8 @@
   }
 
   function commitProgram() {
-    var t = tplById(draft.templateId);
+    var t = draft.customTpl || tplById(draft.templateId);
+    if (draft.customTpl) { pruneAnchors(t); db.customPlans.push(t); }
     var lifts = {};
     (t.anchors || []).forEach(function (id) {
       var w = computeStart(t, id);
@@ -2329,7 +2644,7 @@
     if (!db.equipment.step) db.equipment.step = db.equipment.smallestPlate * 2;
     seedExtraLifts(t, lifts, db.equipment);
     db.active = {
-      templateId: draft.templateId,
+      templateId: t.id,
       options: Object.assign({}, draft.options),
       startedAt: Date.now(),
       cycleIndex: 0,
@@ -2423,7 +2738,10 @@
       var kindTag = s.kind === "metcon" ? "metcon" : "strength";
       dayHasKind[dk] = dayHasKind[dk] || {}; dayHasKind[dk][kindTag] = 1;
 
-      if (s.templateId) { progSet[s.templateId] = 1; progCount[s.templateId] = (progCount[s.templateId] || 0) + 1; }
+      if (s.templateId) {
+        var pk = (tplById(s.templateId) || {}).basedOn || s.templateId;   // your copy of a program is still that program
+        progSet[pk] = 1; progCount[pk] = (progCount[pk] || 0) + 1;
+      }
 
       if (s.kind === "metcon") {
         st.metconCount++;
@@ -2776,16 +3094,22 @@
 
     if (!db.active) {
       c.innerHTML = '<div class="home-hero">' +
-        '<div class="h-eyebrow">Welcome</div>' +
+        '<div class="h-eyebrow">' + (db.sessions.length ? "Welcome back" : "Welcome") + '</div>' +
         '<h2 class="title">Ready when you are</h2>' +
-        '<p class="lead">Pick a program and it runs for you — or just roll a random workout and go.</p>' +
+        '<p class="lead">Log a workout as you go, or pick a program that plans every session for you.</p>' +
         gritCardHtml() +
-        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-setup">Set up a program</button></div>' +
-        (WOD_POOL.length ? '<div class="btn-row"><button class="btn btn-ghost btn-lg" id="h-roll">Roll a random workout</button></div>' : '') +
+        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-empty">Start a workout</button></div>' +
+        '<div class="btn-row"><button class="btn btn-ghost btn-lg" id="h-setup">Set up a program</button></div>' +
+        '<div class="home-alt"><button id="h-past">Log a past workout</button>' +
+          (WOD_POOL.length ? '<span>·</span><button id="h-roll">Roll a random WOD</button>' : '') + '</div>' +
+        savedWorkoutsHtml() +
       '</div>';
+      document.getElementById("h-empty").onclick = function () { startEmptyWorkout(null); };
       document.getElementById("h-setup").onclick = function () { go("choose"); };
+      document.getElementById("h-past").onclick = openPastSheet;
       var hr = document.getElementById("h-roll");
       if (hr) hr.onclick = function () { go("roll"); };
+      wireSavedWorkouts(c);
       return;
     }
 
@@ -2830,15 +3154,13 @@
     }
 
     html += '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-start">Start ' + esc(metcon ? "workout" : sessionLabel(res)) + '</button></div>' +
-      '<div class="home-alt"><button id="h-other">Do a different workout</button>' +
-        (WOD_POOL.length ? '<span>·</span><button data-go="roll">Roll a random WOD</button>' : '') + '</div>' +
+      '<div class="home-alt"><button id="h-else">Something else today</button></div>' +
       '</div>' + // close .home-primary
       '<div class="home-secondary">' + gritCardHtml();
 
     // quick stats
     var last = db.sessions.length ? db.sessions[db.sessions.length - 1] : null;
-    var lastLbl = last ? (last.kind === "metcon" ? (last.wodName || "WOD")
-      : (/^[A-Z]$/.test(last.dayLabel) ? "Workout " + last.dayLabel : cap(last.dayLabel) + " day")) : null;
+    var lastLbl = last ? sessionTitle(last) : null;
     html += '<div class="home-stats">' +
       '<button class="home-stat" data-go="body">' +
         '<span class="hs-k">Bodyweight</span>' +
@@ -2858,12 +3180,90 @@
     c.innerHTML = html;
     // start the next workout straight away; a different one is a secondary choice
     document.getElementById("h-start").onclick = function () { startPlayer(db.active.cycleIndex % t.microcycle.length); };
-    document.getElementById("h-other").onclick = function () { go("pick"); };
+    document.getElementById("h-else").onclick = openSomethingElse;
     document.getElementById("h-info").onclick = openProgramInfoSheet;
     var ncOpen = document.getElementById("nc-open");
     if (ncOpen) ncOpen.onclick = function () { go("schedule"); };
     c.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
   };
+
+  /* ============================================================ ONE-OFFS */
+  function savedWorkoutsHtml() {
+    var list = db.customWorkouts.filter(function (w) { return w.kind !== "metcon"; });
+    if (!list.length) return "";
+    return '<div class="eyebrow" style="margin-top:22px">Your saved workouts</div>' + list.slice().reverse().map(function (w) {
+      return '<button class="se-item" data-cw-run="' + w.id + '"><b>' + esc(w.name) + '</b><span>' +
+        (w.exercises || []).slice(0, 3).map(function (x) { return EX[x.exId] ? EX[x.exId].name : x.exId; }).join(" · ") +
+        ((w.exercises || []).length > 3 ? " +" + ((w.exercises || []).length - 3) : "") + '</span></button>';
+    }).join("");
+  }
+  function wireSavedWorkouts(root) {
+    root.querySelectorAll("[data-cw-run]").forEach(function (b) {
+      b.onclick = function () { closeSheet(); openCustomWorkoutSheet(b.dataset.cwRun); };
+    });
+  }
+  function openSomethingElse() {
+    var t = db.active ? tplById(db.active.templateId) : null;
+    var item = function (id, title, sub) { return '<button class="se-item" id="' + id + '"><b>' + title + '</b><span>' + sub + '</span></button>'; };
+    openSheet('<h2>Something else today</h2>' +
+      (t ? '<p class="sh-lead">One-offs count toward your streaks and badges, but never move your program.</p>' : '') +
+      item("se-empty", "Start an empty workout", "Add exercises as you go") +
+      item("se-past", "Log a past workout", "Already trained? Record it") +
+      (t && !isMetcon(t) && t.microcycle.length > 1 ? item("se-day", "A different day of " + esc(t.name), "Skip ahead or repeat a day") : '') +
+      (WOD_POOL.length ? item("se-roll", "Roll a random WOD", "A CrossFit or Hyrox piece to do now") : '') +
+      savedWorkoutsHtml() +
+      '<div class="btn-row"><button class="btn btn-ghost" id="se-build">Build a workout to save</button></div>');
+    document.getElementById("se-empty").onclick = function () { closeSheet(); startEmptyWorkout(null); };
+    document.getElementById("se-past").onclick = openPastSheet;
+    var sd = document.getElementById("se-day"); if (sd) sd.onclick = function () { closeSheet(); go("pick"); };
+    var sr = document.getElementById("se-roll"); if (sr) sr.onclick = function () { closeSheet(); go("roll"); };
+    document.getElementById("se-build").onclick = function () { closeSheet(); startWorkoutBuilder(); };
+    wireSavedWorkouts(sheetRoot);
+  }
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function openPastSheet() {
+    var y = new Date(Date.now() - 86400000);
+    var today = new Date(), iso = function (d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); };
+    var mins = 60;
+    openSheet('<h2>Log a past workout</h2><p class="sh-lead">Pick when you trained, then add what you did. It lands in your history on that day.</p>' +
+      '<div class="field-inline">' +
+        '<div class="fi"><span>Date</span><input class="num-in" type="date" id="pw-date" value="' + iso(y) + '" max="' + iso(today) + '"></div>' +
+        '<div class="fi"><span>Start time</span><input class="num-in" type="time" id="pw-time" value="18:00"></div>' +
+      '</div>' +
+      '<div class="field-inline"><div class="fi"><span>Duration (min)</span><div class="stepper"><button data-pw="-">–</button><input class="mono" id="pw-min" inputmode="numeric" value="' + mins + '"><button data-pw="+">+</button></div></div></div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="pw-cancel">Cancel</button><button class="btn btn-primary" id="pw-go">Add exercises</button></div>');
+    var mi = document.getElementById("pw-min");
+    sheetRoot.querySelectorAll("[data-pw]").forEach(function (b) {
+      b.onclick = function () { mi.value = Math.max(5, (parseInt(mi.value, 10) || 60) + (b.dataset.pw === "+" ? 5 : -5)); };
+    });
+    document.getElementById("pw-cancel").onclick = closeSheet;
+    document.getElementById("pw-go").onclick = function () {
+      var d = document.getElementById("pw-date").value, tm = document.getElementById("pw-time").value || "12:00";
+      var when = new Date(d + "T" + tm).getTime();
+      if (!d || isNaN(when)) { toast("Pick a date"); return; }
+      if (when > Date.now()) { toast("That's still to come — pick an earlier time"); return; }
+      closeSheet();
+      startEmptyWorkout({ date: when, durationSec: Math.max(5, parseInt(mi.value, 10) || 60) * 60 });
+    };
+  }
+  // tap a one-off in history to do it again or keep it
+  function wireHistory(root) {
+    root.querySelectorAll("[data-sess]").forEach(function (b) {
+      b.onclick = function () {
+        var s = db.sessions.filter(function (x) { return x.id === b.dataset.sess; })[0];
+        if (!s) return;
+        openSheet('<h2>' + esc(sessionTitle(s)) + '</h2><p class="sh-lead">' + esc(shortDate(s.date)) + ' · ' +
+          (s.actual || []).map(function (a) { return a.name; }).join(" · ") + '</p>' +
+          '<div class="btn-row"><button class="btn btn-primary" id="hs-again">Do it again</button></div>' +
+          (s.customWorkoutId ? '' : '<div class="btn-row"><button class="btn btn-ghost" id="hs-save">Save as a workout</button></div>'));
+        document.getElementById("hs-again").onclick = function () { closeSheet(); startFreestyleStrength(workoutFromSession(s, sessionTitle(s))); };
+        var hs = document.getElementById("hs-save");
+        if (hs) hs.onclick = function () {
+          db.customWorkouts.push(workoutFromSession(s, sessionTitle(s))); save(); closeSheet(); toast("Saved as “" + sessionTitle(s) + "”");
+        };
+      };
+    });
+  }
 
   /* ============================================================ SCHEDULE */
   function advanceSim(sim, t, res) {
@@ -3141,26 +3541,90 @@
     renderPlayer();
   }
 
-  // insert a new exercise at the end of the current run
-  function addExerciseToRun(exId, sets, reps, weight) {
-    var ex = EX[exId];
-    var xi = run.res.exercises.length;
-    var isBw = !!ex.bw;
-    var exObj = {
-      exId: exId, name: ex.name, adhoc: true, assist: isBw, bw: isBw,
-      target: reps, weight: isBw ? 0 : weight,
-      warmups: [],
-      workSets: Array.from({ length: sets }, function () { return { weight: isBw ? null : weight, reps: reps }; })
+  function programRun() { return !!(run && run.t && !run.custom && run.kind !== "metcon"); }
+  function runDayIdx() { return programRun() ? run.chosenIdx % run.t.microcycle.length : null; }
+  function dayTitle(label) { return /^[A-Z]$/.test(label || "") ? "Workout " + label : (label || "this workout"); }
+
+  // queue entries (warm-ups for barbell work + work sets) for one exercise
+  function queueFor(x, xi) {
+    var q = [];
+    (x.warmups || []).forEach(function (w) { q.push({ xi: xi, kind: "warm", weight: w.weight, reps: w.reps, exId: x.exId, name: x.name }); });
+    x.workSets.forEach(function (w, si) {
+      q.push({ xi: xi, kind: "work", weight: x.assist ? null : w.weight, reps: w.reps, exId: x.exId, name: x.name,
+        assist: !!x.assist, adhoc: !!x.adhoc, setNo: si + 1, setCount: x.workSets.length, target: x.target, repHigh: w.repHigh || null });
+    });
+    return q;
+  }
+  function makeRunExercise(exId, sets, reps, weight, progressing, slotIdx) {
+    var ex = EX[exId], isBw = !!ex.bw, w = isBw ? 0 : (weight || 0);
+    return {
+      exId: exId, name: ex.name, slotIdx: slotIdx != null ? slotIdx : null, adhoc: !progressing, assist: isBw, bw: isBw,
+      target: reps, weight: w, warmups: (ex.bar && !isBw) ? genWarmups(w, eq()) : [],
+      workSets: Array.from({ length: sets }, function () { return { weight: isBw ? null : w, reps: reps }; })
     };
-    run.res.exercises.push(exObj);
-    run.results.push({ exId: exId, name: ex.name, assist: isBw, bw: isBw, adhoc: true,
-      target: reps, plannedWeight: isBw ? 0 : weight, sets: [] });
-    for (var si = 0; si < sets; si++) {
-      run.queue.push({ xi: xi, kind: "work", weight: isBw ? null : weight, reps: reps,
-        exId: exId, name: ex.name, assist: isBw, adhoc: true,
-        setNo: si + 1, setCount: sets, target: reps });
+  }
+  function resultFor(x) {
+    return { exId: x.exId, name: x.name, assist: !!x.assist, bw: !!x.bw, adhoc: !!x.adhoc, target: x.target, plannedWeight: x.weight || 0, sets: [] };
+  }
+
+  // insert a new exercise at the end of the current run; `permanent` also adds it to this program day
+  function addExerciseToRun(exId, sets, reps, weight, permanent) {
+    var dayIdx = runDayIdx(), slotIdx = null;
+    if (permanent && programRun()) {
+      run.t = ensureOwnActive();
+      slotIdx = tplAddSlot(run.t, dayIdx, exId, sets, reps, weight, db.active.lifts);
     }
+    var progressing = !!(slotIdx != null && run.t.progression && run.t.progression[exId]);
+    var x = makeRunExercise(exId, sets, reps, weight, progressing, slotIdx);
+    var xi = run.res.exercises.length;
+    run.res.exercises.push(x);
+    run.results.push(resultFor(x));
+    run.queue = run.queue.concat(queueFor(x, xi));
+    if (programRun() || permanent) (run.mods = run.mods || []).push({ type: "add", exId: exId, name: x.name, sets: sets, reps: reps, weight: weight,
+      dayIdx: dayIdx, slotIdx: slotIdx, permanent: slotIdx != null });
     renderPlayer();
+  }
+
+  // replace the current exercise (before any of its work sets are logged)
+  function swapCurrentExercise(exId, sets, reps, weight, permanent) {
+    var xi = run.queue[run.i].xi, old = run.res.exercises[xi];
+    var dayIdx = runDayIdx(), slotIdx = old.slotIdx;
+    var keep = !!(permanent && programRun() && slotIdx != null && !old.adhoc);
+    if (keep) { run.t = ensureOwnActive(); tplSwapSlot(run.t, dayIdx, slotIdx, exId, weight, db.active.lifts); }
+    var progressing = !!(keep && run.t.progression && run.t.progression[exId]);
+    var x = makeRunExercise(exId, sets, reps, weight, progressing, slotIdx);
+    run.res.exercises[xi] = x;
+    run.results[xi] = resultFor(x);
+    var before = run.queue.slice(0, run.i), after = run.queue.slice(run.i).filter(function (q) { return q.xi !== xi; });
+    run.queue = before.concat(queueFor(x, xi), after);
+    if (programRun() && !old.adhoc) (run.mods = run.mods || []).push({ type: "swap", from: old.exId, fromName: old.name, exId: exId, name: x.name,
+      sets: sets, reps: reps, weight: weight, dayIdx: dayIdx, slotIdx: slotIdx, permanent: keep });
+    renderPlayer();
+  }
+
+  function openAddFlow() {
+    pickExercise("Add an exercise", function (exId) {
+      openSetsConfig(exId, {
+        cta: "Add to workout",
+        choice: programRun() ? { every: "Every " + dayTitle(run.res.label) } : null,
+        onBack: openAddFlow,
+        onDone: function (s, r, w, perm) { closeSheet(); addExerciseToRun(exId, s, r, w, perm); toast(EX[exId].name + (perm ? " added to " + dayTitle(run.res.label) : " added")); }
+      });
+    });
+  }
+  function openSwapFlow() {
+    var step = run.queue[run.i], cur = run.res.exercises[step.xi];
+    if (run.results[step.xi].sets.length) { toast("Already logged sets — add a new exercise instead"); return; }
+    pickExercise("Swap " + cur.name, function (exId) {
+      var fromSlot = cur.slotIdx != null && !cur.adhoc;
+      openSetsConfig(exId, {
+        cta: "Swap in", sets: cur.workSets.length, reps: cur.target,
+        weight: (db.active && db.active.lifts && db.active.lifts[exId]) ? db.active.lifts[exId].weight : null,
+        choice: programRun() && fromSlot ? { every: "Every " + dayTitle(run.res.label) } : null,
+        onBack: openSwapFlow,
+        onDone: function (s, r, w, perm) { closeSheet(); swapCurrentExercise(exId, s, r, w, perm); toast("Swapped for " + EX[exId].name); }
+      });
+    });
   }
 
   function changeCurrentWeight(newW) {
@@ -3188,7 +3652,7 @@
     if (!run) { root.innerHTML = ""; persistRun(); return; }
     if (run.kind === "metcon") { renderMetconPlayer(); return; }
     persistRun();
-    if (run.i >= run.queue.length) { run.custom ? finishFreestylePlayer() : finishPlayer(); return; }
+    if (run.i >= run.queue.length && !run.custom) { finishPlayer(); return; }
 
     // build the shell once, then update its parts in place (no full-DOM flash between sets)
     if (!root.querySelector(".player")) {
@@ -3206,14 +3670,16 @@
           '<div class="pl-actions" id="pl-actions"></div>' +
         '</div>';
       document.getElementById("pl-close").onclick = endWorkoutPrompt;
-      document.getElementById("pl-menu").onclick = function () { openPlayerMenu(run.queue[run.i]); };
+      document.getElementById("pl-menu").onclick = function () { openPlayerMenu(run.queue[run.i] || null); };
       var plNew = root.querySelector(".player");
       void plNew.offsetWidth;                 // commit the off-screen start position
       plNew.classList.add("show");            // then slide up
     }
 
+    if (run.i >= run.queue.length) { renderLiveEnd(); return; }
     var step = run.queue[run.i];
     paintRail(step);
+    if (run.past) document.getElementById("pl-count").textContent = "Logging · " + shortDate(run.past.date);
 
     if (run.restUntil) {
       if (Date.now() < run.restUntil) { renderRest(step); return; }
@@ -3297,12 +3763,16 @@
   function openPlayerMenu(step) {
     openSheet(
       '<h2>Workout options</h2>' +
-      '<button class="menu-item" id="pm-reorder"><span>Reorder exercises</span><span class="k2">↕</span></button>' +
+      (step ? '<button class="menu-item" id="pm-swap"><span>Swap ' + esc(step.name) + '</span><span class="k2">⇄</span></button>' : '') +
       '<button class="menu-item" id="pm-add"><span>Add an exercise</span><span class="k2">+</span></button>' +
+      (step ? '<button class="menu-item" id="pm-reorder"><span>Reorder exercises</span><span class="k2">↕</span></button>' : '') +
+      (run.custom ? '<button class="menu-item" id="pm-finish"><span>Finish workout</span><span class="k2">✓</span></button>' : '') +
       '<button class="menu-item danger" id="pm-end">End workout without saving</button>'
     );
-    document.getElementById("pm-reorder").onclick = function () { openReorder(); };
-    document.getElementById("pm-add").onclick = function () { openExercisePicker(); };
+    var pr = document.getElementById("pm-reorder"); if (pr) pr.onclick = function () { openReorder(); };
+    var ps = document.getElementById("pm-swap"); if (ps) ps.onclick = openSwapFlow;
+    var pf = document.getElementById("pm-finish"); if (pf) pf.onclick = function () { closeSheet(); finishFreestylePlayer(); };
+    document.getElementById("pm-add").onclick = openAddFlow;
     document.getElementById("pm-end").onclick = function () { closeSheet(); endWorkoutPrompt(); };
   }
 
@@ -3472,75 +3942,6 @@
     };
   }
 
-  function openExercisePicker() {
-    var groups = {};
-    Object.keys(EX).forEach(function (id) {
-      var g = EX[id].grp || "Other";
-      (groups[g] = groups[g] || []).push(id);
-    });
-    var order = ["Push", "Pull", "Legs", "Arms", "Core"];
-    var html = '<h2>Add an exercise</h2><p class="sh-lead">It gets logged in this session. Program lifts keep their own progression — added work is just recorded.</p>' +
-      '<input class="num-in" id="ep-search" placeholder="Search…" autocomplete="off" style="margin-bottom:12px">' +
-      '<div id="ep-list">';
-    order.concat(Object.keys(groups).filter(function (g) { return order.indexOf(g) < 0; })).forEach(function (g) {
-      if (!groups[g]) return;
-      html += '<div class="eyebrow" style="margin:12px 0 6px">' + esc(g) + '</div>';
-      groups[g].forEach(function (id) {
-        html += '<button class="pick-item" data-ex="' + id + '"><span>' + esc(EX[id].name) + '</span>' +
-          '<span class="k2">' + (EX[id].bw ? "bodyweight" : EX[id].bar ? "barbell" : "weighted") + '</span></button>';
-      });
-    });
-    html += '</div>';
-    openSheet(html);
-    var search = document.getElementById("ep-search");
-    search.oninput = function () {
-      var q = search.value.trim().toLowerCase();
-      sheetRoot.querySelectorAll(".pick-item").forEach(function (b) {
-        b.style.display = !q || EX[b.dataset.ex].name.toLowerCase().indexOf(q) >= 0 ? "" : "none";
-      });
-    };
-    sheetRoot.querySelectorAll(".pick-item").forEach(function (b) {
-      b.onclick = function () { openAddConfig(b.dataset.ex); };
-    });
-  }
-
-  function openAddConfig(exId) {
-    var ex = EX[exId];
-    var isBw = !!ex.bw;
-    var wStep = ex.bar ? eq().step : (U() === "lb" ? 5 : 2.5);
-    openSheet(
-      '<h2>' + esc(ex.name) + '</h2><p class="sh-lead">How much are you doing?</p>' +
-      '<div class="field-inline">' +
-        '<div class="fi"><span>Sets</span><div class="stepper"><button data-f="s-">–</button><input class="mono" id="ac-s" inputmode="numeric" value="3"><button data-f="s+">+</button></div></div>' +
-        '<div class="fi"><span>Reps</span><div class="stepper"><button data-f="r-">–</button><input class="mono" id="ac-r" inputmode="numeric" value="' + (isBw ? 10 : 8) + '"><button data-f="r+">+</button></div></div>' +
-        (isBw ? '' : '<div class="fi"><span>Weight (' + U() + ')</span><div class="stepper"><button data-f="w-">–</button><input class="mono" id="ac-w" inputmode="decimal" value="' + (ex.bar ? eq().bar : (U() === "lb" ? 20 : 10)) + '"><button data-f="w+">+</button></div></div>') +
-      '</div>' +
-      '<div class="btn-row"><button class="btn btn-ghost" id="ac-cancel">Back</button><button class="btn btn-primary" id="ac-add">Add to workout</button></div>'
-    );
-    sheetRoot.querySelectorAll("[data-f]").forEach(function (b) {
-      b.onclick = function () {
-        var f = b.dataset.f;
-        var si = document.getElementById("ac-s"), ri = document.getElementById("ac-r"), wi = document.getElementById("ac-w");
-        if (f === "s-") si.value = Math.max(1, (parseInt(si.value, 10) || 1) - 1);
-        if (f === "s+") si.value = Math.min(10, (parseInt(si.value, 10) || 1) + 1);
-        if (f === "r-") ri.value = Math.max(1, (parseInt(ri.value, 10) || 1) - 1);
-        if (f === "r+") ri.value = (parseInt(ri.value, 10) || 1) + 1;
-        if (f === "w-" && wi) wi.value = fmt(Math.max(0, (parseFloat(wi.value) || 0) - wStep));
-        if (f === "w+" && wi) wi.value = fmt((parseFloat(wi.value) || 0) + wStep);
-      };
-    });
-    document.getElementById("ac-cancel").onclick = openExercisePicker;
-    document.getElementById("ac-add").onclick = function () {
-      var s = Math.max(1, parseInt(document.getElementById("ac-s").value, 10) || 3);
-      var r = Math.max(1, parseInt(document.getElementById("ac-r").value, 10) || 8);
-      var w = isBw ? 0 : (parseFloat(document.getElementById("ac-w").value) || 0);
-      if (ex.bar) w = roundLoad(w, eq());
-      closeSheet();
-      addExerciseToRun(exId, s, r, w);
-      toast(ex.name + " added");
-    };
-  }
-
   function plateStr(weight) {
     var e = eq();
     var per = (weight - e.bar) / 2;
@@ -3574,11 +3975,41 @@
   }
 
   /* ---------- rest timer ---------- */
+  // an open-ended workout (empty start, saved workout, past log) waits here between exercises
+  function renderLiveEnd() {
+    if (run.tick) { clearInterval(run.tick); run.tick = null; }
+    var logged = run.results.filter(function (r) { return r.sets.length; });
+    document.getElementById("pl-rail").innerHTML = run.res.exercises.map(function () { return '<i class="done"></i>'; }).join("");
+    document.getElementById("pl-count").textContent = run.past ? "Logging · " + shortDate(run.past.date) : logged.length ? logged.length + " done" : "";
+    document.getElementById("pl-body").innerHTML =
+      '<div class="pl-ex">' + esc(run.freestyleName || "Workout") + '</div>' +
+      '<div class="lv-title">' + (logged.length ? "What’s next?" : run.past ? "What did you do?" : "Add your first exercise") + '</div>' +
+      (logged.length ? '<div class="lv-list">' + logged.map(function (r) {
+        var top = r.sets.reduce(function (m, x) { return (x.weight || 0) >= (m.weight || 0) ? x : m; }, r.sets[0]);
+        return '<div><span>' + esc(r.name) + '</span><span>' + r.sets.length + ' × ' + (top.reps || 0) + (top.weight ? ' @ ' + fmt(top.weight) + ' ' + U() : '') + '</span></div>';
+      }).join("") + '</div>' : '<p class="pl-hint">Pick an exercise — it fills in what you did last time.</p>');
+    document.getElementById("pl-actions").innerHTML =
+      '<button class="btn btn-primary pl-done" id="lv-add" style="width:100%">Add exercise</button>' +
+      (logged.length ? '<button class="btn btn-ghost pl-cw" id="lv-finish">Finish workout</button>' : '');
+    document.getElementById("lv-add").onclick = openAddFlow;
+    var f = document.getElementById("lv-finish"); if (f) f.onclick = finishFreestylePlayer;
+  }
+
+  function workoutNameFor(ts) { var h = new Date(ts).getHours(); return h < 11 ? "Morning workout" : h < 17 ? "Afternoon workout" : "Evening workout"; }
+  // past = { date, durationSec } when logging a workout that already happened
+  function startEmptyWorkout(past) {
+    run = { custom: true, freestyleName: workoutNameFor(past ? past.date : Date.now()), customWorkoutId: null,
+      t: null, res: { label: "", dayType: null, exercises: [] }, queue: [], i: 0,
+      startedAt: Date.now(), chosenIdx: null, results: [], past: past || null };
+    renderPlayer();
+  }
+
   // seconds of rest after this step (0 = off): the exercise's remembered time, else the Settings default
   function restKind(step) { return step.kind === "warm" ? "warm" : "work"; }
   function restDefault(kind) { return +(kind === "warm" ? db.settings.restWarm : db.settings.restWork) || 0; }
   function restOverride(exId, kind) { var o = db.settings.restByEx[exId]; return o && o[kind] != null ? o[kind] : null; }
   function restSecondsFor(step) {
+    if (run && run.past) return 0;   // logging after the fact — nothing to rest for
     var kind = restKind(step), o = restOverride(step.exId, kind);
     return o != null ? o : restDefault(kind);
   }
@@ -3751,7 +4182,7 @@
       var topW = ws.reduce(function (m, s) { return Math.max(m, s.weight || 0); }, 0);
       progExercises.push({
         exId: r.exId,
-        done: ws.length > 0,
+        done: ws.some(function (s) { return s.reps > 0; }),   // every set skipped = not done, not a miss
         made: ws.length > 0 && ws.every(function (s) { return s.reps >= s.target; }),
         hitTop: ws.length > 0 && ws.every(function (s) { return s.reps >= (s.repHigh || s.target); }),
         topWeight: topW
@@ -3765,13 +4196,15 @@
 
     var sess = {
       id: uid(), date: run.startedAt, templateId: t.id, dayLabel: run.res.label,
+      dayIdx: run.chosenIdx % t.microcycle.length, mods: run.mods || [],
       weekIndex: db.active.weekIndex, dayType: run.res.dayType,
       durationSec: Math.round((Date.now() - run.startedAt) / 1000),
       snapshot: snapshot,
-      actual: run.results.map(function (r) {
+      actual: run.results.map(function (r, ri) {
         var top = r.sets.reduce(function (m, s) { return (s.weight || 0) >= (m.weight || 0) ? s : m; }, r.sets[0] || {});
+        var rx = run.res.exercises[ri] || {};
         return {
-          exId: r.exId, name: r.name, assist: r.assist, adhoc: r.adhoc,
+          exId: r.exId, name: r.name, assist: r.assist, adhoc: r.adhoc, slotIdx: rx.slotIdx != null ? rx.slotIdx : null,
           made: (r.assist || r.adhoc) ? null : (r.sets.length > 0 && r.sets.every(function (s) { return s.reps >= s.target; })),
           sets: r.sets, topWeight: (top && top.weight) || 0, topReps: (top && top.reps) || 0
         };
@@ -4042,7 +4475,7 @@
     var mins = Math.max(1, Math.round(s.durationSec / 60));
 
     var html = '<h2 class="title">' + esc(sessionTitle(s)) + ' done</h2>' +
-      '<p class="lead">' + (freestyle ? 'One-off workout' : esc(t.name) + ' · Week ' + programWeekAt(s.date)) + '</p>' +
+      '<p class="lead">' + (freestyle ? (s.past ? 'Logged for ' + esc(shortDate(s.date)) : 'One-off workout') + nextProgramNote() : esc(t.name) + ' · Week ' + programWeekAt(s.date)) + '</p>' +
       '<div class="statbar">' +
         '<div class="stat"><div class="k">Volume</div><div class="v">' + fmt(Math.round(vol)) + '<small> ' + U() + '</small></div></div>' +
         '<div class="stat"><div class="k">Sets</div><div class="v">' + sets + '</div></div>' +
@@ -4051,24 +4484,31 @@
 
     // what you logged
     html += '<div class="eyebrow">Logged</div><div class="day-block">';
+    var swappedIn = {};
+    (s.mods || []).forEach(function (m) { if (m.type === "swap") swappedIn[m.exId] = 1; });
     s.actual.forEach(function (a) {
       if (!a.sets.length) return;
-      var top = a.topWeight ? fmt(a.topWeight) + U() + " × " + a.topReps : a.topReps + " reps";
+      var skipped = !a.sets.some(function (x) { return x.reps > 0; });
+      var top = skipped ? "skipped" : a.topWeight ? fmt(a.topWeight) + U() + " × " + a.topReps : a.topReps + " reps";
       var rirs = a.sets.map(function (x) { return x.rir; }).filter(function (v) { return v != null; });
       var effTag = rirs.length ? ' · ' + effortText(Math.min.apply(null, rirs)) : '';
-      html += '<div class="ex-line"><span>' + esc(a.name) + (a.adhoc && !freestyle ? ' <span class="k2" style="font-size: var(--fs-xs);color:var(--text-faint)">ADDED</span>' : '') +
-        '</span><span class="scheme">' + a.sets.length + (a.sets.length === 1 ? " set · " : " sets · ") + esc(top) + esc(effTag) + '</span></div>';
+      html += '<div class="ex-line"><span>' + esc(a.name) + (a.adhoc && !freestyle ? ' <span class="k2" style="font-size: var(--fs-xs);color:var(--text-faint)">' + (swappedIn[a.exId] ? "SWAPPED" : "ADDED") + '</span>' : '') +
+        '</span><span class="scheme">' + (skipped ? "skipped" : a.sets.length + (a.sets.length === 1 ? " set · " : " sets · ") + esc(top) + esc(effTag)) + '</span></div>';
     });
     html += '</div>';
 
     if (freestyle) {
-      html += '<div class="btn-row"><button class="btn btn-primary" id="sm-done">Done</button></div>' +
+      html += oneOffExtrasHtml(s) +
+        '<div class="btn-row"><button class="btn btn-primary" id="sm-done">Done</button></div>' +
         '<div class="btn-row"><button class="btn btn-ghost" id="sm-progress">See history</button></div>';
       c.innerHTML = html;
+      wireOneOffExtras(c, s);
       document.getElementById("sm-done").onclick = function () { go("home", true); };
       document.getElementById("sm-progress").onclick = function () { go("progress", false); };
       return;
     }
+
+    html += programChangesHtml(s);
 
     html += '<div class="eyebrow">Next session\'s weights</div><div class="day-block">';
     if (!s.notes.length) html += '<p style="font-size: var(--fs-sm);color:var(--text-muted)">No program changes this session.</p>';
@@ -4086,9 +4526,147 @@
     html += '<div class="btn-row"><button class="btn btn-primary" id="sm-done">Back to program</button></div>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="sm-progress">See progress</button></div>';
     c.innerHTML = html;
+    wireProgramChanges(c, s);
     document.getElementById("sm-done").onclick = function () { go("home", true); };
     document.getElementById("sm-progress").onclick = function () { go("progress", false); };
   };
+
+  // "· Starting Strength still has Workout B next" — one-offs never move the program
+  function nextProgramNote() {
+    if (!db.active) return "";
+    var t = tplById(db.active.templateId);
+    if (!t || isMetcon(t)) return "";
+    return " · your program still has " + esc(sessionLabel(resolveSession(t, db.active, eq()))) + " next";
+  }
+  function lineageOf(id) { var t = tplById(id); return t ? (t.basedOn || t.id) : id; }
+  function summaryProgram(s) {
+    if (!db.active || !s.templateId) return null;
+    if (lineageOf(db.active.templateId) !== lineageOf(s.templateId)) return null;
+    return tplById(db.active.templateId);
+  }
+  function weightUsed(s, exId, fallback) {
+    var a = (s.actual || []).filter(function (x) { return x.exId === exId; })[0];
+    return a && a.topWeight ? a.topWeight : fallback;
+  }
+
+  // mid-workout changes: confirm the permanent ones (with undo), offer to keep today-only ones,
+  // and offer to drop program exercises you skipped entirely
+  function programChangesHtml(s) {
+    var t = summaryProgram(s);
+    if (!t) return "";
+    var day = dayTitle(s.dayLabel), rows = [];
+    (s.mods || []).forEach(function (m, i) {
+      if (m.undone) { rows.push('<div class="pc-row"><span>' + (m.type === "add" ? esc(m.name) + ' kept to today only' : esc(m.fromName) + ' is back in ' + esc(day)) + '</span></div>'); return; }
+      if (m.permanent) {
+        rows.push('<div class="pc-row"><span>' + (m.type === "add" ? esc(m.name) + ' ' + m.sets + '×' + m.reps + ' added to ' + esc(day) : esc(m.name) + ' replaces ' + esc(m.fromName) + ' in ' + esc(day)) +
+          '</span><button data-pc-undo="' + i + '">Undo</button></div>');
+      } else {
+        rows.push('<div class="pc-row"><span>' + (m.type === "add" ? 'Keep ' + esc(m.name) + ' in ' + esc(day) + '?' : 'Keep ' + esc(m.name) + ' instead of ' + esc(m.fromName) + '?') +
+          '</span><button data-pc-keep="' + i + '">' + (m.type === "add" ? "Keep" : "Keep the swap") + '</button></div>');
+      }
+    });
+    s.removed = s.removed || [];
+    (s.actual || []).forEach(function (a) {
+      if (a.sets.some(function (x) { return x.reps > 0; }) || a.adhoc || a.slotIdx == null) return;   // only exercises skipped entirely
+      var gone = s.removed.filter(function (r) { return r.exId === a.exId; })[0];
+      if (gone) { rows.push('<div class="pc-row"><span>' + esc(a.name) + ' removed from ' + esc(day) + '</span><button data-pc-restore="' + esc(a.exId) + '">Undo</button></div>'); return; }
+      var idx = findSlot(t, s.dayIdx, a.exId);
+      if (idx < 0 || slotLocked(t, t.microcycle[s.dayIdx].slots[idx])) return;
+      rows.push('<div class="pc-row"><span>You skipped ' + esc(a.name) + ' — remove it from ' + esc(day) + '?</span><button data-pc-remove="' + esc(a.exId) + '">Remove</button></div>');
+    });
+    if (!rows.length) return "";
+    return '<div class="eyebrow">Your program</div><div class="day-block pc-box">' + rows.join("") + '</div>';
+  }
+  function wireProgramChanges(c, s) {
+    var redo = function () { save(); var y = c.scrollTop; renderers.summary(); c.scrollTop = y; };
+    c.querySelectorAll("[data-pc-keep]").forEach(function (b) {
+      b.onclick = function () {
+        var m = s.mods[+b.dataset.pcKeep], t = ensureOwnActive(), w = weightUsed(s, m.exId, m.weight);
+        if (m.type === "add") m.slotIdx = tplAddSlot(t, s.dayIdx, m.exId, m.sets, m.reps, w, db.active.lifts);
+        else tplSwapSlot(t, s.dayIdx, m.slotIdx, m.exId, w, db.active.lifts);
+        m.permanent = true; redo();
+      };
+    });
+    c.querySelectorAll("[data-pc-undo]").forEach(function (b) {
+      b.onclick = function () {
+        var m = s.mods[+b.dataset.pcUndo], t = ensureOwnActive();
+        if (m.type === "add") { var idx = findSlot(t, s.dayIdx, m.exId); if (idx >= 0) tplRemoveSlot(t, s.dayIdx, idx); }
+        else tplSwapSlot(t, s.dayIdx, m.slotIdx, m.from, null, db.active.lifts);
+        m.undone = true; redo();
+      };
+    });
+    c.querySelectorAll("[data-pc-remove]").forEach(function (b) {
+      b.onclick = function () {
+        var t = ensureOwnActive(), idx = findSlot(t, s.dayIdx, b.dataset.pcRemove);
+        if (idx < 0) return;
+        s.removed.push({ exId: b.dataset.pcRemove, idx: idx, slot: deepClone(t.microcycle[s.dayIdx].slots[idx]),
+          prog: t.progression && t.progression[b.dataset.pcRemove] ? deepClone(t.progression[b.dataset.pcRemove]) : null });
+        tplRemoveSlot(t, s.dayIdx, idx); redo();
+      };
+    });
+    c.querySelectorAll("[data-pc-restore]").forEach(function (b) {
+      b.onclick = function () {
+        var r = s.removed.filter(function (x) { return x.exId === b.dataset.pcRestore; })[0], t = ensureOwnActive();
+        t.microcycle[s.dayIdx].slots.splice(Math.min(r.idx, t.microcycle[s.dayIdx].slots.length), 0, r.slot);
+        if (r.prog) { t.progression = t.progression || {}; t.progression[r.exId] = r.prog; } else ensureProgression(t, r.exId, r.slot.reps);
+        touched(t);
+        s.removed = s.removed.filter(function (x) { return x !== r; }); redo();
+      };
+    });
+  }
+
+  // after a one-off: save it for reuse, and offer to move program weights up if you out-lifted them
+  function oneOffExtrasHtml(s) {
+    var html = "";
+    var t = db.active ? tplById(db.active.templateId) : null;
+    s.liftUpdates = s.liftUpdates || {};
+    if (t && !isMetcon(t) && db.active.lifts) {
+      (s.actual || []).forEach(function (a) {
+        var lift = db.active.lifts[a.exId], slot = slotFor(t, a.exId);
+        if (s.liftUpdates[a.exId]) { html += '<div class="pc-row"><span>' + esc(t.name) + ' now has ' + esc(a.name) + ' at ' + fmt(s.liftUpdates[a.exId]) + ' ' + U() + '</span></div>'; return; }
+        if (!lift || !slot || !a.topWeight || a.topWeight <= lift.weight || (a.topReps || 0) < slot.reps) return;
+        html += '<div class="pc-row"><span>You did ' + esc(a.name) + ' ' + fmt(a.topWeight) + ' ' + U() + ' × ' + a.topReps + ' — your program has ' + fmt(lift.weight) + ' ' + U() + '. Move it up?</span>' +
+          '<button data-lift-up="' + esc(a.exId) + '">Update</button></div>';
+      });
+      if (html) html = '<div class="eyebrow">Your program</div><div class="day-block pc-box">' + html + '</div>';
+    }
+    if (!s.customWorkoutId) {
+      html += s.savedAs
+        ? '<p class="pc-saved">Saved as “' + esc(s.savedAs) + '” — find it ' + (db.active ? 'under Something else today' : 'on Home') + '.</p>'
+        : '<div class="btn-row"><button class="btn btn-ghost" id="sm-saveas">Save as a workout</button></div>';
+    }
+    return html;
+  }
+  function wireOneOffExtras(c, s) {
+    var redo = function () { save(); var y = c.scrollTop; renderers.summary(); c.scrollTop = y; };
+    c.querySelectorAll("[data-lift-up]").forEach(function (b) {
+      b.onclick = function () {
+        var id = b.dataset.liftUp, a = s.actual.filter(function (x) { return x.exId === id; })[0], lift = db.active.lifts[id];
+        lift.weight = roundFor(id, a.topWeight, eq()); lift.failCount = 0;
+        lift.history.push({ t: Date.now(), w: lift.weight });
+        s.liftUpdates[id] = lift.weight; redo();
+      };
+    });
+    var sv = document.getElementById("sm-saveas");
+    if (sv) sv.onclick = function () {
+      openSheet('<h2>Save as a workout</h2><p class="sh-lead">Reuse it any time — it fills in today’s weights.</p>' +
+        '<input class="num-in" id="sa-name" maxlength="40" value="' + esc(s.dayLabel && !/workout$/i.test(s.dayLabel) ? s.dayLabel : "") + '" placeholder="Hotel gym, arm day…" style="width:100%">' +
+        '<div class="btn-row"><button class="btn btn-ghost" id="sa-cancel">Cancel</button><button class="btn btn-primary" id="sa-ok">Save</button></div>');
+      document.getElementById("sa-cancel").onclick = closeSheet;
+      document.getElementById("sa-ok").onclick = function () {
+        var name = document.getElementById("sa-name").value.trim();
+        if (!name) { toast("Give it a name"); return; }
+        db.customWorkouts.push(workoutFromSession(s, name));
+        s.savedAs = name; closeSheet(); redo(); toast("Saved");
+      };
+    };
+  }
+  function workoutFromSession(s, name) {
+    return { id: "cw-" + uid(), custom: true, kind: "strength", name: name, createdAt: Date.now(),
+      exercises: (s.actual || []).filter(function (a) { return a.sets.length; }).map(function (a) {
+        return { exId: a.exId, sets: a.sets.length, reps: a.sets[0].target || a.sets[0].reps, repHigh: null, weight: a.topWeight || 0 };
+      }) };
+  }
 
   function metconScoreText(s) {
     var sc = s.score || {};
@@ -4229,9 +4807,10 @@
       var sum = s.kind === "freestyle"
         ? (s.actual || []).reduce(function (n, a) { return n + a.sets.length; }, 0) + " sets"
         : esc(metconScoreText(s)) + (s.score && !s.score.rx ? " · scaled" : "");
-      html += '<div class="rec-row"><span class="rr-day">' + esc(s.wodName || s.dayLabel) + '</span>' +
+      var tag = s.kind === "freestyle" ? 'button data-sess="' + s.id + '"' : 'div';
+      html += '<' + tag + ' class="rec-row">' + '<span class="rr-day">' + esc(s.wodName || s.dayLabel) + '</span>' +
         '<span class="rr-sum">' + sum + '</span>' +
-        '<span class="rr-date">' + relDate(s.date) + '</span></div>';
+        '<span class="rr-date">' + relDate(s.date) + '</span></' + (s.kind === "freestyle" ? 'button' : 'div') + '>';
     });
     return html;
   }
@@ -4245,6 +4824,7 @@
         metconHistoryHtml() +
         '<div class="eyebrow" style="margin-top:22px">Body</div>' + bodyChartsHtml();
       c.innerHTML = html0;
+      wireHistory(c);
       return;
     }
     var t = tplById(db.active.templateId);
@@ -4304,6 +4884,7 @@
       }
     }
     c.innerHTML = html;
+    wireHistory(c);
   };
 
   // weekly line chart with a visible dot at every week
@@ -4704,9 +5285,9 @@
     var wrap = sheetRoot.querySelector(".sheet-wrap");
     wrap.addEventListener("click", function (e) { if (e.target === wrap) closeSheet(); });
   }
-  function confirmSheet(title, body, onYes) {
+  function confirmSheet(title, body, onYes, yesLabel) {
     openSheet('<h2>' + esc(title) + '</h2><p class="sh-lead">' + esc(body) + '</p>' +
-      '<div class="btn-row"><button class="btn btn-ghost" id="cf-no">Cancel</button><button class="btn btn-danger" id="cf-yes">End workout</button></div>');
+      '<div class="btn-row"><button class="btn btn-ghost" id="cf-no">Cancel</button><button class="btn btn-danger" id="cf-yes">' + esc(yesLabel || "End workout") + '</button></div>');
     document.getElementById("cf-no").onclick = closeSheet;
     document.getElementById("cf-yes").onclick = function () { closeSheet(); onYes(); };
   }
