@@ -385,6 +385,7 @@
   .rs-adj .btn { width: 88px; }
   .rs-next { margin-top: 18px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: var(--fs-sm); color: var(--text-muted); }
   .rs-next span { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .12em; color: var(--text-faint); font-weight: 700; }
+  .rs-next .rs-plates { font-size: var(--fs-xs); text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--text-muted); }
   .rs-next b { font-family: "Barlow Condensed", sans-serif; font-size: var(--fs-lg); color: var(--text); }
   .pl-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6vh 20px 24px; gap: 6px; overflow-y: auto; }
   .pl-ex { font-family: "Barlow Condensed"; font-weight: 600; font-size: var(--fs-xl); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
@@ -553,7 +554,7 @@
   /* sheet */
   .sheet-wrap { position: fixed; inset: 0; z-index: 60; background: rgba(10,8,6,.5); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s ease both; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-  .sheet { background: var(--surface); width: 100%; max-width: 560px; max-height: 88vh; border-radius: 18px 18px 0 0; box-shadow: var(--shadow-sheet); padding: 8px 16px max(18px, env(safe-area-inset-bottom)); overflow-y: auto; animation: slideup .26s cubic-bezier(.22,1,.36,1) both; }
+  .sheet { background: var(--surface); width: 100%; max-width: 560px; max-height: min(88vh, calc(100% - 24px)); border-radius: 18px 18px 0 0; box-shadow: var(--shadow-sheet); padding: 8px 16px max(18px, env(safe-area-inset-bottom)); overflow-y: auto; animation: slideup .26s cubic-bezier(.22,1,.36,1) both; }
   @keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
   .grab { width: 36px; height: 4px; border-radius: 999px; background: var(--line-strong); margin: 6px auto 12px; }
   .sheet h2 { font-size: var(--fs-xl); margin-bottom: 3px; }
@@ -1880,7 +1881,7 @@
       '<p class="lead">' + (st.context === "setup" ? "Optional. Swap, add or remove exercises — the original program stays available."
         : st.context === "active" ? "Changes apply from your next workout. Your history and working weights carry over."
         : "Swap, add or remove exercises, and change sets and reps.") + '</p>' +
-      (st.context === "setup" ? '' : '<div class="field"><label>Name</label><input class="ed-name" id="ed-name" value="' + esc(t.name) + '"></div>');
+      '<div class="field"><label>Name</label><input class="ed-name" id="ed-name" maxlength="60" value="' + esc(t.name) + '"></div>';
     var anyLocked = false, anyFixed = false;
     // days collapse to one line so a 6-day program isn't eight screens of steppers
     var total = t.microcycle.reduce(function (n, d) { return n + d.slots.length; }, 0);
@@ -1953,7 +1954,7 @@
     document.getElementById("ed-save").onclick = function () {
       if (nameIn) t.name = nameIn.value.trim() || t.name;
       if (st.context === "setup") {
-        draft.customTpl = planChanges(t, orig).any ? t : null;
+        draft.customTpl = (planChanges(t, orig).any || t.name !== personalCopy(orig).name) ? t : null;
         editorState = null; go("setup", true); return;
       }
       pruneAnchors(t); t.updatedAt = Date.now();
@@ -2407,12 +2408,27 @@
       html += '</div>';
     });
     html += '<div class="btn-row"><button class="btn btn-primary" id="d-use">Use this program</button></div>' +
-      (t.custom ? '<div class="btn-row"><button class="btn btn-ghost" id="d-edit">Edit this program</button></div>' : '');
+      (t.custom ? '<div class="btn-row"><button class="btn btn-ghost" id="d-rename">Rename</button><button class="btn btn-ghost" id="d-edit">Edit this program</button></div>' : '');
     c.innerHTML = html;
     document.getElementById("d-back").onclick = function () { go("choose"); };
     document.getElementById("d-use").onclick = function () { startSetup(t.id); };
     var de = document.getElementById("d-edit");
     if (de) de.onclick = function () { editorState = { mode: "plan", plan: deepClone(t), context: "library" }; go("editor"); };
+    var dr = document.getElementById("d-rename");
+    if (dr) dr.onclick = function () {
+      openSheet('<h2>Rename program</h2>' +
+        '<div class="field"><label>Name</label><input class="ed-name" id="rn-name" maxlength="60" value="' + esc(t.name) + '"></div>' +
+        '<div class="btn-row"><button class="btn btn-ghost" id="rn-cancel">Cancel</button><button class="btn btn-primary" id="rn-ok">Save</button></div>');
+      var inp = document.getElementById("rn-name");
+      inp.focus(); inp.select();
+      document.getElementById("rn-cancel").onclick = closeSheet;
+      document.getElementById("rn-ok").onclick = function () {
+        var nm = inp.value.trim();
+        if (nm && nm !== t.name) { t.name = nm; t.updatedAt = Date.now(); save(); }
+        closeSheet(); renderers.detail();
+      };
+      inp.onkeydown = function (e) { if (e.key === "Enter") document.getElementById("rn-ok").click(); };
+    };
   };
 
   function progressionRuleText(t) {
@@ -4303,7 +4319,7 @@
   }
   function renderRest(next) {
     var a = run.restAfter || {};
-    var nextLine = !next ? "Pick it when you're ready" : next.kind === "warm" ? "Warm-up " + warmPos(next).n + " of " + warmPos(next).of
+    var nextLine = !next ? "Pick it when you're ready" : next.kind === "warm" ? "Warm-up " + warmPos(next).n + " of " + warmPos(next).of + " · " + fmt(next.weight) + " " + U() + " × " + next.reps
       : next.assist ? "Set " + next.setNo + " of " + next.setCount + " · " + repRange(next.target, next.repHigh) + " reps"
       : "Set " + next.setNo + " of " + next.setCount + " · " + fmt(next.weight) + " " + U() + " × " + repRange(next.reps, next.repHigh);
     document.getElementById("pl-body").innerHTML =
@@ -4322,7 +4338,8 @@
           ? '<div class="rs-rule">' + restLabel(o) + ' remembered for ' + what + ' · <button id="rs-reset">Use default (' + restLabel(restDefault(kind)) + ')</button></div>'
           : '<div class="rs-rule">Adjust to remember a rest time for ' + what + '</div>';
       })() +
-      '<div class="rs-next"><span>Up next</span><b>' + esc(next ? next.name : "Your next exercise") + '</b>' + esc(nextLine) + '</div>';
+      '<div class="rs-next"><span>Up next</span><b>' + esc(next ? next.name : "Your next exercise") + '</b>' + esc(nextLine) +
+        ((next && !next.assist && next.weight > 0 && EX[next.exId] && EX[next.exId].bar && plateStr(next.weight)) ? '<span class="rs-plates">' + esc(plateStr(next.weight)) + '</span>' : '') + '</div>';
     document.getElementById("pl-actions").innerHTML =
       '<div class="pl-prow">' +
         '<button class="btn btn-ghost pl-back" id="rs-undo">Undo set</button>' +
@@ -5496,9 +5513,22 @@
   /* ============================================================ SHEETS */
   var sheetRoot = document.getElementById("sheet-root");
   function closeSheet() { sheetRoot.innerHTML = ""; }
+  // iOS lays the keyboard over the page instead of resizing it, so fit the sheet to what's still visible
+  function fitSheetToViewport() {
+    var wrap = sheetRoot.querySelector(".sheet-wrap"), vv = window.visualViewport;
+    if (!wrap || !vv) return;
+    wrap.style.top = vv.offsetTop + "px";
+    wrap.style.height = vv.height + "px";
+    wrap.style.bottom = "auto";
+  }
+  if (window.visualViewport) {
+    visualViewport.addEventListener("resize", fitSheetToViewport);
+    visualViewport.addEventListener("scroll", fitSheetToViewport);
+  }
   function openSheet(inner) {
     sheetRoot.innerHTML = '<div class="sheet-wrap"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>' + inner + '</div></div>';
     var wrap = sheetRoot.querySelector(".sheet-wrap");
+    fitSheetToViewport();
     wrap.addEventListener("click", function (e) { if (e.target === wrap) closeSheet(); });
   }
   function confirmSheet(title, body, onYes, yesLabel) {
