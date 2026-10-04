@@ -526,6 +526,33 @@
   .nu-ticks { display: flex; justify-content: space-between; font-family: "IBM Plex Mono", monospace; font-size: var(--fs-xs); color: var(--text-faint); }
   .nu-delta { font-size: var(--fs-sm); color: var(--text); font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; }
   .nu-warn { font-size: var(--fs-sm); color: var(--hold); line-height: 1.45; margin-top: 8px; }
+  /* food log */
+  .fd-day { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 12px; }
+  .fd-day b { font-size: var(--fs-md); }
+  .fd-day button { width: 44px; height: 44px; display: grid; place-items: center; color: var(--text-muted); border-radius: var(--radius-sm); }
+  .fd-day button:disabled { opacity: .3; }
+  .fd-day button svg { width: 20px; height: 20px; }
+  .fd-bar { height: 8px; border-radius: 999px; background: var(--line-strong); overflow: hidden; margin-top: 10px; }
+  .fd-bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+  .fd-bar.over i { background: var(--hold); }
+  .fd-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 14px; }
+  .fd-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; min-height: 56px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .fd-row:last-child { border-bottom: none; }
+  .fd-row .fd-n { flex: 1; min-width: 0; }
+  .fd-row .fd-n b { display: block; font-size: var(--fs-md); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fd-row .fd-n span { display: block; font-size: var(--fs-xs); color: var(--text-faint); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fd-row .fd-k { font-family: "IBM Plex Mono", monospace; font-size: var(--fs-sm); color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .fd-list { padding: 0 13px; }
+  .fd-add { width: 100%; margin: 4px 0 10px; }
+  .fd-link { color: var(--accent-ink); font-weight: 600; font-size: var(--fs-sm); min-height: 44px; }
+  .fd-q { width: 100%; height: 46px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text); font-size: var(--fs-md); font-family: inherit; }
+  .fd-grp { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--text-faint); margin: 14px 0 2px; }
+  .fd-msg { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.45; padding: 10px 0; }
+  .fd-amt { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; margin: 12px 0; }
+  .fd-amt select { width: 100%; height: 46px; }
+  .fd-prev { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 4px; }
+  .fd-prev b { display: block; font-family: "Barlow Condensed"; font-size: var(--fs-xl); line-height: 1.1; }
+  .fd-prev span { font-size: var(--fs-xs); color: var(--text-faint); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
   .meas-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0 4px; }
   .meas { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; }
   .meas .k { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); font-weight: 700; }
@@ -733,6 +760,7 @@
     <section class="screen" id="s-summary"></section>
     <section class="screen" id="s-progress"></section>
     <section class="screen" id="s-body"></section>
+    <section class="screen" id="s-food"></section>
     <section class="screen" id="s-nutrition"></section>
     <section class="screen" id="s-badges"></section>
     <section class="screen" id="s-feed"></section>
@@ -1533,6 +1561,24 @@
     A(nLow.belowBmr && nLow.belowFloor && nLow.tooFast, "big deficit on a small frame flags below BMR, floor and pace");
     A(nutritionPlan({ sex: "m", age: 30, heightCm: 0, weightKg: 80 }) === null, "missing height → no plan");
 
+    // --- food log ---
+    var fu = foodFromUsda({ fdcId: 171477, description: "CHICKEN BREAST, ROASTED", foodNutrients: [
+      { nutrientNumber: "208", unitName: "KCAL", value: 165 }, { nutrientNumber: "203", unitName: "G", value: 31 },
+      { nutrientNumber: "204", unitName: "G", value: 3.6 }, { nutrientNumber: "205", unitName: "G", value: 0 }],
+      foodMeasures: [{ disseminationText: "1 breast", gramWeight: 172 }, { disseminationText: "Quantity not specified", gramWeight: 100 }] });
+    A(fu && fu.per.kcal === 165 && fu.per.p === 31 && fu.name === "Chicken breast, roasted", "USDA hit → per-100 g food, de-shouted name");
+    A(fu.portions.length === 1 && fu.portions[0].g === 172, "USDA portions keep real measures only");
+    A(foodFromUsda({ fdcId: 1, description: "x", foodNutrients: [{ nutrientNumber: "958", unitName: "KCAL", value: 50 }] }).per.kcal === 50, "Foundation food falls back to Atwater energy");
+    A(foodFromUsda({ fdcId: 1, description: "x", foodNutrients: [] }) === null, "USDA hit without energy is skipped");
+    var fo = foodFromOff({ code: "123", product_name: "Oats", brands: "Quaker,PepsiCo", serving_quantity: "40", serving_size: "40 g",
+      nutriments: { energy_100g: 1569, proteins_100g: 13, carbohydrates_100g: 60, fat_100g: 7 } });
+    A(fo && Math.abs(fo.per.kcal - 375) < 0.5 && fo.brand === "Quaker" && fo.portions[0].g === 40, "OFF product: kJ → kcal, first brand, serving portion");
+    A(foodFromOff({ code: "1", product_name: "", nutriments: { "energy-kcal_100g": 100 } }) === null, "OFF product without a name is skipped");
+    var sc = scaleFood(fu.per, 172);
+    A(sc.kcal === 284 && sc.p === 53.3, "172 g chicken → 284 kcal, 53.3 g protein → got " + sc.kcal + ", " + sc.p);
+    var ft = foodTotals([{ kcal: 284, p: 53.3, c: 0, f: 6.2 }, { kcal: 150, p: 5, c: 27, f: 3 }]);
+    A(ft.kcal === 434 && Math.abs(ft.p - 58.3) < 1e-9, "day totals add up");
+
     var el = document.createElement("div");
     el.className = "selftest";
     el.innerHTML = "RACK COACH — SELF TEST\n" + (ok ? "<span class='pass'>ALL PASSED</span>" : "<span class='fail'>FAILURES ABOVE</span>") + "\n\n" +
@@ -1686,6 +1732,7 @@
     summary: document.getElementById("s-summary"),
     progress: document.getElementById("s-progress"),
     body: document.getElementById("s-body"),
+    food: document.getElementById("s-food"),
     nutrition: document.getElementById("s-nutrition"),
     badges: document.getElementById("s-badges"),
     feed: document.getElementById("s-feed")
@@ -1693,7 +1740,7 @@
   var TAB_SCREENS = { home: 1, progress: 1, body: 1, badges: 1, feed: 1 };
   var TAB_ORDER = ["home", "progress", "body", "badges", "feed"];
   // rough "depth" so a plain go() can infer push vs pop direction
-  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, feed: 0, choose: 1, nutrition: 1, summary: 1, pick: 1, roll: 1, schedule: 1, detail: 2, setup: 3, editor: 3 };
+  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, feed: 0, choose: 1, food: 1, nutrition: 2, summary: 1, pick: 1, roll: 1, schedule: 1, detail: 2, setup: 3, editor: 3 };
   var cur = null, sliding = false;
   var SCR_RESET = ["anim", "from-right", "from-left", "to-left", "to-right", "behind", "lead", "trail"];
   function snapScreens() {
@@ -5305,10 +5352,13 @@
       activity: n.activity, delta: n.delta, goalKg: n.goalKg });
   }
   function nutritionCardHtml() {
-    var pl = currentNutrition();
-    return '<button class="bw-hero nu-card" id="bd-nutri"><div class="k">Nutrition</div>' +
-      (pl ? '<div class="nu-v">Eat ~' + kcal(pl.target) + ' kcal/day</div><div class="trend">Maintenance ' + kcal(pl.maintenance) + ' · BMR ' + kcal(pl.bmr) + '</div>'
-          : '<div class="nu-v">Work out your calories</div><div class="trend">BMR, maintenance and a deficit planner</div>') +
+    var pl = currentNutrition(), today = foodDayEntries(dayKey(Date.now())), t = foodTotals(today);
+    var body;
+    if (pl) body = '<div class="nu-v">' + kcal(t.kcal) + ' / ' + kcal(pl.target) + ' kcal today</div><div class="trend">' +
+      (t.kcal <= pl.target ? kcal(pl.target - t.kcal) + ' left' : kcal(t.kcal - pl.target) + ' over') + ' · protein ' + Math.round(t.p) + ' g</div>';
+    else if (today.length) body = '<div class="nu-v">' + kcal(t.kcal) + ' kcal today</div><div class="trend">Protein ' + Math.round(t.p) + ' g · set a target to see what\'s left</div>';
+    else body = '<div class="nu-v">Track your food</div><div class="trend">Search foods, log what you eat, hit your calories</div>';
+    return '<button class="bw-hero nu-card" id="bd-nutri"><div class="k">Food</div>' + body +
       '<svg class="nu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
   }
   function weeklyText(kg) {
@@ -5323,8 +5373,8 @@
     var c = screens.nutrition, s = db.settings, n = s.nutrition, w = nutritionWeight();
     var hDisp = s.heightCm > 0 ? (L() === "in" ? Math.round(s.heightCm / 2.54 * 2) / 2 : Math.round(s.heightCm)) : "";
     var act = ACTIVITY.filter(function (a) { return a.id === n.activity; })[0] || ACTIVITY[2];
-    var html = '<button class="backlink" id="nu-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Body</button>' +
-      '<h2 class="title">Nutrition</h2><p class="lead">Your daily calories, worked out from your size and how much you move.</p>' +
+    var html = '<button class="backlink" id="nu-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Food</button>' +
+      '<h2 class="title">Calorie target</h2><p class="lead">Your daily calories, worked out from your size and how much you move.</p>' +
       '<div class="eyebrow">You</div><div class="day-block">' +
         '<div class="toggle-line"><div class="tl-k">Sex</div><div class="mini-seg" id="nu-sex">' +
           '<button data-v="m" aria-selected="' + (s.sex === "m") + '">Male</button><button data-v="f" aria-selected="' + (s.sex === "f") + '">Female</button></div></div>' +
@@ -5382,7 +5432,7 @@
       document.getElementById("nu-goal-t").textContent = gt;
     }
     var num = function (v) { v = parseFloat(String(v).replace(",", ".")); return v > 0 ? v : null; };
-    document.getElementById("nu-back").onclick = function () { go("body", true); };
+    document.getElementById("nu-back").onclick = function () { go("food", true); };
     document.getElementById("nu-sex").querySelectorAll("button").forEach(function (b) {
       b.onclick = function () {
         s.sex = b.dataset.v; save();
@@ -5415,6 +5465,330 @@
     };
     update();
   };
+
+  /* ---------- food log */
+  // entries keep the food's per-100 g values so the amount can be edited later
+  function foodDb() {
+    if (!db.food || typeof db.food !== "object") db.food = {};
+    if (!Array.isArray(db.food.log)) db.food.log = [];
+    if (!Array.isArray(db.food.recent)) db.food.recent = [];
+    return db.food;
+  }
+  function foodDayEntries(day) {
+    return foodDb().log.filter(function (e) { return e.day === day; }).sort(function (a, b) { return a.at - b.at; });
+  }
+  function foodTotals(list) {
+    return list.reduce(function (t, e) { t.kcal += e.kcal || 0; t.p += e.p || 0; t.c += e.c || 0; t.f += e.f || 0; return t; }, { kcal: 0, p: 0, c: 0, f: 0 });
+  }
+  function scaleFood(per, g) {
+    var k = g / 100;
+    return { kcal: Math.round(per.kcal * k), p: Math.round(per.p * k * 10) / 10, c: Math.round(per.c * k * 10) / 10, f: Math.round(per.f * k * 10) / 10 };
+  }
+  function cleanName(s) {
+    s = String(s || "").trim();
+    // USDA and some products shout in capitals
+    if (s.length > 3 && s === s.toUpperCase()) s = s.charAt(0) + s.slice(1).toLowerCase();
+    return s;
+  }
+  // USDA FoodData Central search hit → food (values are per 100 g for Foundation, SR Legacy and FNDDS)
+  function foodFromUsda(f) {
+    var by = {};
+    (f.foodNutrients || []).forEach(function (n) { if (n.nutrientNumber && by[n.nutrientNumber] == null) by[n.nutrientNumber] = n; });
+    var en = by["208"] && /kcal/i.test(by["208"].unitName || "kcal") ? by["208"] : (by["958"] || by["957"]);
+    if (!en || !(en.value >= 0)) return null;
+    var v = function (num) { return by[num] && by[num].value > 0 ? by[num].value : 0; };
+    var portions = (f.foodMeasures || []).filter(function (m) {
+      return m.gramWeight > 0 && m.disseminationText && !/not specified/i.test(m.disseminationText);
+    }).slice(0, 6).map(function (m) { return { label: m.disseminationText, g: m.gramWeight }; });
+    return { src: "usda", ref: String(f.fdcId), name: cleanName(f.description), brand: "",
+      per: { kcal: en.value, p: v("203"), c: v("205"), f: v("204") }, portions: portions };
+  }
+  // Open Food Facts product → food
+  function foodFromOff(p) {
+    var n = p.nutriments || {};
+    var kc = n["energy-kcal_100g"];
+    if (!(kc >= 0) && n.energy_100g > 0) kc = n.energy_100g / 4.184;   // energy_100g is kJ
+    var name = cleanName(p.product_name_en || p.product_name || p.generic_name);
+    if (!(kc >= 0) || kc > 950 || !name) return null;
+    var num = function (x) { x = parseFloat(x); return x > 0 ? x : 0; };
+    var sq = parseFloat(p.serving_quantity);
+    var portions = sq > 0 ? [{ label: "serving", g: sq }] : [];
+    var brand = String(p.brands || "").split(",")[0].trim();
+    return { src: "off", ref: String(p.code || name), name: name, brand: brand.charAt(0).toUpperCase() + brand.slice(1),
+      per: { kcal: Math.round(kc * 10) / 10, p: num(n.proteins_100g), c: num(n.carbohydrates_100g), f: num(n.fat_100g) }, portions: portions };
+  }
+  var USDA_DEMO = "DEMO_KEY";
+  function searchUsda(q, signal) {
+    return fetch("https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + encodeURIComponent(db.settings.usdaKey || USDA_DEMO), {
+      method: "POST", signal: signal, headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: q, pageSize: 15, dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"] })
+    }).then(function (r) {
+      if (r.status === 429 || r.status === 403) throw new Error("limit");
+      if (!r.ok) throw new Error("http");
+      return r.json();
+    }).then(function (j) { return (j.foods || []).map(foodFromUsda).filter(Boolean); });
+  }
+  // Open Food Facts allows ~10 searches a minute, and its search sometimes 503s — so cache, and retry once
+  var foodCache = {};
+  function cachedSearch(src, fn, q, signal) {
+    var k = src + ":" + q.toLowerCase();
+    if (foodCache[k]) return Promise.resolve(foodCache[k]);
+    return fn(q, signal).then(function (list) { foodCache[k] = list; return list; });
+  }
+  function searchOffRetry(q, signal) {
+    return searchOff(q, signal).catch(function (err) {
+      if (err && err.name === "AbortError") throw err;
+      return new Promise(function (res) { setTimeout(res, 2000); }).then(function () {
+        if (signal.aborted) throw new DOMException("aborted", "AbortError");
+        return searchOff(q, signal);
+      });
+    });
+  }
+  function searchOff(q, signal) {
+    return fetch("https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=20&search_terms=" + encodeURIComponent(q) +
+      "&fields=code,product_name,product_name_en,generic_name,brands,nutriments,serving_quantity,serving_size", { signal: signal })
+      .then(function (r) { if (!r.ok) throw new Error("http"); return r.json(); })
+      .then(function (j) { return (j.products || []).map(foodFromOff).filter(Boolean).slice(0, 15); });
+  }
+  function foodMacroLine(x) { return "P " + fmt(Math.round(x.p)) + " · C " + fmt(Math.round(x.c)) + " · F " + fmt(Math.round(x.f)); }
+  function foodAmountText(e) {
+    if (e.src === "quick") return "Quick add";
+    var po = e.portions && e.unit >= 0 ? e.portions[e.unit] : null;
+    return po ? fmt(e.qty) + " × " + po.label : fmt(e.g) + " g";
+  }
+  function foodRowHtml(attr, title, sub, right) {
+    return '<button class="fd-row" ' + attr + '><span class="fd-n"><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></span><span class="fd-k">' + right + '</span></button>';
+  }
+  function rememberFood(e) {
+    if (e.src === "quick") return;
+    var F = foodDb(), key = e.src + ":" + e.ref;
+    F.recent = F.recent.filter(function (r) { return r.src + ":" + r.ref !== key; });
+    F.recent.unshift({ src: e.src, ref: e.ref, name: e.name, brand: e.brand, per: e.per, portions: e.portions || [], unit: e.unit, qty: e.qty });
+    F.recent.length = Math.min(F.recent.length, 40);
+  }
+
+  var foodDay = null;   // the day the Food screen is showing; null = today
+  renderers.food = function () {
+    var c = screens.food, today = dayKey(Date.now());
+    if (foodDay == null || foodDay > today) foodDay = today;
+    var day = foodDay, list = foodDayEntries(day), t = foodTotals(list), pl = currentNutrition();
+    var dayName = day === today ? "Today" : day === dayKey(today - 864e5 / 2) ? "Yesterday" : new Date(day).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    var chev = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>'; };
+    var html = '<button class="backlink" id="fd-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Body</button>' +
+      '<h2 class="title">Food</h2>' +
+      '<div class="fd-day"><button id="fd-prev" aria-label="Previous day">' + chev("M15 18l-6-6 6-6") + '</button><b>' + esc(dayName) + '</b>' +
+        '<button id="fd-next" aria-label="Next day"' + (day >= today ? ' disabled' : '') + '>' + chev("M9 6l6 6-6 6") + '</button></div>';
+    if (pl) {
+      var over = t.kcal > pl.target, pct = Math.min(100, Math.round(t.kcal / pl.target * 100));
+      html += '<div class="bw-hero"><div class="k">Calories</div><div class="big">' + kcal(t.kcal) + '<small> / ' + kcal(pl.target) + ' kcal</small></div>' +
+        '<div class="fd-bar' + (over ? ' over' : '') + '"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="trend">' + (over ? kcal(t.kcal - pl.target) + ' kcal over' : kcal(pl.target - t.kcal) + ' kcal left') + '</div></div>';
+    } else {
+      html += '<div class="bw-hero"><div class="k">Calories</div><div class="big">' + kcal(t.kcal) + '<small> kcal</small></div>' +
+        '<div class="trend">No daily target yet</div></div>';
+    }
+    html += '<div class="fd-macros">' +
+      '<div class="meas"><div class="k">Protein</div><div class="v">' + Math.round(t.p) + ' <small>g</small></div><div class="d">' + (pl ? 'aim ' + pl.proteinLo + '–' + pl.proteinHi : '&nbsp;') + '</div></div>' +
+      '<div class="meas"><div class="k">Carbs</div><div class="v">' + Math.round(t.c) + ' <small>g</small></div><div class="d">&nbsp;</div></div>' +
+      '<div class="meas"><div class="k">Fat</div><div class="v">' + Math.round(t.f) + ' <small>g</small></div><div class="d">&nbsp;</div></div></div>' +
+      '<button class="btn btn-primary fd-add" id="fd-add">Add food</button>';
+    if (list.length) {
+      html += '<div class="eyebrow" style="margin-top:8px">Logged</div><div class="day-block fd-list">' + list.map(function (e) {
+        return foodRowHtml('data-fe="' + e.id + '"', e.name, [foodAmountText(e), e.brand].filter(Boolean).join(" · "), kcal(e.kcal));
+      }).join("") + '</div>';
+    } else {
+      html += '<p class="nu-note" style="text-align:center;margin:10px 0 18px">Nothing logged ' + (day === today ? 'yet today' : 'this day') + '.</p>';
+    }
+    html += '<button class="fd-link" id="fd-target">' + (pl ? 'Change calorie target' : 'Set a calorie target') + ' ›</button>' +
+      '<p class="nu-note" style="margin:4px 0 24px">Food data from USDA FoodData Central and Open Food Facts. Labels and databases can be off by 10–20%.</p>';
+    c.innerHTML = html;
+    document.getElementById("fd-back").onclick = function () { go("body", true); };
+    document.getElementById("fd-target").onclick = function () { go("nutrition"); };
+    document.getElementById("fd-prev").onclick = function () { foodDay = dayKey(day - 864e5 / 2); renderers.food(); };
+    document.getElementById("fd-next").onclick = function () { foodDay = dayKey(day + 864e5 * 1.5); renderers.food(); };
+    document.getElementById("fd-add").onclick = function () { openFoodSearch(day); };
+    c.querySelectorAll("[data-fe]").forEach(function (b) {
+      b.onclick = function () {
+        var e = foodDb().log.filter(function (x) { return x.id === b.dataset.fe; })[0];
+        if (!e) return;
+        if (e.src === "quick") openQuickAdd(day, e); else openFoodAmount(e, day, e);
+      };
+    });
+  };
+
+  // search state survives hopping to the amount sheet and back
+  var foodSearch = { q: "", usda: null, off: null, usdaErr: null, offErr: null, ctl: null, t: null };
+  function openFoodSearch(day) {
+    openSheet('<div class="ep-head"><h2>Add food</h2>' +
+      '<input class="fd-q" id="fs-q" type="search" enterkeyhint="search" autocomplete="off" placeholder="Search foods — e.g. chicken breast, oats" value="' + esc(foodSearch.q) + '"></div>' +
+      '<div id="fs-res"></div>');
+    var inp = document.getElementById("fs-q"), box = document.getElementById("fs-res");
+    var shown = [];
+    function paint() {
+      var S = foodSearch, h = "";
+      shown = [];
+      var row = function (f, sub, right) { shown.push(f); return foodRowHtml('data-fs="' + (shown.length - 1) + '"', f.name, sub, right); };
+      if (S.q.trim().length < 2) {
+        var rec = foodDb().recent;
+        h += '<button class="btn btn-ghost" id="fs-quick" style="width:100%;margin-top:4px">Quick add calories</button>';
+        if (rec.length) {
+          h += '<div class="fd-grp">Recent</div>' + rec.slice(0, 20).map(function (r) {
+            var g = r.unit >= 0 && r.portions[r.unit] ? r.portions[r.unit].g * r.qty : r.qty;
+            return row(r, [foodAmountText({ src: r.src, unit: r.unit, qty: r.qty, g: r.qty, portions: r.portions }), r.brand].filter(Boolean).join(" · "), kcal(scaleFood(r.per, g).kcal));
+          }).join("");
+        } else h += '<p class="fd-msg">Search by name — basic foods come from USDA, packaged products from Open Food Facts.</p>';
+        box.innerHTML = h; wire(); return;
+      }
+      var grp = function (title, list, err, errMsg) {
+        var g = '<div class="fd-grp">' + title + '</div>';
+        if (err) return g + '<p class="fd-msg">' + errMsg + '</p>';
+        if (!list) return g + '<p class="fd-msg">Searching…</p>';
+        if (!list.length) return g + '<p class="fd-msg">No matches.</p>';
+        return g + list.map(function (f) {
+          return row(f, [f.brand, kcal(f.per.kcal) + " kcal · P " + fmt(Math.round(f.per.p)) + " g per 100 g"].filter(Boolean).join(" · "), "›");
+        }).join("");
+      };
+      var limitMsg = db.settings.usdaKey ? "USDA search is busy — try again in a minute."
+        : 'The shared USDA key has hit its hourly limit. <button class="fd-link" id="fs-key">Add your free key</button>';
+      h += grp("Basic foods", S.usda, S.usdaErr, S.usdaErr === "limit" ? limitMsg : navigator.onLine === false ? "You're offline." : "USDA search isn't responding right now.");
+      h += grp("Products", S.off, S.offErr, navigator.onLine === false ? "You're offline." : "Open Food Facts isn't responding right now.");
+      box.innerHTML = h; wire();
+    }
+    function wire() {
+      box.querySelectorAll("[data-fs]").forEach(function (b) {
+        b.onclick = function () { var f = shown[+b.dataset.fs]; openFoodAmount(f, day, null); };
+      });
+      var qa = document.getElementById("fs-quick");
+      if (qa) qa.onclick = function () { openQuickAdd(day, null); };
+      var k = document.getElementById("fs-key");
+      if (k) k.onclick = function () { openUsdaKey(function () { foodSearch.usda = foodSearch.usdaErr = null; openFoodSearch(day); }); };
+    }
+    function run() {
+      var S = foodSearch, q = S.q.trim();
+      if (S.ctl) S.ctl.abort();
+      S.usda = S.off = S.usdaErr = S.offErr = null;
+      if (q.length < 2) { paint(); return; }
+      var ctl = S.ctl = new AbortController();
+      paint();
+      var done = function (key) {
+        return [function (list) { if (S.ctl !== ctl) return; S[key] = list; paint(); },
+          function (err) { if (S.ctl !== ctl || (err && err.name === "AbortError")) return; S[key + "Err"] = err && err.message === "limit" ? "limit" : "fail"; paint(); }];
+      };
+      var u = done("usda"), o = done("off");
+      cachedSearch("usda", searchUsda, q, ctl.signal).then(u[0], u[1]);
+      cachedSearch("off", searchOffRetry, q, ctl.signal).then(o[0], o[1]);
+    }
+    inp.oninput = function () {
+      foodSearch.q = inp.value;
+      clearTimeout(foodSearch.t);
+      foodSearch.t = setTimeout(run, 700);
+    };
+    inp.onkeydown = function (e) { if (e.key === "Enter") { clearTimeout(foodSearch.t); run(); inp.blur(); } };
+    if (foodSearch.q.trim() && !foodSearch.usda && !foodSearch.off && !foodSearch.usdaErr && !foodSearch.offErr) run(); else paint();
+    if (!foodSearch.q) setTimeout(function () { inp.focus(); }, 60);
+  }
+
+  // pick an amount for a food; `existing` is a logged entry being edited
+  function openFoodAmount(f, day, existing) {
+    var portions = f.portions || [];
+    var unit = f.unit != null && f.unit < portions.length ? f.unit : (portions.length ? 0 : -1);
+    var qty = f.qty > 0 ? f.qty : (unit >= 0 ? 1 : 100);
+    var html = '<h2>' + esc(f.name) + '</h2><p class="sh-lead">' + esc([f.brand, kcal(f.per.kcal) + " kcal per 100 g"].filter(Boolean).join(" · ")) + '</p>' +
+      '<div class="fd-amt"><input class="num-in" id="fa-q" inputmode="decimal" value="' + fmt(qty) + '" aria-label="Amount">' +
+      '<select class="rest-sel" id="fa-u" aria-label="Unit"><option value="-1"' + (unit < 0 ? ' selected' : '') + '>grams</option>' +
+        portions.map(function (p, i) { return '<option value="' + i + '"' + (unit === i ? ' selected' : '') + '>' + esc(p.label) + ' · ' + fmt(Math.round(p.g)) + ' g</option>'; }).join("") +
+      '</select></div><div class="fd-prev" id="fa-prev"></div>' +
+      '<div class="btn-row">' + (existing ? '<button class="btn btn-danger" id="fa-del">Delete</button>' : '<button class="btn btn-ghost" id="fa-back">Back</button>') +
+      '<button class="btn btn-primary" id="fa-save">' + (existing ? 'Save' : 'Add') + '</button></div>';
+    openSheet(html);
+    var qi = document.getElementById("fa-q"), us = document.getElementById("fa-u");
+    var shownUnit = unit;   // the unit the amount box currently means; the select changes before onchange runs
+    function grams(u) {
+      var q = parseFloat(String(qi.value).replace(",", "."));
+      if (!(q > 0)) return 0;
+      if (u == null) u = +us.value;
+      return u >= 0 ? portions[u].g * q : q;
+    }
+    function update() {
+      var m = scaleFood(f.per, grams());
+      document.getElementById("fa-prev").innerHTML = '<div><b>' + kcal(m.kcal) + '</b><span>kcal</span></div><div><b>' + fmt(Math.round(m.p)) + '</b><span>protein</span></div>' +
+        '<div><b>' + fmt(Math.round(m.c)) + '</b><span>carbs</span></div><div><b>' + fmt(Math.round(m.f)) + '</b><span>fat</span></div>';
+    }
+    qi.oninput = update;
+    us.onchange = function () {
+      // keep roughly the same amount when switching between grams and a portion
+      var g = grams(shownUnit), u = +us.value;
+      if (g > 0) qi.value = fmt(u >= 0 ? Math.round(g / portions[u].g * 4) / 4 || 1 : Math.round(g));
+      shownUnit = u;
+      update();
+    };
+    update();
+    var back = document.getElementById("fa-back");
+    if (back) back.onclick = function () { openFoodSearch(day); };
+    var del = document.getElementById("fa-del");
+    if (del) del.onclick = function () {
+      foodDb().log = foodDb().log.filter(function (x) { return x.id !== existing.id; });
+      save(); closeSheet(); renderers.food(); toast("Removed");
+    };
+    document.getElementById("fa-save").onclick = function () {
+      var g = grams();
+      if (!(g > 0)) { toast("Enter an amount"); return; }
+      var u = +us.value, q = parseFloat(String(qi.value).replace(",", "."));
+      var rec = Object.assign({ src: f.src, ref: f.ref, name: f.name, brand: f.brand || "", per: f.per, portions: portions, unit: u, qty: q, g: Math.round(g * 10) / 10 }, scaleFood(f.per, g));
+      if (existing) Object.assign(existing, rec);
+      else foodDb().log.push(Object.assign({ id: uid(), day: day, at: Date.now() }, rec));
+      rememberFood(rec);
+      if (!existing) foodSearch.q = "";   // next search starts on Recent
+      save(); closeSheet();
+      if (cur === "food") renderers.food(); else go("food");
+      toast(existing ? "Saved" : "Added " + kcal(rec.kcal) + " kcal");
+    };
+  }
+
+  // for restaurant meals and anything not in the databases
+  function openQuickAdd(day, existing) {
+    var e = existing || {};
+    var field = function (id, label, v) {
+      return '<div class="fi"><span>' + label + '</span><input class="num-in" id="' + id + '" inputmode="decimal" value="' + (v ? fmt(v) : "") + '" placeholder="—"></div>';
+    };
+    openSheet('<h2>' + (existing ? 'Edit quick add' : 'Quick add') + '</h2><p class="sh-lead">For meals out or anything you can\'t find. Only calories are needed.</p>' +
+      '<input class="fd-q" id="qa-n" placeholder="Name (optional)" value="' + esc(existing && e.name !== "Quick add" ? e.name : "") + '">' +
+      '<div class="field-inline">' + field("qa-k", "Calories", e.kcal) + field("qa-p", "Protein g", e.p) + '</div>' +
+      '<div class="field-inline">' + field("qa-c", "Carbs g", e.c) + field("qa-f", "Fat g", e.f) + '</div>' +
+      '<div class="btn-row">' + (existing ? '<button class="btn btn-danger" id="qa-del">Delete</button>' : '<button class="btn btn-ghost" id="qa-back">Back</button>') +
+      '<button class="btn btn-primary" id="qa-save">' + (existing ? 'Save' : 'Add') + '</button></div>');
+    var num = function (id) { var v = parseFloat(String(document.getElementById(id).value).replace(",", ".")); return v > 0 ? v : 0; };
+    var back = document.getElementById("qa-back");
+    if (back) back.onclick = function () { openFoodSearch(day); };
+    var del = document.getElementById("qa-del");
+    if (del) del.onclick = function () {
+      foodDb().log = foodDb().log.filter(function (x) { return x.id !== existing.id; });
+      save(); closeSheet(); renderers.food(); toast("Removed");
+    };
+    document.getElementById("qa-save").onclick = function () {
+      var k = num("qa-k");
+      if (!k) { toast("Enter the calories"); return; }
+      var rec = { src: "quick", name: document.getElementById("qa-n").value.trim() || "Quick add", brand: "", kcal: Math.round(k), p: num("qa-p"), c: num("qa-c"), f: num("qa-f") };
+      if (existing) Object.assign(existing, rec);
+      else foodDb().log.push(Object.assign({ id: uid(), day: day, at: Date.now() }, rec));
+      save(); closeSheet();
+      if (cur === "food") renderers.food(); else go("food");
+      toast(existing ? "Saved" : "Added " + kcal(rec.kcal) + " kcal");
+    };
+  }
+
+  function openUsdaKey(after) {
+    after = typeof after === "function" ? after : closeSheet;
+    openSheet('<h2>USDA food key</h2><p class="sh-lead">Basic foods (rice, chicken, eggs…) come from the USDA. The shared key only allows a handful of searches an hour — a free personal key allows 1,000.</p>' +
+      '<p class="nu-note" style="margin:0 0 10px">Get one in a minute at <b>fdc.nal.usda.gov/api-key-signup</b> — it\'s emailed to you. Kept on this device.</p>' +
+      '<input class="fd-q mono" id="uk-k" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste your key" value="' + esc(db.settings.usdaKey || "") + '">' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="uk-x">Cancel</button><button class="btn btn-primary" id="uk-ok">Save</button></div>');
+    document.getElementById("uk-x").onclick = after;
+    document.getElementById("uk-ok").onclick = function () {
+      db.settings.usdaKey = document.getElementById("uk-k").value.trim() || null; save();
+      after(); toast(db.settings.usdaKey ? "Key saved" : "Using the shared key");
+    };
+  }
 
   // lean / fat mass for an entry with both bodyweight and body fat
   function leanMass(e) {
@@ -5462,7 +5836,7 @@
         '<button class="btn btn-primary" id="bd-log">Log an entry</button></div>';
       c.innerHTML = html;
       document.getElementById("bd-log").onclick = function () { openBodyEntry(null); };
-      document.getElementById("bd-nutri").onclick = function () { go("nutrition"); };
+      document.getElementById("bd-nutri").onclick = function () { go("food"); };
       return;
     }
 
@@ -5530,7 +5904,7 @@
 
     c.innerHTML = html;
     document.getElementById("bd-log").onclick = function () { openBodyEntry(null); };
-    document.getElementById("bd-nutri").onclick = function () { go("nutrition"); };
+    document.getElementById("bd-nutri").onclick = function () { go("food"); };
     c.querySelectorAll("[data-entry]").forEach(function (b) {
       b.onclick = function () {
         var e = db.body.filter(function (x) { return x.id === b.dataset.entry; })[0];
@@ -5791,6 +6165,9 @@
           '<input class="num-in mono" id="st-by" inputmode="numeric" maxlength="4" value="' + (db.settings.birthYear || "") + '" placeholder="YYYY" style="width:96px;padding:7px 10px;text-align:center"></div>' +
       '</div>' +
       '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat and calorie calculators. Kept on this device — not shared to the feed.</p>' +
+      '<div class="eyebrow" style="margin:18px 0 8px">Food search</div>' +
+      '<div class="day-block"><div class="toggle-line" style="border-bottom:0;padding:0"><div class="tl-k">USDA key<p>' + (db.settings.usdaKey ? 'Your own key' : 'Shared key · a few searches an hour') + '</p></div>' +
+        '<button class="rx-reset" id="st-usda">' + (db.settings.usdaKey ? 'Change' : 'Add') + '</button></div></div>' +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
       (db.account
         ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' + avatarHtml(db.account.avatarUrl, db.account.displayName, 40) +
@@ -5845,6 +6222,7 @@
     if (soBtn) soBtn.onclick = rcSignOut;
     var epBtn = document.getElementById("st-editprofile");
     if (epBtn) epBtn.onclick = openEditProfile;
+    document.getElementById("st-usda").onclick = function () { openUsdaKey(openSettings); };
     document.getElementById("st-export").onclick = exportData;
     document.getElementById("st-import").onclick = openImport;
     var w = document.getElementById("st-wipe");
