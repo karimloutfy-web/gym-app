@@ -509,6 +509,23 @@
   .bw-hero .big { font-family: "Barlow Condensed"; font-weight: 700; font-size: var(--fs-hero); line-height: 1; margin-top: 2px; }
   .bw-hero .big small { font-size: .36em; color: var(--text-muted); }
   .bw-hero .trend { font-size: var(--fs-sm); color: var(--text-muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  /* nutrition */
+  .nu-card { display: block; width: 100%; text-align: left; position: relative; padding-right: 40px; }
+  .nu-card .nu-v { font-family: "Barlow Condensed"; font-weight: 700; font-size: var(--fs-xl); line-height: 1.1; margin-top: 4px; color: var(--text); }
+  .nu-card .nu-chev { position: absolute; right: 14px; top: 50%; width: 18px; height: 18px; margin-top: -9px; color: var(--text-faint); }
+  .nu-in { width: 104px; padding: 7px 10px; text-align: center; }
+  .nu-u { display: inline-block; width: 22px; font-size: var(--fs-xs); color: var(--text-faint); margin-left: 6px; }
+  .nu-act { width: 100%; text-align: left; margin-top: 2px; }
+  .nu-note { font-size: var(--fs-xs); color: var(--text-faint); line-height: 1.45; margin-top: 6px; }
+  .nu-range { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; background: transparent; margin: 4px 0 0; touch-action: pan-y; }
+  .nu-range:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+  .nu-range::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: var(--line-strong); }
+  .nu-range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -11px; border-radius: 50%; background: var(--accent); border: 3px solid var(--surface); box-shadow: var(--shadow); }
+  .nu-range::-moz-range-track { height: 6px; border-radius: 999px; background: var(--line-strong); }
+  .nu-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); border: 3px solid var(--surface); }
+  .nu-ticks { display: flex; justify-content: space-between; font-family: "IBM Plex Mono", monospace; font-size: var(--fs-xs); color: var(--text-faint); }
+  .nu-delta { font-size: var(--fs-sm); color: var(--text); font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .nu-warn { font-size: var(--fs-sm); color: var(--hold); line-height: 1.45; margin-top: 8px; }
   .meas-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0 4px; }
   .meas { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; }
   .meas .k { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); font-weight: 700; }
@@ -716,6 +733,7 @@
     <section class="screen" id="s-summary"></section>
     <section class="screen" id="s-progress"></section>
     <section class="screen" id="s-body"></section>
+    <section class="screen" id="s-nutrition"></section>
     <section class="screen" id="s-badges"></section>
     <section class="screen" id="s-feed"></section>
   </main>
@@ -1330,6 +1348,16 @@
   }
 
   /* ============================================================ SELF TEST */
+  // activity levels for the calorie planner (BMR × f = maintenance)
+  var ACTIVITY = [
+    { id: "desk", name: "Desk job", note: "Mostly sitting, little or no exercise", f: 1.2 },
+    { id: "light", name: "Light", note: "Training 1–3 days a week", f: 1.375 },
+    { id: "moderate", name: "Moderate", note: "Training 3–5 days a week", f: 1.55 },
+    { id: "very", name: "Very active", note: "Hard training 6–7 days a week", f: 1.725 },
+    { id: "athlete", name: "Athlete", note: "Training twice a day, or a physical job", f: 1.9 }
+  ];
+  var KCAL_PER_KG = 7700, LB_PER_KG = 2.20462;
+
   function runSelfTest() {
     var out = [], ok = true;
     function A(cond, msg) { ok = ok && cond; out.push((cond ? "PASS " : "FAIL ") + msg); }
@@ -1488,6 +1516,23 @@
     var fakeCtx = { stats: {}, sessions: [], body: [], customPlans: [], customWorkouts: [] };
     A(BADGES.every(function (b) { try { b.check(fakeCtx); return true; } catch (e) { return false; } }), "no badge check throws on an empty context");
 
+    // --- nutrition ---
+    var nm = nutritionPlan({ sex: "m", age: 30, heightCm: 180, weightKg: 80, activity: "moderate", delta: -500 });
+    A(nm && nm.bmr === 1780, "Mifflin male 30y 180cm 80kg → BMR 1780 → got " + (nm && nm.bmr));
+    var nf = nutritionPlan({ sex: "f", age: 30, heightCm: 165, weightKg: 60, activity: "desk", delta: 0 });
+    A(nf && nf.bmr === 1320, "Mifflin female 30y 165cm 60kg → BMR 1320 → got " + (nf && nf.bmr));
+    A(nm.maintenance === Math.round(1780 * 1.55 / 10) * 10 && nm.target === nm.maintenance - 500, "moderate ×1.55, target = maintenance − 500");
+    var nl = nutritionPlan({ sex: "m", age: 30, heightCm: 180, weightKg: 80, activity: "moderate", delta: -550 });
+    var ng = nutritionPlan({ sex: "m", age: 30, heightCm: 180, weightKg: 80, activity: "moderate", delta: 550 });
+    A(Math.abs(nl.weeklyKg + 0.5) < 1e-9 && Math.abs(ng.weeklyKg - 0.5) < 1e-9, "±550 kcal/day ≈ ±0.5 kg/week");
+    var nGoal = nutritionPlan({ sex: "m", age: 30, heightCm: 180, weightKg: 80, activity: "moderate", delta: -550, goalKg: 75 });
+    A(nGoal.weeks === 10, "80→75 kg at −0.5 kg/week → 10 weeks → got " + nGoal.weeks);
+    var nWrong = nutritionPlan({ sex: "m", age: 30, heightCm: 180, weightKg: 80, activity: "moderate", delta: 300, goalKg: 75 });
+    A(nWrong.weeks === null && nWrong.goalWrongWay, "goal below weight with a surplus → no weeks, wrong-way flag");
+    var nLow = nutritionPlan({ sex: "f", age: 30, heightCm: 165, weightKg: 60, activity: "desk", delta: -1000 });
+    A(nLow.belowBmr && nLow.belowFloor && nLow.tooFast, "big deficit on a small frame flags below BMR, floor and pace");
+    A(nutritionPlan({ sex: "m", age: 30, heightCm: 0, weightKg: 80 }) === null, "missing height → no plan");
+
     var el = document.createElement("div");
     el.className = "selftest";
     el.innerHTML = "RACK COACH — SELF TEST\n" + (ok ? "<span class='pass'>ALL PASSED</span>" : "<span class='fail'>FAILURES ABOVE</span>") + "\n\n" +
@@ -1525,6 +1570,9 @@
   // profile basics for the body-fat calculator; kept on this device, never sent to the feed
   if (db.settings.sex == null && db.settings.bfSex) db.settings.sex = db.settings.bfSex;
   if (db.settings.birthYear == null && db.settings.bfBirthYear) db.settings.birthYear = db.settings.bfBirthYear;
+  // calorie planner inputs; weights in kg so a unit switch doesn't skew them
+  db.settings.nutrition = Object.assign({ activity: "moderate", delta: -500, goalKg: null, weightKg: null, weightAt: 0 },
+    (db.settings.nutrition && typeof db.settings.nutrition === "object") ? db.settings.nutrition : {});
   db.equipment = Object.assign({ bar: 20, smallestPlate: 1.25, step: 2.5, hasDumbbells: false }, db.equipment || {});
   db.customPlans = Array.isArray(db.customPlans) ? db.customPlans : [];
   db.customWorkouts = Array.isArray(db.customWorkouts) ? db.customWorkouts : [];
@@ -1638,13 +1686,14 @@
     summary: document.getElementById("s-summary"),
     progress: document.getElementById("s-progress"),
     body: document.getElementById("s-body"),
+    nutrition: document.getElementById("s-nutrition"),
     badges: document.getElementById("s-badges"),
     feed: document.getElementById("s-feed")
   };
   var TAB_SCREENS = { home: 1, progress: 1, body: 1, badges: 1, feed: 1 };
   var TAB_ORDER = ["home", "progress", "body", "badges", "feed"];
   // rough "depth" so a plain go() can infer push vs pop direction
-  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, feed: 0, choose: 1, summary: 1, pick: 1, roll: 1, schedule: 1, detail: 2, setup: 3, editor: 3 };
+  var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, feed: 0, choose: 1, nutrition: 1, summary: 1, pick: 1, roll: 1, schedule: 1, detail: 2, setup: 3, editor: 3 };
   var cur = null, sliding = false;
   var SCR_RESET = ["anim", "from-right", "from-left", "to-left", "to-right", "behind", "lead", "trail"];
   function snapScreens() {
@@ -5216,6 +5265,157 @@
         return 495 / bd - 450;
       } }
   };
+  /* ---------- nutrition */
+  // Mifflin–St Jeor BMR × activity, plus the effect of eating `delta` kcal/day above or below maintenance
+  function nutritionPlan(p) {
+    if (!(p.weightKg > 0) || !(p.heightCm > 0) || !(p.age > 0) || (p.sex !== "m" && p.sex !== "f")) return null;
+    var bmr = Math.round(10 * p.weightKg + 6.25 * p.heightCm - 5 * p.age + (p.sex === "f" ? -161 : 5));
+    var act = ACTIVITY.filter(function (a) { return a.id === p.activity; })[0] || ACTIVITY[2];
+    var maintenance = Math.round(bmr * act.f / 10) * 10;
+    var delta = p.delta || 0, target = Math.round((maintenance + delta) / 10) * 10;
+    var weeklyKg = delta * 7 / KCAL_PER_KG;
+    var out = {
+      bmr: bmr, maintenance: maintenance, target: target, delta: delta, weeklyKg: weeklyKg,
+      proteinLo: Math.round(p.weightKg * 1.6), proteinHi: Math.round(p.weightKg * 2.2),
+      weeks: null, goalWrongWay: false, goalDiffKg: null,
+      belowBmr: target < bmr, belowFloor: target < (p.sex === "f" ? 1200 : 1500), tooFast: -weeklyKg > p.weightKg * 0.01
+    };
+    if (p.goalKg > 0) {
+      var diff = p.goalKg - p.weightKg;
+      out.goalDiffKg = diff;
+      if (Math.abs(diff) < 0.05) out.weeks = 0;
+      else if (weeklyKg !== 0 && (diff < 0) === (weeklyKg < 0)) out.weeks = Math.ceil(Math.abs(diff) / Math.abs(weeklyKg) - 1e-9);
+      else out.goalWrongWay = true;
+    }
+    return out;
+  }
+  function toKg(w) { return U() === "lb" ? w / LB_PER_KG : w; }
+  function fromKg(kg) { return U() === "lb" ? kg * LB_PER_KG : kg; }
+  function kcal(n) { return Math.round(n).toLocaleString("en-US"); }
+  // the weight the planner uses: the newer of your last log or a weight typed into the planner
+  function nutritionWeight() {
+    var n = db.settings.nutrition;
+    var lw = db.body.filter(function (e) { return e.bw != null; }).sort(function (a, b) { return a.date - b.date; }).pop() || null;
+    if (lw && !(n.weightKg > 0 && n.weightAt > lw.date)) return { kg: toKg(lw.bw), fromLog: lw };
+    return n.weightKg > 0 ? { kg: n.weightKg, fromLog: null } : null;
+  }
+  function currentNutrition() {
+    var s = db.settings, n = s.nutrition, w = nutritionWeight();
+    return nutritionPlan({ sex: s.sex, age: ageAt(s.birthYear, Date.now()), heightCm: s.heightCm, weightKg: w && w.kg,
+      activity: n.activity, delta: n.delta, goalKg: n.goalKg });
+  }
+  function nutritionCardHtml() {
+    var pl = currentNutrition();
+    return '<button class="bw-hero nu-card" id="bd-nutri"><div class="k">Nutrition</div>' +
+      (pl ? '<div class="nu-v">Eat ~' + kcal(pl.target) + ' kcal/day</div><div class="trend">Maintenance ' + kcal(pl.maintenance) + ' · BMR ' + kcal(pl.bmr) + '</div>'
+          : '<div class="nu-v">Work out your calories</div><div class="trend">BMR, maintenance and a deficit planner</div>') +
+      '<svg class="nu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
+  }
+  function weeklyText(kg) {
+    var v = Math.round(Math.abs(fromKg(kg)) * 100) / 100;
+    return (kg < 0 ? "lose" : "gain") + " ~" + fmt(v) + " " + U() + "/week";
+  }
+  function deltaText(d, pl) {
+    if (!d) return "Maintenance · weight stays about the same";
+    return (d > 0 ? "+" : "−") + kcal(Math.abs(d)) + " kcal/day" + (pl ? " · " + weeklyText(pl.weeklyKg) : "");
+  }
+  renderers.nutrition = function () {
+    var c = screens.nutrition, s = db.settings, n = s.nutrition, w = nutritionWeight();
+    var hDisp = s.heightCm > 0 ? (L() === "in" ? Math.round(s.heightCm / 2.54 * 2) / 2 : Math.round(s.heightCm)) : "";
+    var act = ACTIVITY.filter(function (a) { return a.id === n.activity; })[0] || ACTIVITY[2];
+    var html = '<button class="backlink" id="nu-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Body</button>' +
+      '<h2 class="title">Nutrition</h2><p class="lead">Your daily calories, worked out from your size and how much you move.</p>' +
+      '<div class="eyebrow">You</div><div class="day-block">' +
+        '<div class="toggle-line"><div class="tl-k">Sex</div><div class="mini-seg" id="nu-sex">' +
+          '<button data-v="m" aria-selected="' + (s.sex === "m") + '">Male</button><button data-v="f" aria-selected="' + (s.sex === "f") + '">Female</button></div></div>' +
+        '<div class="toggle-line"><div class="tl-k">Birth year</div><div><input class="num-in mono nu-in" id="nu-by" inputmode="numeric" maxlength="4" value="' + (s.birthYear || "") + '" placeholder="YYYY"><span class="nu-u"></span></div></div>' +
+        '<div class="toggle-line"><div class="tl-k">Height</div><div><input class="num-in mono nu-in" id="nu-h" inputmode="decimal" value="' + hDisp + '" placeholder="—"><span class="nu-u">' + L() + '</span></div></div>' +
+        '<div class="toggle-line"><div class="tl-k">Weight' + (w && w.fromLog ? '<div class="nu-note" style="margin-top:2px">from your log, ' + esc(shortDate(w.fromLog.date)) + '</div>' : '') + '</div>' +
+          '<div><input class="num-in mono nu-in" id="nu-w" inputmode="decimal" value="' + (w ? fmt(Math.round(fromKg(w.kg) * 10) / 10) : "") + '" placeholder="—"><span class="nu-u">' + U() + '</span></div></div>' +
+        '<div style="padding-top:11px"><div class="tl-k" style="font-size:var(--fs-sm);margin-bottom:6px">Activity</div>' +
+          '<select class="rest-sel nu-act" id="nu-act" aria-label="Activity level">' +
+            ACTIVITY.map(function (a) { return '<option value="' + a.id + '"' + (a.id === act.id ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join("") +
+          '</select><div class="nu-note" id="nu-act-note">' + esc(act.note) + '</div></div>' +
+      '</div>' +
+      '<div id="nu-base"></div>' +
+      '<div class="eyebrow" style="margin-top:6px">Daily deficit or surplus</div><div class="day-block">' +
+        '<input type="range" class="nu-range" id="nu-delta" min="-1000" max="500" step="50" value="' + n.delta + '" aria-label="Calories above or below maintenance per day">' +
+        '<div class="nu-ticks" aria-hidden="true"><span>−1000</span><span>−500</span><span>0</span><span>+500</span></div>' +
+        '<div class="nu-delta" id="nu-delta-t"></div>' +
+      '</div>' +
+      '<div id="nu-res"></div>' +
+      '<div class="eyebrow" style="margin-top:6px">Goal (optional)</div><div class="day-block">' +
+        '<div class="toggle-line" style="border-bottom:0;padding:0"><div class="tl-k">Goal weight</div><div><input class="num-in mono nu-in" id="nu-goal" inputmode="decimal" value="' +
+          (n.goalKg > 0 ? fmt(Math.round(fromKg(n.goalKg) * 10) / 10) : "") + '" placeholder="—"><span class="nu-u">' + U() + '</span></div></div>' +
+        '<div class="nu-note" id="nu-goal-t"></div>' +
+      '</div>' +
+      '<p class="nu-note" style="margin:6px 0 24px">Estimates, using the Mifflin–St Jeor equation. Real change varies — weigh in a few times a week and adjust after 2–3 weeks.</p>';
+    c.innerHTML = html;
+
+    // repaint the numbers only, so typing and dragging never lose focus
+    function update() {
+      var pl = currentNutrition();
+      document.getElementById("nu-base").innerHTML = pl
+        ? '<div class="meas-grid" style="margin:4px 0 14px"><div class="meas"><div class="k">BMR</div><div class="v">' + kcal(pl.bmr) + ' <small>kcal</small></div><div class="d">burned at complete rest</div></div>' +
+          '<div class="meas"><div class="k">Maintenance</div><div class="v">' + kcal(pl.maintenance) + ' <small>kcal</small></div><div class="d">to hold your weight</div></div></div>'
+        : '<p class="nu-note" style="margin:0 0 14px">Fill in sex, birth year, height and weight to see your numbers.</p>';
+      document.getElementById("nu-delta-t").textContent = deltaText(n.delta, pl);
+      var res = "";
+      if (pl) {
+        var warns = [];
+        if (pl.belowFloor) warns.push("That's under " + kcal(s.sex === "f" ? 1200 : 1500) + " kcal — hard to fuel training and hit protein. A smaller deficit is safer.");
+        else if (pl.belowBmr) warns.push("That's below your BMR. Fine for a short push, but a smaller deficit is easier to stick to.");
+        if (pl.tooFast) warns.push("Losing over 1% of bodyweight a week risks muscle and strength — ease off if lifts start stalling.");
+        res = '<div class="bw-hero"><div class="k">Eat per day</div><div class="big">~' + kcal(pl.target) + '<small> kcal</small></div>' +
+          '<div class="trend">Protein ' + pl.proteinLo + '–' + pl.proteinHi + ' g a day ' + (n.delta < 0 ? 'keeps your muscle while you cut' : n.delta > 0 ? 'to build muscle, not just weight' : 'to hold on to your muscle') + '</div>' +
+          warns.map(function (t) { return '<div class="nu-warn">' + esc(t) + '</div>'; }).join("") + '</div>';
+      }
+      document.getElementById("nu-res").innerHTML = res;
+      var gt = "";
+      if (pl && n.goalKg > 0) {
+        if (pl.weeks === 0) gt = "You're at your goal weight.";
+        else if (pl.weeks != null) {
+          var when = new Date(Date.now() + pl.weeks * 7 * 864e5);
+          gt = "≈ " + pl.weeks + " week" + (pl.weeks === 1 ? "" : "s") + " at this pace — around " + when.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) + ".";
+        } else gt = pl.goalDiffKg < 0 ? "Your goal is below your weight — slide into a deficit to get there." : "Your goal is above your weight — slide into a surplus to get there.";
+      } else if (!pl && n.goalKg > 0) gt = "Fill in your details above to see how long it takes.";
+      document.getElementById("nu-goal-t").textContent = gt;
+    }
+    var num = function (v) { v = parseFloat(String(v).replace(",", ".")); return v > 0 ? v : null; };
+    document.getElementById("nu-back").onclick = function () { go("body", true); };
+    document.getElementById("nu-sex").querySelectorAll("button").forEach(function (b) {
+      b.onclick = function () {
+        s.sex = b.dataset.v; save();
+        document.getElementById("nu-sex").querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+        update();
+      };
+    });
+    document.getElementById("nu-by").oninput = function () {
+      var by = validBirthYear(this.value);
+      if (by || !this.value.trim()) { s.birthYear = by; save(); update(); }
+    };
+    document.getElementById("nu-h").oninput = function () {
+      var v = num(this.value);
+      s.heightCm = v ? (L() === "in" ? Math.round(v * 2.54 * 10) / 10 : v) : null; save(); update();
+    };
+    document.getElementById("nu-w").oninput = function () {
+      var v = num(this.value);
+      n.weightKg = v ? toKg(v) : null; n.weightAt = Date.now(); save(); update();
+    };
+    document.getElementById("nu-act").onchange = function () {
+      n.activity = this.value; save();
+      document.getElementById("nu-act-note").textContent = (ACTIVITY.filter(function (a) { return a.id === n.activity; })[0] || ACTIVITY[2]).note;
+      update();
+    };
+    var sl = document.getElementById("nu-delta");
+    sl.oninput = function () { n.delta = +sl.value; update(); };
+    sl.onchange = function () { n.delta = +sl.value; save(); };
+    document.getElementById("nu-goal").oninput = function () {
+      var v = num(this.value); n.goalKg = v ? toKg(v) : null; save(); update();
+    };
+    update();
+  };
+
   // lean / fat mass for an entry with both bodyweight and body fat
   function leanMass(e) {
     if (e.bw == null || e.bf == null) return null;
@@ -5253,7 +5453,8 @@
     var first = entries[0] || null;
 
     var html = '<div class="home-head"><h2>Body</h2>' +
-      '<span class="pos">' + entries.length + ' log' + (entries.length === 1 ? '' : 's') + '</span></div>';
+      '<span class="pos">' + entries.length + ' log' + (entries.length === 1 ? '' : 's') + '</span></div>' +
+      nutritionCardHtml();
 
     if (!entries.length) {
       html += '<div class="empty"><div class="em-ic">⚖️</div><h3>No entries yet</h3>' +
@@ -5261,6 +5462,7 @@
         '<button class="btn btn-primary" id="bd-log">Log an entry</button></div>';
       c.innerHTML = html;
       document.getElementById("bd-log").onclick = function () { openBodyEntry(null); };
+      document.getElementById("bd-nutri").onclick = function () { go("nutrition"); };
       return;
     }
 
@@ -5328,6 +5530,7 @@
 
     c.innerHTML = html;
     document.getElementById("bd-log").onclick = function () { openBodyEntry(null); };
+    document.getElementById("bd-nutri").onclick = function () { go("nutrition"); };
     c.querySelectorAll("[data-entry]").forEach(function (b) {
       b.onclick = function () {
         var e = db.body.filter(function (x) { return x.id === b.dataset.entry; })[0];
@@ -5587,7 +5790,7 @@
         '<div class="toggle-line"><div class="tl-k">Birth year</div>' +
           '<input class="num-in mono" id="st-by" inputmode="numeric" maxlength="4" value="' + (db.settings.birthYear || "") + '" placeholder="YYYY" style="width:96px;padding:7px 10px;text-align:center"></div>' +
       '</div>' +
-      '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat calculator. Kept on this device — not shared to the feed.</p>' +
+      '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat and calorie calculators. Kept on this device — not shared to the feed.</p>' +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
       (db.account
         ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' + avatarHtml(db.account.avatarUrl, db.account.displayName, 40) +
