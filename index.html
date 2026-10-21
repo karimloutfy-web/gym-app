@@ -90,7 +90,8 @@
     --fig: #d9d3c1;          /* skinfold figure */
     --fig-line: #bdb49c;
     /* type scale — every font-size uses one of these */
-    --fs-xs: 11px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 18px; --fs-xl: 24px; --fs-2xl: 30px; --fs-hero: 46px;
+    --fs-xs: 11px; --fs-label: 12px; --fs-note: 12.5px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 18px; --fs-xl: 24px; --fs-2xl: 30px; --fs-hero: 46px;
+    --seg-on: var(--surface);   /* the selected option in a segmented control */
     --radius: 13px;
     --radius-sm: 9px;
     --shadow: 0 1px 2px rgba(18,18,14,.06), 0 10px 30px rgba(24,26,22,.09);
@@ -118,6 +119,7 @@
       --miss: #dd6047;
       --fig: #26374a;
       --fig-line: #3b5068;
+      --seg-on: #34495f;     /* lifted well clear of the #1c2938 track */
       --shadow: 0 1px 2px rgba(0,0,0,.5), 0 14px 36px rgba(0,0,0,.42);
       --shadow-sheet: 0 -10px 44px rgba(0,0,0,.55);
     }
@@ -127,7 +129,7 @@
     --line-strong: #3b4c5d; --text: #e7e8e4; --text-muted: #9aa4a5; --text-faint: #8a959c;
     --accent: #35c8b6; --accent-ink: #59dccb; --accent-soft: #35c8b622; --accent-text: #04201c;
     --brand: #35c8b6; --brand-soft: #35c8b622; --wave: #35c8b6; --gain: #35c8b6;
-    --hold: #d6a94e; --miss: #dd6047; --fig: #26374a; --fig-line: #3b5068;
+    --hold: #d6a94e; --miss: #dd6047; --fig: #26374a; --fig-line: #3b5068; --seg-on: #34495f;
     --shadow: 0 1px 2px rgba(0,0,0,.5), 0 14px 36px rgba(0,0,0,.42);
     --shadow-sheet: 0 -10px 44px rgba(0,0,0,.55);
   }
@@ -237,14 +239,20 @@
   .ex-line .scheme .wt { display: inline-block; min-width: 7ch; text-align: right; }   /* keeps the sets column lined up */
 
   .rule-box { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--line)); border-radius: var(--radius-sm); padding: 12px 13px; font-size: var(--fs-sm); color: var(--text); margin: 4px 0 16px; }
+  .rule-list { list-style: none; }
+  .rule-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 5px 0; border-top: 1px solid color-mix(in srgb, var(--accent) 18%, transparent); }
+  .rule-list li:first-child { border-top: none; }
+  .rule-list li span small { display: block; font-size: var(--fs-note); color: var(--text-muted); }
+  .rule-list li > b { font-family: "IBM Plex Mono", monospace; font-size: var(--fs-note); font-weight: 600; color: var(--text); text-transform: none; letter-spacing: 0; display: inline; margin: 0; }
+  .rule-foot { font-size: var(--fs-note); color: var(--text-muted); margin-top: 6px; }
   .rule-box b { font-family: "Barlow Condensed"; letter-spacing: .04em; text-transform: uppercase; font-size: var(--fs-sm); color: var(--accent-ink); display: block; margin-bottom: 4px; }
 
   /* setup */
   .field { margin-bottom: 16px; }
   .field > label { display: block; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--text-faint); margin-bottom: 7px; }
   .seg-ctl { display: flex; gap: 3px; padding: 3px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; }
-  .seg-ctl button { flex: 1; padding: 8px 6px; border-radius: 6px; font-family: "Barlow Condensed"; font-weight: 600; font-size: var(--fs-sm); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
-  .seg-ctl button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .seg-ctl button { flex: 1; min-height: 40px; padding: 8px 6px; border-radius: 6px; font-family: "Barlow Condensed"; font-weight: 600; font-size: var(--fs-sm); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
+  .seg-ctl button[aria-selected="true"] { background: var(--seg-on); color: var(--text); box-shadow: var(--shadow); }
   .num-in { width: 100%; height: 44px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface-2); font-family: "IBM Plex Mono", monospace; font-size: var(--fs-md); }
 
   .lift-row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 13px; margin-bottom: 9px; }
@@ -252,7 +260,7 @@
   .lift-row h4 { font-size: var(--fs-md); }
   .mini-seg { display: flex; gap: 2px; padding: 2px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; }
   .mini-seg button { padding: 5px 9px; border-radius: 5px; font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted); font-family: "Barlow Condensed"; letter-spacing: .04em; text-transform: uppercase; }
-  .mini-seg button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .mini-seg button[aria-selected="true"] { background: var(--seg-on); color: var(--text); box-shadow: var(--shadow); }
   .lr-inputs { display: flex; gap: 8px; margin-top: 10px; align-items: flex-end; }
   .lr-inputs .fw { flex: 1; }
   .lr-inputs .fw span { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); font-weight: 700; display: block; margin-bottom: 4px; }
@@ -262,8 +270,9 @@
   .toggle-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
   .toggle-line:last-child { border-bottom: none; }
   .toggle-line .tl-k { font-size: var(--fs-sm); }
-  .toggle-line .tl-k p { font-size: var(--fs-xs); color: var(--text-faint); margin-top: 1px; }
+  .toggle-line .tl-k p { font-size: var(--fs-note); color: var(--text-faint); margin-top: 1px; }
   .sw { width: 46px; height: 27px; border-radius: 999px; background: var(--line-strong); position: relative; flex-shrink: 0; transition: background .16s; }
+  .sw::before { content: ""; position: absolute; inset: -9px -4px; }   /* 44px tall hit area around the small track */
   .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 21px; height: 21px; border-radius: 999px; background: #fff; transition: transform .16s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
   .sw[aria-checked="true"] { background: var(--accent); }
   .sw[aria-checked="true"]::after { transform: translateX(19px); }
@@ -589,6 +598,7 @@
   .menu-item.danger { color: var(--miss); border-color: color-mix(in srgb, var(--miss) 35%, var(--line)); }
   .pick-item { width: 100%; text-align: left; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-size: var(--fs-sm); margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
   .pick-item:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .menu-item .k2 { font-size: var(--fs-note); color: var(--text-faint); text-align: right; flex: none; }
   .pick-item .k2 { font-size: var(--fs-xs); color: var(--text-faint); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
   .field-inline { display: flex; gap: 8px; align-items: flex-end; margin: 10px 0; flex-wrap: wrap; }
   .field-inline .fi { flex: 1; min-width: 90px; }
@@ -648,7 +658,8 @@
   .pe-day { padding: 0 13px; }
   .pe-dhead { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; text-align: left; }
   .pe-dhead b { font-family: "Barlow Condensed", sans-serif; font-size: var(--fs-lg); letter-spacing: .02em; }
-  .pe-dhead span { flex: 1; font-size: var(--fs-sm); color: var(--text-muted); }
+  .pe-dhead span { flex: 1; min-width: 0; font-size: var(--fs-sm); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pe-addday { display: block; width: 100%; min-height: 48px; margin: 4px 0 12px; border: 1.5px dashed var(--line-strong); border-radius: var(--radius); color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
   .pe-dhead svg { width: 18px; height: 18px; color: var(--text-faint); transition: transform .2s; }
   .pe-day.open .pe-dhead svg { transform: rotate(180deg); }
   .pe-row { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; padding: 6px 0; border-top: 1px solid var(--line); text-align: left; }
@@ -659,7 +670,8 @@
   .pe-name { flex: 1; min-height: 44px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; text-align: left; font-size: var(--fs-md); font-weight: 600; color: var(--text); }
   .pe-fixed { min-height: 32px; }
   .pe-sw { margin-left: auto; font-size: var(--fs-sm); color: var(--accent-ink); font-weight: 600; }
-  .pe-tag { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-ink); background: var(--accent-soft); padding: 2px 6px; border-radius: 5px; }
+  .pe-tag { font-size: var(--fs-label); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-ink); background: var(--accent-soft); padding: 2px 6px; border-radius: 5px; }
+  .pe-tag.main { color: var(--accent-text); background: var(--accent); }
   .pe-lock { width: 16px; height: 16px; flex: none; color: var(--text-faint); vertical-align: -3px; }
   .pe-del { width: 44px; height: 44px; display: grid; place-items: center; color: var(--text-faint); flex: none; }
   .pe-del svg { width: 18px; height: 18px; }
@@ -677,19 +689,35 @@
   .pe-add { min-height: 44px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
   .pe-note { font-size: var(--fs-xs); color: var(--text-faint); line-height: 1.5; margin: 4px 0 8px; }
   .su-custom h3 { font-size: var(--fs-lg); }
-  .ac-note { font-size: var(--fs-xs); color: var(--text-faint); margin-top: 6px; line-height: 1.45; }
+  .ac-note { font-size: var(--fs-note); color: var(--text-faint); margin-top: 6px; line-height: 1.45; }
+  /* the primary action stays reachable at the foot of a long sheet */
+  .sh-foot { position: sticky; bottom: calc(-1 * max(18px, env(safe-area-inset-bottom))); margin: 14px -16px calc(-1 * max(18px, env(safe-area-inset-bottom))); padding: 10px 16px max(18px, env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); z-index: 1; }
+  .sh-foot .btn { width: 100%; }
+  .trend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .trend-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 112px; padding: 12px 12px 10px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .trend-tile:hover { border-color: var(--accent); }
+  .tt-k { font-size: var(--fs-label); text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--text-faint); }
+  .tt-v { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: var(--fs-xl); line-height: 1.1; color: var(--text); }
+  .tt-v small { font-family: "Archivo", sans-serif; font-weight: 500; font-size: var(--fs-note); color: var(--text-muted); }
+  .tt-d { font-family: "IBM Plex Mono", monospace; font-size: var(--fs-note); color: var(--text-muted); }
+  .tt-spark { width: 100%; height: 30px; margin-top: auto; }
+  .tt-wait { margin-top: auto; font-size: var(--fs-label); color: var(--text-faint); }
+  .ss-fine { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; margin-top: 14px; padding: 0 2px; border-top: 1px solid var(--line); text-align: left; font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+  .ss-fine .k2 { flex: 1; text-align: right; font-weight: 500; color: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: var(--fs-note); }
+  .ss-fine svg { width: 16px; height: 16px; color: var(--text-faint); transition: transform .2s; flex: none; }
+  .ss-fine[aria-expanded="true"] svg { transform: rotate(180deg); }
   .ed-slot { display: flex; align-items: center; gap: 8px; padding: 6px 0; flex-wrap: wrap; }
   .ed-ex { flex: 1; min-width: 110px; text-align: left; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text); font-size: var(--fs-sm); }
   .ed-nums { display: flex; gap: 10px; flex-wrap: wrap; }
   .ed-cap { flex: 1; min-width: 100px; font-size: var(--fs-sm); color: var(--text-muted); }
-  .ns { display: inline-grid; grid-template-columns: 40px minmax(34px, auto) 40px; grid-template-rows: 44px auto; align-items: center; }
+  .ns { display: inline-grid; grid-template-columns: 44px minmax(34px, auto) 44px; grid-template-rows: 44px auto; align-items: center; }
   .ns > span, .ns b { font-family: "IBM Plex Mono", monospace; }
   .ns { position: relative; }
-  .ns button { width: 40px; height: 44px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font-size: var(--fs-md); }
+  .ns button { width: 44px; height: 44px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font-size: var(--fs-md); }
   .ns button:first-of-type { border-radius: 7px 0 0 7px; }
   .ns button:last-of-type { border-radius: 0 7px 7px 0; }
   .ns b { display: inline-grid; place-items: center; min-width: 34px; height: 44px; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); font-size: var(--fs-sm); font-weight: 600; }
-  .ns i { grid-column: 1 / -1; text-align: center; font-style: normal; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin-top: 3px; }
+  .ns i { grid-column: 1 / -1; text-align: center; font-style: normal; font-size: var(--fs-label); text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin-top: 3px; }
   .mp-list { max-height: 46vh; overflow-y: auto; margin: 4px 0 10px; }
 
   /* badges */
@@ -1206,7 +1234,7 @@
   // one conditioning day as a read-only block (detail screen, program info sheet)
   function metconDayHtml(day, maxMoves) {
     var w = day.wod;
-    return '<div class="day-block"><h4>' + esc(day.label) + ' <span class="dtype">' + esc(FORMAT_LABEL[w.format] || w.format) + '</span></h4>' +
+    return '<div class="day-block"><h4>' + esc(dayTitle(day.label)) + ' <span class="dtype">' + esc(FORMAT_LABEL[w.format] || w.format) + '</span></h4>' +
       '<div class="mc-detail-sub">' + esc(w.name ? w.name + " · " : "") + esc(metconSubtitle(w)) + '</div>' +
       metconMoves(w).slice(0, maxMoves || 99).map(function (m) { return '<div class="ex-line"><span>' + esc(moveLine(m)) + '</span></div>'; }).join("") +
       (w.equipmentNote ? '<div class="best">Needs: ' + esc(w.equipmentNote) + '</div>' : '') +
@@ -1220,6 +1248,15 @@
   }
   // "Fran 4:12" for a session's logged finisher
   function finisherScoreText(f) { return (f.wodName || "Finisher") + " " + metconScoreText(f); }
+  // the WOD's shape in a few words, for one-line rows: "AMRAP 12", "3 rounds · 15 min", "21-15-9 for time"
+  function metconShort(w) {
+    if (w.format === "amrap") return "AMRAP " + (w.capMin || "?");
+    if (w.format === "emom") return "EMOM " + (w.capMin || (w.minutes ? w.minutes.length : "?"));
+    if (w.format === "hyrox") return "Hyrox";
+    var cap = w.capMin ? " · " + w.capMin + " min" : "";
+    if (w.format === "rft" || w.format === "chipper") return (w.targetRounds ? w.targetRounds + " rounds" : FORMAT_LABEL[w.format]) + cap;
+    return (w.scheme ? w.scheme + " " : "") + "for time" + cap;
+  }
   function resolveMetcon(tpl, active) {
     var mc = tpl.microcycle;
     var day = mc[(active.cycleIndex || 0) % mc.length];
@@ -1384,13 +1421,15 @@
   }
   function touched(t) { t.updatedAt = Date.now(); if (db && db.active && db.active.templateId === t.id && db.active.order) db.active.order = {}; }
 
-  function tplAddSlot(t, dayIdx, exId, sets, reps, weight, lifts, repHigh) {
+  // mode (built programs): the progression picked when adding — "linear" | "double" | "none"
+  function tplAddSlot(t, dayIdx, exId, sets, reps, weight, lifts, repHigh, mode) {
     var slot = { exId: exId, sets: sets, reps: reps, added: true };
     if (isDouble(t)) slot.repHigh = repHigh && repHigh > reps ? repHigh : reps;
     else if (isMixed(t) && repHigh && repHigh > reps) slot.repHigh = repHigh;
     if (weight != null && !(EX[exId] && EX[exId].bw)) slot.seedLoad = weight;
     t.microcycle[dayIdx].slots.push(slot);
     ensureProgression(t, exId, slot.repHigh || reps);
+    if (mode && isMixed(t) && t.progression && t.progression[exId]) t.progression[exId].mode = mode;
     seedLift(lifts, exId, weight);
     touched(t);
     return t.microcycle[dayIdx].slots.length - 1;
@@ -1803,6 +1842,19 @@
     A(!followsAnchor(PC.microcycle[1].slots[0]) && PC.progression[pcEx], "a follower whose main lift stops being one gets its own rule back");
     db = dbWas;
 
+    // --- one progression choice per exercise (design critique) ---
+    var pcSlot = { exId: "row", sets: 3, reps: 8, repHigh: 12 }, pcP = { mode: "double", increment: 2.5, failRule: { misses: 3, pct: 0.9 } };
+    applyProgChoice(pcSlot, pcP, "linear");
+    A(pcP.mode === "linear" && pcSlot.repHigh === undefined, "Add weight → fixed reps");
+    applyProgChoice(pcSlot, pcP, "double");
+    A(pcP.mode === "double" && pcSlot.repHigh === 12, "Rep range → a range above the reps (8–12)");
+    applyProgChoice(pcSlot, pcP, "none");
+    A(pcP.mode === "none" && pcSlot.repHigh === 12, "Keep weight leaves the rep style alone");
+    A(signed(2.5) === "+2.5" && signed(-0.4) === "−0.4" && signed(0) === "0", "signed() uses a real minus sign");
+    A(metconShort({ format: "rft", targetRounds: 3, capMin: 15 }) === "3 rounds · 15 min" && metconShort({ format: "amrap", capMin: 12 }) === "AMRAP 12" &&
+      metconShort({ format: "fortime", scheme: "21-15-9", capMin: 10 }) === "21-15-9 for time · 10 min", "metconShort fits a WOD on one line");
+    A(sessionLabel({ label: "Heavy-light" }) === "Heavy-light" && sessionLabel({ label: "B" }) === "Workout B" && sessionLabel({ label: "Volume", dayType: "volume" }) === "Volume day", "one day-naming rule everywhere");
+
     // --- badges ---
     A(BADGES.length === 151, "badge catalogue has exactly 151 entries → " + BADGES.length);
     var bIds = {}; BADGES.forEach(function (b) { bIds[b.id] = (bIds[b.id] || 0) + 1; });
@@ -1936,6 +1988,8 @@
   function sessionLabel(res) { return res.dayType ? cap(res.dayType) + " day" : dayTitle(res.label); }
 
   // "8" or "8–12" for a double-progression rep range
+  // "+2.5" / "−0.4" / "0" — a change, with a real minus sign
+  function signed(n) { return (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n)); }
   function repRange(lo, hi) { return hi && hi > lo ? lo + "–" + hi : String(lo); }
 
   // effort logging — stored value is always reps-in-reserve (0 = to failure).
@@ -2259,7 +2313,7 @@
       var slots = day.slots || [];
       var dch = !own && orig && orig.microcycle[di] ? dayChanges(day, orig.microcycle[di]) : 0;
       var open = !!st.open[di];
-      var sub = day.wod ? "Conditioning · " + metconSubtitle(day.wod)
+      var sub = day.wod ? (day.wod.name || "Conditioning") + " · " + metconShort(day.wod)
         : slots.length + ' exercise' + (slots.length === 1 ? '' : 's') + (day.finisher ? ' + finisher' : '') + (dch ? ' · ' + dch + ' change' + (dch === 1 ? '' : 's') : '');
       html += '<div class="day-block pe-day' + (open ? ' open' : '') + '">' +
         '<div class="pe-dwrap"><button class="pe-dhead" data-day="' + di + '" aria-expanded="' + open + '"><b>' + esc(dayTitle(day.label)) + '</b>' +
@@ -2300,7 +2354,7 @@
       html += '</div>';
     });
     if (own) {
-      html += '<div class="btn-row"><button class="btn btn-ghost" id="ed-addday">+ Add a day</button></div>' +
+      html += '<button class="pe-addday" id="ed-addday">+ Add a day</button>' +
         '<div class="day-block"><div class="toggle-line"><div class="tl-k">Sessions a week<p>' +
           (t.daysPerWeek === t.microcycle.length ? "One pass through your days each week." : "Your " + t.microcycle.length + " days rotate across " + t.daysPerWeek + " sessions a week.") +
         '</p></div><span class="ns" id="ed-dpw"><button data-d="-">–</button><b>' + t.daysPerWeek + '</b><button data-d="+">+</button></span></div></div>';
@@ -2365,8 +2419,8 @@
       b.onclick = function () {
         pickExercise("Add to " + dayTitle(t.microcycle[di].label), function (exId) {
           var dbl = isDouble(t) || own;
-          openSetsConfig(exId, { cta: "Add exercise", range: dbl, repHigh: dbl ? 12 : null, rangeToggle: own, onBack: null, onDone: function (sets, reps, w, perm, rh) {
-            tplAddSlot(t, di, exId, sets, reps, w, null, rh); closeSheet(); keepScroll();
+          openSetsConfig(exId, { cta: "Add exercise", range: dbl, repHigh: dbl ? 12 : null, progChoice: own, onBack: null, onDone: function (sets, reps, w, perm, rh, mode) {
+            tplAddSlot(t, di, exId, sets, reps, w, null, rh, mode); closeSheet(); keepScroll();
           } });
         });
       };
@@ -2425,8 +2479,8 @@
     var p = t.progression && t.progression[slot.exId];
     if (!p) return '';
     var m = progMode(t, p);
-    return '<span class="pe-tag">' + (m === "double" ? "range" : m === "none" ? "hold" : "+" + fmt(p.increment)) + '</span>' +
-      ((t.anchors || []).indexOf(slot.exId) >= 0 ? '<span class="pe-tag">main</span>' : '');
+    return ((t.anchors || []).indexOf(slot.exId) >= 0 ? '<span class="pe-tag main">main</span>' : '') +
+      '<span class="pe-tag">' + (m === "double" ? "range" : m === "none" ? "keep" : "+" + fmt(p.increment) + " " + U()) + '</span>';
   }
 
   // a day's ⋯ menu: rename, duplicate, move, switch type, delete
@@ -2440,7 +2494,7 @@
       (di < n - 1 ? item("dm-down", "Move later") : '') +
       (d.wod ? '' : item("dm-fin", d.finisher ? "Edit finisher" : "Add finisher", d.finisher ? esc(metconSubtitle(d.finisher)) : "a short WOD after the lifts") +
         (d.finisher ? item("dm-finx", "Remove finisher", "", "danger") : '')) +
-      item("dm-kind", d.wod ? "Make it a lifting day" : "Make it a conditioning day", d.wod ? "drops the WOD" : ((d.slots || []).length ? "drops its exercises" : "")) +
+      item("dm-kind", d.wod ? "Make it a lifting day" : "Make it a conditioning day", d.wod ? "removes the workout" : ((d.slots || []).length ? "removes its exercises" : "")) +
       (n > 1 ? item("dm-del", "Delete day", "", "danger") : '') +
       '<div class="btn-row"><button class="btn btn-ghost" id="dm-cancel">Cancel</button></div>');
     // open flags are by position, so they move with the day
@@ -2592,60 +2646,102 @@
     return added + swapped + Math.max(0, od.slots.length - kept) + (numbers ? 1 : 0);
   }
   // one exercise in the editor: sets / reps / range, swap, remove
+  // the three ways an exercise can progress, as one choice (built programs)
+  var PROG_CHOICES = [["linear", "Add weight"], ["double", "Rep range"], ["none", "Keep weight"]];
+  function progChoiceNote(mode, inc, range) {
+    return mode === "linear" ? "Fixed reps. Hit every rep on every set and next time it goes up " + fmt(inc) + " " + U() + "."
+      : mode === "double" ? "Work every set up to the top of the range, then it goes up " + fmt(inc) + " " + U() + " and you start again at the bottom."
+      : "No automatic changes — next time starts from whatever you lifted." + (range ? " Aim anywhere in the range." : "");
+  }
+  // put an exercise's reps in line with its progression: add weight = fixed, rep range = a range
+  function applyProgChoice(slot, p, mode) {
+    if (p) p.mode = mode;
+    if (mode === "linear") delete slot.repHigh;
+    if (mode === "double" && !(slot.repHigh > slot.reps)) slot.repHigh = slot.reps + 4;
+  }
+  function segHtml(id, opts, cur) {
+    return '<div class="seg-ctl" id="' + id + '">' + opts.map(function (o) { return '<button data-v="' + o[0] + '" aria-selected="' + (o[0] === cur) + '">' + o[1] + '</button>'; }).join("") + '</div>';
+  }
+  function wireSeg(id, cb) {
+    var el = document.getElementById(id);
+    if (el) el.querySelectorAll("button").forEach(function (b) { b.onclick = function () { cb(b.dataset.v); }; });
+  }
+
   function openSlotSheet(t, di, si, rerender) {
     var slot = t.microcycle[di].slots[si];
     var locked = slotLocked(t, slot);
     var own = isMixed(t);
-    var segHtml = function (id, opts, cur) {
-      return '<div class="seg-ctl" id="' + id + '">' + opts.map(function (o) { return '<button data-v="' + o[0] + '" aria-selected="' + (o[0] === cur) + '">' + o[1] + '</button>'; }).join("") + '</div>';
-    };
+    var fine = false;   // the increment / back-off controls stay folded until asked for
+    var drawn = false;
     var draw = function () {
       var ex = EX[slot.exId] || {}, p = t.progression && t.progression[slot.exId];
       var canSwap = slotSwappable(slot);   // a lift following a percentage can't be swapped until it stops
       var range = !!(slot.repHigh && slot.repHigh > slot.reps);
+      var follow = followsAnchor(slot), isMain = (t.anchors || []).indexOf(slot.exId) >= 0;
       var html = '<h2>' + esc(slotName(slot)) + '</h2>' +
-        '<p class="sh-lead">' + esc(dayTitle(t.microcycle[di].label)) + (locked ? ' · locked — this lift drives the program’s progression' : '') + '</p>';
-      if (own) html += '<div class="eyebrow" style="margin:0 0 6px">Reps</div>' + segHtml("ss-range", [["fixed", "Fixed reps"], ["range", "Rep range"]], range ? "range" : "fixed");
-      html += '<div class="ed-nums" style="margin:10px 0 14px">' + numStep("sets", slot.sets) + numStep("reps", slot.reps) +
-          ((own ? range : isDouble(t)) ? numStep("repHigh", slot.repHigh || slot.reps) : "") + '</div>';
-      // a barbell lift that isn't a main lift itself can ride on a percentage of one
-      var mains = own && ex.bar ? (t.anchors || []).filter(function (id) { return id !== slot.exId && EX[id]; }) : [];
-      var follow = followsAnchor(slot);
-      if (mains.length && (t.anchors || []).indexOf(slot.exId) < 0) {
-        html += '<div class="toggle-line" style="margin-bottom:10px"><div class="tl-k">% of a main lift<p>' +
-            (follow ? "Its weight follows " + esc(EX[slot.anchorId].name) + " — no progression of its own." : "Load it as a percentage of a main lift instead of progressing it on its own.") + '</p></div>' +
-          '<button class="sw" role="switch" id="ss-follow" aria-label="% of a main lift" aria-checked="' + follow + '"></button></div>';
-        if (follow) {
+        '<p class="sh-lead">' + esc(dayTitle(t.microcycle[di].label)) + (locked ? ' · locked — this lift drives the program’s progression' : '') +
+          (own && slotCount(t, slot.exId) > 1 && p ? ' · its rule applies on every day it appears' : '') + '</p>';
+      var nums = function (showHigh) {
+        return '<div class="ed-nums" style="margin:10px 0 14px">' + numStep("sets", slot.sets) + numStep("reps", slot.reps, showHigh) +
+          (showHigh ? numStep("repHigh", slot.repHigh || slot.reps + 1) : "") + '</div>';
+      };
+      if (!own) {
+        html += nums(isDouble(t));
+      } else if (p) {
+        var mode = progMode(t, p);
+        html += '<div class="eyebrow" style="margin:0 0 6px">Progression</div>' + segHtml("ss-mode", PROG_CHOICES, mode) +
+          '<p class="ac-note">' + esc(progChoiceNote(mode, p.increment, range)) + '</p>' + nums(range) +
+          (mode === "none" ? '<button class="pe-add" id="ss-range" style="margin:-8px 0 8px">' + (range ? "Use fixed reps" : "Use a rep range") + '</button>' : '');
+      } else {
+        // bodyweight, or riding on a main lift: no rule of its own, just the rep style
+        html += '<div class="eyebrow" style="margin:0 0 6px">Reps</div>' + segHtml("ss-reps", [["fixed", "Fixed reps"], ["range", "Rep range"]], range ? "range" : "fixed") + nums(range) +
+          (ex.bw ? '<p class="ac-note" style="margin-top:-6px">Bodyweight — no load to progress. Add reps as you get stronger.</p>' : '');
+      }
+
+      // where the weight comes from: set here, a rep test at setup (main lift), or a % of a main lift
+      if (own && !ex.bw) {
+        var mains = ex.bar ? (t.anchors || []).filter(function (id) { return id !== slot.exId && EX[id]; }) : [];
+        var src = follow ? "pct" : isMain ? "main" : "set";
+        var srcOpts = [["set", "Set it here"]];
+        if (ex.bar) srcOpts.push(["main", "Rep test"]);
+        if (mains.length || follow) srcOpts.push(["pct", "% of main"]);
+        var started = db.active && db.active.templateId === t.id && db.active.lifts && db.active.lifts[slot.exId];
+        html += '<div class="eyebrow" style="margin:16px 0 6px">Starting weight</div>' + (srcOpts.length > 1 ? segHtml("ss-src", srcOpts, src) : '');
+        if (src === "set") {
+          html += started ? '<p class="ac-note">Working weight now: ' + fmt(started.weight) + ' ' + U() + '.</p>'
+            : '<div class="ed-nums" style="margin:10px 0 4px"><span class="ns" data-pr="seed"><button data-d="-">–</button><b>' + fmt(slot.seedLoad != null ? slot.seedLoad : (ex.bar ? eq().bar : 10)) + '</b><button data-d="+">+</button><i>start ' + U() + '</i></span></div>';
+        } else if (src === "main") {
+          html += '<p class="ac-note">A main lift: when you start the program you enter a recent set and it works out where to begin.</p>';
+        } else {
           var aw = db.active && db.active.templateId === t.id && db.active.lifts && db.active.lifts[slot.anchorId];
-          html += (mains.length > 1 ? segHtml("ss-anchor", mains.map(function (id) { return [id, esc(EX[id].name)]; }), slot.anchorId) : '') +
+          html += (mains.length > 1 ? '<div style="margin-top:8px">' + segHtml("ss-anchor", mains.map(function (id) { return [id, esc(EX[id].name)]; }), slot.anchorId) + '</div>' : '') +
             '<div class="ed-nums" style="margin:10px 0 4px"><span class="ns" data-pr="pct"><button data-d="-">–</button><b>' + Math.round(slot.pctOfAnchor * 100) + '</b><button data-d="+">+</button><i>% of ' + esc(EX[slot.anchorId].name) + '</i></span></div>' +
-            (aw ? '<p class="ac-note">Next time: ' + fmt(roundLoad(aw.weight * slot.pctOfAnchor, eq())) + ' ' + U() + ' (' + esc(EX[slot.anchorId].name) + ' is at ' + fmt(aw.weight) + ').</p>' : '');
+            '<p class="ac-note">Its weight follows ' + esc(EX[slot.anchorId].name) + ' — no progression of its own.' +
+              (aw ? ' Next time: ' + fmt(roundLoad(aw.weight * slot.pctOfAnchor, eq())) + ' ' + U() + ' (' + esc(EX[slot.anchorId].name) + ' is at ' + fmt(aw.weight) + ' ' + U() + ').' : '') + '</p>';
         }
       }
-      if (own && p && !follow) {
-        var mode = progMode(t, p);
-        var started = db.active && db.active.templateId === t.id && db.active.lifts && db.active.lifts[slot.exId];
-        html += '<div class="eyebrow" style="margin:0 0 6px">Progression</div>' +
-          segHtml("ss-mode", [["linear", "Add weight"], ["double", "Range, then add"], ["none", "Keep weight"]], mode) +
-          '<p class="ac-note">' + (mode === "linear" ? "Hit every rep on every set and next time it goes up " + fmt(p.increment) + " " + U() + "."
-            : mode === "double" ? "Work every set up to the top of the range, then it goes up " + fmt(p.increment) + " " + U() + " and you start again at the bottom."
-            : "No automatic changes — it starts from whatever you lifted last time.") +
-            (slotCount(t, slot.exId) > 1 ? " Applies to " + esc(ex.name || slot.exId) + " on every day." : "") + '</p>' +
-          (mode === "none" ? '' : '<div class="ed-nums" style="margin:10px 0 4px">' +
-            '<span class="ns" data-pr="inc"><button data-d="-">–</button><b>' + fmt(p.increment) + '</b><button data-d="+">+</button><i>+' + U() + '</i></span>' +
+
+      // the fine print, folded: how big each jump is and when it backs off
+      if (own && p && progMode(t, p) !== "none" && !follow) {
+        html += '<button class="ss-fine" id="ss-fine" aria-expanded="' + fine + '"><span>Fine-tune</span><span class="k2">+' + fmt(p.increment) + ' ' + U() + ' · back off after ' + p.failRule.misses + '</span>' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>';
+        if (fine) html += '<div class="ed-nums" style="margin:8px 0 4px">' +
+            '<span class="ns" data-pr="inc"><button data-d="-">–</button><b>' + fmt(p.increment) + '</b><button data-d="+">+</button><i>+' + U() + ' per jump</i></span>' +
             '<span class="ns" data-pr="miss"><button data-d="-">–</button><b>' + p.failRule.misses + '</b><button data-d="+">+</button><i>misses</i></span></div>' +
-            '<p class="ac-note">Miss ' + p.failRule.misses + ' session' + (p.failRule.misses === 1 ? '' : 's') + ' in a row and it drops ' + Math.round((1 - p.failRule.pct) * 100) + '% to rebuild.</p>') +
-          (!ex.bw && !started && (t.anchors || []).indexOf(slot.exId) < 0
-            ? '<div class="ed-nums" style="margin:12px 0 4px"><span class="ns" data-pr="seed"><button data-d="-">–</button><b>' + fmt(slot.seedLoad != null ? slot.seedLoad : (ex.bar ? eq().bar : 10)) + '</b><button data-d="+">+</button><i>start ' + U() + '</i></span></div>' : '') +
-          (ex.bar ? '<div class="toggle-line" style="margin-top:10px"><div class="tl-k">Main lift<p>Set its starting weight from a rep test when you start the program.</p></div>' +
-            '<button class="sw" role="switch" id="ss-main" aria-checked="' + ((t.anchors || []).indexOf(slot.exId) >= 0) + '"></button></div>' : '');
-      } else if (own && ex.bw) {
-        html += '<p class="ac-note">Bodyweight — no load to progress. Add reps as you get stronger.</p>';
+          '<p class="ac-note">Miss ' + p.failRule.misses + ' session' + (p.failRule.misses === 1 ? '' : 's') + ' in a row and it drops ' + Math.round((1 - p.failRule.pct) * 100) + '% to rebuild.</p>';
       }
-      html += (canSwap ? '<div class="btn-row"><button class="btn btn-ghost" id="ss-swap">Swap exercise</button></div>' : '') +
-        (locked ? '' : '<div class="btn-row"><button class="btn btn-ghost" id="ss-del" style="color:var(--miss)">Remove from ' + esc(dayTitle(t.microcycle[di].label)) + '</button></div>') +
-        '<div class="btn-row"><button class="btn btn-primary" id="ss-done">Done</button></div>';
+
+      html += (canSwap || !locked ? '<div class="btn-row">' +
+          (canSwap ? '<button class="btn btn-ghost" id="ss-swap">Swap</button>' : '') +
+          (locked ? '' : '<button class="btn btn-ghost" id="ss-del" style="color:var(--miss)">Remove</button>') + '</div>' : '') +
+        '<div class="sh-foot"><button class="btn btn-primary" id="ss-done">Done</button></div>';
+      // redraws keep their place and don't replay the slide-up
+      var keepY = drawn && sheetRoot.querySelector(".sheet") ? sheetRoot.querySelector(".sheet").scrollTop : 0;
       openSheet(html);
+      var sh = sheetRoot.querySelector(".sheet");
+      if (drawn && sh) { sh.style.animation = "none"; sheetRoot.querySelector(".sheet-wrap").style.animation = "none"; sh.scrollTop = keepY; }
+      drawn = true;
+
       sheetRoot.querySelectorAll("[data-num]").forEach(function (grp) {
         var f = grp.dataset.num;
         grp.querySelector("[data-d='-']").onclick = function () {
@@ -2659,27 +2755,25 @@
           touched(t); draw();
         };
       });
+      wireSeg("ss-mode", function (v) { applyProgChoice(slot, p, v); touched(t); draw(); });
+      wireSeg("ss-reps", function (v) { if (v === "range") slot.repHigh = slot.repHigh > slot.reps ? slot.repHigh : slot.reps + 4; else delete slot.repHigh; touched(t); draw(); });
       var rg = document.getElementById("ss-range");
-      if (rg) rg.querySelectorAll("button").forEach(function (b) {
-        b.onclick = function () {
-          if (b.dataset.v === "range") slot.repHigh = slot.repHigh > slot.reps ? slot.repHigh : slot.reps + 4;
-          else {
-            delete slot.repHigh;
-            if (p && progMode(t, p) === "double") p.mode = "linear";   // nothing to climb without a range
-          }
-          touched(t); draw();
-        };
+      if (rg) rg.onclick = function () { if (slot.repHigh > slot.reps) delete slot.repHigh; else slot.repHigh = slot.reps + 4; touched(t); draw(); };
+      wireSeg("ss-src", function (v) {
+        var mains = (t.anchors || []).filter(function (id) { return id !== slot.exId && EX[id]; });
+        var wasMain = (t.anchors || []).indexOf(slot.exId) >= 0;
+        if (followsAnchor(slot) && v !== "pct") stopFollow(t, slot);
+        if (wasMain && v !== "main") { t.anchors.splice(t.anchors.indexOf(slot.exId), 1); releaseFollowers(t); }
+        if (v === "main" && !wasMain) (t.anchors = t.anchors || []).push(slot.exId);
+        if (v === "pct" && !followsAnchor(slot) && mains.length) setFollow(t, slot, mains[0], 0.8);
+        touched(t); draw();
       });
-      var md = document.getElementById("ss-mode");
-      if (md) md.querySelectorAll("button").forEach(function (b) {
-        b.onclick = function () {
-          p.mode = b.dataset.v;
-          if (p.mode === "double" && !(slot.repHigh > slot.reps)) slot.repHigh = slot.reps + 4;
-          touched(t); draw();
-        };
-      });
+      wireSeg("ss-anchor", function (v) { slot.anchorId = v; touched(t); draw(); });
+      var fb = document.getElementById("ss-fine");
+      if (fb) fb.onclick = function () { fine = !fine; draw(); };
       sheetRoot.querySelectorAll("[data-pr]").forEach(function (grp) {
-        var f = grp.dataset.pr, unit = addedIncrement(slot.exId) / (ex.bar ? 1 : 2);
+        var f = grp.dataset.pr, ex = EX[slot.exId] || {}, p = t.progression && t.progression[slot.exId];
+        var unit = addedIncrement(slot.exId) / (ex.bar ? 1 : 2);
         var bump = function (dlt) {
           if (f === "pct") slot.pctOfAnchor = Math.min(1, Math.max(0.5, Math.round((slot.pctOfAnchor + dlt * 0.05) * 100) / 100));
           else if (f === "inc") p.increment = Math.max(unit, Math.round((p.increment + dlt * unit) * 100) / 100);
@@ -2692,23 +2786,6 @@
         };
         grp.querySelector("[data-d='-']").onclick = function () { bump(-1); };
         grp.querySelector("[data-d='+']").onclick = function () { bump(1); };
-      });
-      var mn = document.getElementById("ss-main");
-      if (mn) mn.onclick = function () {
-        t.anchors = t.anchors || [];
-        var i = t.anchors.indexOf(slot.exId);
-        if (i >= 0) t.anchors.splice(i, 1); else t.anchors.push(slot.exId);
-        releaseFollowers(t);   // lifts that followed this one get their own rule back
-        touched(t); draw();
-      };
-      var fl = document.getElementById("ss-follow");
-      if (fl) fl.onclick = function () {
-        if (followsAnchor(slot)) stopFollow(t, slot); else setFollow(t, slot, mains[0], 0.8);
-        draw();
-      };
-      var anc = document.getElementById("ss-anchor");
-      if (anc) anc.querySelectorAll("button").forEach(function (b) {
-        b.onclick = function () { slot.anchorId = b.dataset.v; touched(t); draw(); };
       });
       var sw = document.getElementById("ss-swap");
       if (sw) sw.onclick = function () {
@@ -2809,8 +2886,8 @@
   }
 
   // sets / reps / weight for an exercise, pre-filled from last time.
-  // opts: { cta, sets?, reps?, weight?, range?, repHigh?, rangeToggle?, choice?: { every: "Every workout A" }, onBack?, onDone(sets, reps, weight, permanent, repHigh) }
-  // rangeToggle: let the user pick fixed reps or a rep range (programs you built); `range` is the starting choice
+  // opts: { cta, sets?, reps?, weight?, range?, repHigh?, progChoice?, choice?: { every: "Every workout A" }, onBack?, onDone(sets, reps, weight, permanent, repHigh, mode) }
+  // progChoice (programs you built): pick how it progresses — add weight (fixed reps), rep range, or keep weight; `range` is the starting choice
   function openSetsConfig(exId, opts) {
     var ex = EX[exId], isBw = !!ex.bw;
     var wStep = ex.bar ? eq().step : (U() === "lb" ? 5 : 2.5);
@@ -2821,10 +2898,16 @@
     var hint = lp ? 'Last time: ' + lp.sets + ' × ' + lp.reps + (lp.weight ? ' @ ' + fmt(lp.weight) + ' ' + U() : '') + ' · ' + shortDate(lp.date) +
         (sug != null && sug !== lp.weight ? ' — try ' + fmt(sug) + ' ' + U() : '') : 'First time logging this one.';
     var permanent = false;
-    var range = !!opts.range, showHigh = range || !!opts.rangeToggle;
+    var range = !!opts.range, showHigh = range || !!opts.progChoice;
+    // bodyweight has no load to progress, so it only chooses its rep style
+    var mode = opts.progChoice && !isBw ? (range ? "double" : "linear") : null;
+    var choiceHtml = !opts.progChoice ? '' : isBw
+      ? '<div class="eyebrow" style="margin:0 0 6px">Reps</div>' + segHtml("ac-range", [["fixed", "Fixed reps"], ["range", "Rep range"]], range ? "range" : "fixed")
+      : '<div class="eyebrow" style="margin:0 0 6px">Progression</div>' + segHtml("ac-mode", PROG_CHOICES, mode) +
+        '<p class="ac-note" id="ac-mode-note">' + esc(progChoiceNote(mode, addedIncrement(exId), range)) + '</p>' +
+        '<button class="pe-add" id="ac-keep-range" style="display:none">Use a rep range</button>';
     openSheet('<h2>' + esc(ex.name) + '</h2><p class="sh-lead">' + esc(hint) + '</p>' +
-      (opts.rangeToggle ? '<div class="seg-ctl" id="ac-range" style="margin-bottom:12px">' +
-        '<button data-v="fixed" aria-selected="' + !range + '">Fixed reps</button><button data-v="range" aria-selected="' + range + '">Rep range</button></div>' : '') +
+      (choiceHtml ? '<div style="margin-bottom:12px">' + choiceHtml + '</div>' : '') +
       '<div class="field-inline">' +
         '<div class="fi"><span>Sets</span><div class="stepper"><button data-f="s-">–</button><input class="mono" id="ac-s" inputmode="numeric" value="' + sets + '"><button data-f="s+">+</button></div></div>' +
         '<div class="fi"><span id="ac-r-k">' + (range ? 'Reps from' : 'Reps') + '</span><div class="stepper"><button data-f="r-">–</button><input class="mono" id="ac-r" inputmode="numeric" value="' + reps + '"><button data-f="r+">+</button></div></div>' +
@@ -2850,17 +2933,23 @@
         if (f === "w+" && wi) wi.value = fmt((parseFloat(wi.value) || 0) + wStep);
       };
     });
-    var rg = document.getElementById("ac-range");
-    if (rg) rg.querySelectorAll("button").forEach(function (b) {
-      b.onclick = function () {
-        range = b.dataset.v === "range";
-        rg.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
-        document.getElementById("ac-h-fi").style.display = range ? "" : "none";
-        document.getElementById("ac-r-k").textContent = range ? "Reps from" : "Reps";
-        var ri = document.getElementById("ac-r"), hi = document.getElementById("ac-h");
-        if (range && (parseInt(hi.value, 10) || 0) <= (parseInt(ri.value, 10) || 0)) hi.value = (parseInt(ri.value, 10) || 8) + 4;
-      };
-    });
+    // show or hide "Up to" without redrawing (keeps whatever was typed)
+    var setRange = function (on) {
+      range = on;
+      document.getElementById("ac-h-fi").style.display = range ? "" : "none";
+      document.getElementById("ac-r-k").textContent = range ? "Reps from" : "Reps";
+      var ri = document.getElementById("ac-r"), hi = document.getElementById("ac-h");
+      if (range && (parseInt(hi.value, 10) || 0) <= (parseInt(ri.value, 10) || 0)) hi.value = (parseInt(ri.value, 10) || 8) + 4;
+      var kr = document.getElementById("ac-keep-range");
+      if (kr) { kr.style.display = mode === "none" ? "" : "none"; kr.textContent = range ? "Use fixed reps" : "Use a rep range"; }
+      var mn = document.getElementById("ac-mode-note");
+      if (mn) mn.textContent = progChoiceNote(mode, addedIncrement(exId), range);
+    };
+    var selSeg = function (id, v) { document.getElementById(id).querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x.dataset.v === v ? "true" : "false"); }); };
+    wireSeg("ac-range", function (v) { selSeg("ac-range", v); setRange(v === "range"); });
+    wireSeg("ac-mode", function (v) { mode = v; selSeg("ac-mode", v); setRange(v === "double" ? true : v === "linear" ? false : range); });
+    var kr = document.getElementById("ac-keep-range");
+    if (kr) kr.onclick = function () { setRange(!range); };
     var keep = document.getElementById("ac-keep");
     if (keep) keep.querySelectorAll("button").forEach(function (b) {
       b.onclick = function () {
@@ -2878,7 +2967,7 @@
       var wN = isBw ? null : (parseFloat(document.getElementById("ac-w").value) || 0);
       if (ex.bar && wN != null) wN = roundLoad(wN, eq());
       var hEl = range ? document.getElementById("ac-h") : null, hN = hEl ? parseInt(hEl.value, 10) || null : null;
-      opts.onDone(sN, rN, wN, permanent, hN && hN > rN ? hN : null);
+      opts.onDone(sN, rN, wN, permanent, hN && hN > rN ? hN : null, mode);
     };
   }
 
@@ -2990,9 +3079,10 @@
     };
   }
 
-  function numStep(field, val) {
+  // fromLabel: the reps stepper is the bottom of a range, so say "reps from" (and "up to" for the top)
+  function numStep(field, val, fromLabel) {
     return '<span class="ns" data-num="' + field + '"><button data-d="-">–</button><b>' + fmt(val) + '</b><button data-d="+">+</button>' +
-      '<i>' + (field === "repHigh" ? "top" : field) + '</i></span>';
+      '<i>' + (field === "repHigh" ? "up to" : field === "reps" && fromLabel ? "reps from" : field) + '</i></span>';
   }
 
   // a simple movement/exercise picker sheet. metcon=true → MOVES, else EX
@@ -3108,7 +3198,9 @@
   renderers.detail = function () {
     var t = tplById(detailId); if (!t) { go("choose"); return; }
     var c = screens.detail;
-    var demo = demoLifts(t);
+    // the program you're running shows your real weights; anything else shows examples
+    var mine = !!(db.active && db.active.templateId === t.id && db.active.lifts);
+    var demo = mine ? db.active.lifts : demoLifts(t);
     var html = '<button class="backlink" id="d-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>All programs</button>' +
       '<h2 class="title">' + esc(t.name) + '</h2><p class="lead">' + esc(t.blurb) + '</p>';
 
@@ -3117,7 +3209,7 @@
         '<div class="eyebrow">The sessions</div>';
       t.microcycle.forEach(function (day) {
         var w = day.wod;
-        html += '<div class="day-block"><h4>' + esc(day.label) + ' <span class="dtype">' + esc(FORMAT_LABEL[w.format] || w.format) + '</span></h4>' +
+        html += '<div class="day-block"><h4>' + esc(dayTitle(day.label)) + ' <span class="dtype">' + esc(FORMAT_LABEL[w.format] || w.format) + '</span></h4>' +
           '<div class="mc-detail-sub">' + esc(metconSubtitle(w)) + '</div>' +
           metconMoves(w).map(function (m) { return '<div class="ex-line"><span>' + esc(moveLine(m)) + '</span></div>'; }).join("") +
           (w.equipmentNote ? '<div class="best">Needs: ' + esc(w.equipmentNote) + '</div>' : '') +
@@ -3130,12 +3222,12 @@
       return;
     }
 
-    html += '<div class="rule-box"><b>How it progresses</b>' + esc(progressionRuleText(t)) + '</div>';
-    html += '<div class="eyebrow">A week of training <span style="text-transform:none;font-weight:500;color:var(--text-faint)">— example weights</span></div>';
+    html += ruleBoxHtml(t);
+    html += '<div class="eyebrow">A week of training <span style="text-transform:none;font-weight:500;color:var(--text-faint)">— ' + (mine ? 'your weights now' : 'example weights') + '</span></div>';
     t.microcycle.forEach(function (day) {
       if (day.wod) { html += metconDayHtml(day); return; }
-      var res = resolveSession(t, { options: optionDefaults(t), cycleIndex: t.microcycle.indexOf(day), weekIndex: 0, lifts: demo }, eq());
-      html += '<div class="day-block"><h4>' + esc(day.label) + (day.dayType ? ' <span class="dtype">' + esc(day.dayType) + '</span>' : '') + '</h4>';
+      var res = resolveSession(t, { options: mine ? (db.active.options || {}) : optionDefaults(t), cycleIndex: t.microcycle.indexOf(day), weekIndex: mine ? db.active.weekIndex || 0 : 0, lifts: demo }, eq());
+      html += '<div class="day-block"><h4>' + esc(dayTitle(day.label)) + (day.dayType ? ' <span class="dtype">' + esc(day.dayType) + '</span>' : '') + '</h4>';
       res.exercises.forEach(function (x) {
         var sc = x.assist ? (x.workSets.length + "×" + repRange(x.target, x.repHigh) + (x.workSets[0].amrap ? "+" : "")) : (x.workSets.length + "×" + repRange(x.target, x.repHigh));
         html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' + sc +
@@ -3200,6 +3292,26 @@
     return out;
   }
 
+  // the "How it progresses" box: a short list for a program you built, the prose rule otherwise
+  function ruleBoxHtml(t) {
+    if (!isMixed(t)) return ruleBoxHtml(t);
+    var n = { linear: 0, double: 0, none: 0 }, u = usedExIds(t);
+    Object.keys(t.progression || {}).forEach(function (id) { if (u[id]) n[progMode(t, t.progression[id])]++; });
+    var follow = t.microcycle.reduce(function (k, d) { return k + (d.slots || []).filter(followsAnchor).length; }, 0);
+    var cond = t.microcycle.filter(function (d) { return d.wod; }).length;
+    var fins = t.microcycle.filter(function (d) { return !d.wod && d.finisher; }).length;
+    var row = function (k, v, sub) { return '<li><span>' + k + (sub ? '<small>' + sub + '</small>' : '') + '</span><b>' + v + '</b></li>'; };
+    var ex = function (k) { return k + " exercise" + (k === 1 ? "" : "s"); };
+    return '<div class="rule-box"><b>How it progresses</b><ul class="rule-list">' +
+      (n.linear ? row("Add weight", ex(n.linear), "every session you hit every rep") : '') +
+      (n.double ? row("Rep range", ex(n.double), "top of the range, then add weight") : '') +
+      (n.none ? row("Keep weight", ex(n.none), "you set it") : '') +
+      (follow ? row("% of a main lift", ex(follow), "moves with the main lift") : '') +
+      (cond ? row("Conditioning", cond + " day" + (cond === 1 ? "" : "s"), "log your score") : '') +
+      (fins ? row("Finishers", fins + " day" + (fins === 1 ? "" : "s"), "saved with the lifts") : '') +
+      '</ul><p class="rule-foot">Miss too many sessions in a row and a lift backs off so you can rebuild.</p></div>';
+  }
+
   // "more about the program" sheet — opened from the i on the home header
   function openProgramInfoSheet() {
     if (!db.active) return;
@@ -3209,7 +3321,7 @@
     var html = '<h2>' + esc(t.name) + '</h2>' +
       '<p style="font-size: var(--fs-xs);text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--text-faint);margin:-4px 0 8px">' + esc(t.author || "") + '</p>' +
       '<p class="sh-lead">' + esc(t.blurb) + '</p>' +
-      '<div class="rule-box"><b>How it progresses</b>' + esc(progressionRuleText(t)) + '</div>' +
+      ruleBoxHtml(t) +
       '<div class="eyebrow">Schedule</div>' +
       '<div class="day-block"><div class="ex-line"><span>Sessions a week</span><span class="scheme">' + (t.daysPerWeek || "—") + '</span></div>' +
       (td ? '<div class="ex-line"><span>Your days</span><span class="scheme">' + esc(td) + '</span></div>' : '') +
@@ -3219,7 +3331,7 @@
       html += '<div class="eyebrow">The sessions</div>';
       t.microcycle.forEach(function (day) {
         var w = day.wod;
-        html += '<div class="day-block"><h4>' + esc(day.label) + ' <span class="dtype">' + esc(FORMAT_LABEL[w.format] || w.format) + '</span></h4>' +
+        html += '<div class="day-block"><h4>' + esc(dayTitle(day.label)) + ' <span class="dtype">' + esc(FORMAT_LABEL[w.format] || w.format) + '</span></h4>' +
           '<div class="mc-detail-sub">' + esc(metconSubtitle(w)) + '</div>' +
           metconMoves(w).slice(0, 6).map(function (m) { return '<div class="ex-line"><span>' + esc(moveLine(m)) + '</span></div>'; }).join("") +
         '</div>';
@@ -3230,8 +3342,8 @@
         html += '<div class="eyebrow">Working weights now</div><div class="day-block">';
         lifts.forEach(function (id) {
           var lf = db.active.lifts[id];
-          html += '<div class="ex-line"><span>' + esc((EX[id] || {}).name || id) + '</span><span class="scheme">' + fmt(lf.weight) + U() +
-            (lf.weight !== lf.start ? '  ·  ' + (lf.weight > lf.start ? '+' : '') + fmt(lf.weight - lf.start) + ' since start' : '') + '</span></div>';
+          html += '<div class="ex-line"><span>' + esc((EX[id] || {}).name || id) + '</span><span class="scheme">' + fmt(lf.weight) + ' ' + U() +
+            (lf.weight !== lf.start ? '  ·  ' + signed(lf.weight - lf.start) + ' since start' : '') + '</span></div>';
         });
         html += '</div>';
       }
@@ -3239,10 +3351,10 @@
       t.microcycle.forEach(function (day) {
         if (day.wod) { html += metconDayHtml(day, 6); return; }
         var res = resolveSession(t, { options: db.active.options || optionDefaults(t), cycleIndex: t.microcycle.indexOf(day), weekIndex: db.active.weekIndex || 0, lifts: db.active.lifts }, eq());
-        html += '<div class="day-block"><h4>' + esc(day.label) + (day.dayType ? ' <span class="dtype">' + esc(day.dayType) + '</span>' : '') + '</h4>';
+        html += '<div class="day-block"><h4>' + esc(dayTitle(day.label)) + (day.dayType ? ' <span class="dtype">' + esc(day.dayType) + '</span>' : '') + '</h4>';
         res.exercises.forEach(function (x) {
           html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' +
-            x.workSets.length + '×' + repRange(x.target, x.repHigh) + (x.assist ? '' : '  ·  ' + fmt(x.weight) + U()) + '</span></div>';
+            x.workSets.length + '×' + repRange(x.target, x.repHigh) + (x.assist ? '' : '  ·  ' + fmt(x.weight) + ' ' + U()) + '</span></div>';
         });
         if (res.finisher) html += finisherLineHtml(res.finisher);
         html += '</div>';
@@ -3440,6 +3552,20 @@
       html += '</div>';
     });
 
+    // a built program: every other loaded exercise starts where its slot says — show it, let it change
+    var others = isMixed(t) ? setupOthers(t) : [];
+    if (others.length) {
+      draft.seeds = draft.seeds || {};
+      html += '<button class="ss-fine" id="su-others" aria-expanded="' + !!draft.othersOpen + '" style="margin-top:18px"><span>Other exercises start at</span>' +
+        '<span class="k2">' + others.length + ' exercise' + (others.length === 1 ? '' : 's') + '</span>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>';
+      if (draft.othersOpen) html += '<div class="day-block">' + others.map(function (o) {
+        var v = draft.seeds[o.exId] != null ? draft.seeds[o.exId] : o.start;
+        return '<div class="toggle-line"><div class="tl-k">' + esc(EX[o.exId].name) + '</div>' +
+          '<span class="ns" data-seed="' + o.exId + '"><button data-d="-" aria-label="Less">–</button><b>' + fmt(v) + '</b><button data-d="+" aria-label="More">+</button></span></div>';
+      }).join("") + '</div><p class="ac-note" style="margin-top:-8px">Set when you built the program. Change them here for this start only.</p>';
+    }
+
     // options
     if (t.options && t.options.length) {
       html += '<div class="eyebrow" style="margin-top:22px">Options</div><div class="day-block">';
@@ -3504,6 +3630,19 @@
         renderers.setup();
       };
     });
+    var suo = document.getElementById("su-others");
+    if (suo) suo.onclick = function () { draft.othersOpen = !draft.othersOpen; var y = c.scrollTop; renderers.setup(); c.scrollTop = y; };
+    c.querySelectorAll("[data-seed]").forEach(function (g) {
+      var id = g.dataset.seed, o = setupOthers(t).filter(function (x) { return x.exId === id; })[0];
+      var stp = EX[id].bar ? draft.equipment.step || draft.equipment.smallestPlate * 2 : 2.5;
+      var bump = function (d) {
+        var cur = draft.seeds[id] != null ? draft.seeds[id] : o.start;
+        draft.seeds[id] = Math.max(0, Math.round((cur + d * stp) * 100) / 100);
+        g.querySelector("b").textContent = fmt(draft.seeds[id]);   // no re-render: keeps the list where it is
+      };
+      g.querySelector("[data-d='-']").onclick = function () { bump(-1); };
+      g.querySelector("[data-d='+']").onclick = function () { bump(1); };
+    });
     document.getElementById("su-start").onclick = function () { commitProgram(); };
     var suCustom = document.getElementById("su-custom");
     if (suCustom) suCustom.onclick = function () {
@@ -3526,6 +3665,18 @@
     return roundLoad(w5RM(e1RM(w, reps)) * (t.startingWeight.pct != null ? t.startingWeight.pct : 1), e);
   }
 
+  // a built program's loaded exercises that aren't main lifts or riding on one: [{ exId, start }]
+  function setupOthers(t) {
+    var anchors = t.anchors || [], seen = {}, out = [];
+    t.microcycle.forEach(function (d) { (d.slots || []).forEach(function (sl) {
+      var ex = EX[sl.exId];
+      if (!ex || ex.bw || seen[sl.exId] || anchors.indexOf(sl.exId) >= 0 || followsAnchor(sl) || !(t.progression && t.progression[sl.exId])) return;
+      seen[sl.exId] = 1;
+      var start = sl.seedLoad != null ? sl.seedLoad : ex.bar ? (draft ? draft.equipment.bar : eq().bar) : 10;
+      out.push({ exId: sl.exId, start: roundFor(sl.exId, start, draft ? draft.equipment : eq()) });
+    }); });
+    return out;
+  }
   function commitProgram() {
     var t = draft.customTpl || tplById(draft.templateId);
     if (draft.customTpl) { pruneAnchors(t); db.customPlans.push(t); }
@@ -3537,6 +3688,12 @@
     db.equipment = Object.assign({}, draft.equipment);
     if (!db.equipment.step) db.equipment.step = db.equipment.smallestPlate * 2;
     seedExtraLifts(t, lifts, db.equipment);
+    // starting weights changed on the setup screen win over the ones saved with the program
+    Object.keys(draft.seeds || {}).forEach(function (id) {
+      if (!lifts[id]) return;
+      var w = roundFor(id, draft.seeds[id], db.equipment);
+      lifts[id] = { weight: w, start: w, failCount: 0, history: [{ t: Date.now(), w: w }] };
+    });
     db.active = {
       templateId: t.id,
       options: Object.assign({}, draft.options),
@@ -4205,7 +4362,8 @@
     return out;
   }
 
-  function dayName(label) { return /^[A-Z]$/.test(label) ? "Workout " + label : cap(label) + " day"; }
+  // a logged session's day as the rest of the app names it ("Workout A", "Volume day", "Heavy-light")
+  function dayName(label, dayType) { return sessionLabel({ label: label, dayType: dayType }); }
 
   renderers.schedule = function () {
     var c = screens.schedule;
@@ -4248,14 +4406,14 @@
 
       if (item.done) {
         var s = item.sess;
-        var title = s.kind === "metcon" ? (s.wodName || s.dayLabel) : dayName(s.dayLabel);
+        var title = s.kind === "metcon" ? (s.wodName || s.dayLabel) : dayName(s.dayLabel, s.dayType);
         html += '<div class="day-block' + (s.kind === "metcon" ? '' : ' sc-past') + '"><h4>' + esc(dlabel) + ' · ' + esc(title) + tag + '</h4>';
         if (s.kind === "metcon") {
           html += '<div class="ex-line"><span>Score</span><span class="scheme">' + esc(metconScoreText(s)) + '</span></div>';
         } else {
           (s.actual || []).filter(function (a) { return !a.assist && a.sets && a.sets.length; }).forEach(function (a) {
             html += '<div class="ex-line"><span>' + esc(a.name) + '</span><span class="scheme">' +
-              a.sets.length + '×' + a.topReps + (a.topWeight ? '  ·  ' + fmt(a.topWeight) + U() : '') + '</span></div>';
+              a.sets.length + '×' + a.topReps + (a.topWeight ? '  ·  ' + fmt(a.topWeight) + ' ' + U() : '') + '</span></div>';
           });
           if (s.finisher) html += '<div class="ex-line fin-line"><span>Finisher · ' + esc(s.finisher.wodName || "Conditioning") + '</span><span class="scheme">' + esc(metconScoreText(s.finisher)) + '</span></div>';
         }
@@ -4264,7 +4422,7 @@
       }
 
       var res = item.res;
-      var t2 = res.wod ? res.wod.name : (res.dayType ? cap(res.dayType) + " day" : "Workout " + res.label);
+      var t2 = res.wod ? res.wod.name : sessionLabel(res);
       html += '<div class="day-block"><h4>' + esc(dlabel) + ' · ' + esc(t2) + tag + '</h4>';
       if (res.wod) {
         html += '<div class="sc-sub">' + esc(res.subtitle) + '</div>' +
@@ -4275,7 +4433,7 @@
         res.exercises.forEach(function (x) {
           var setStr = x.workSets.length + "×" + repRange(x.target, x.repHigh);
           html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' + setStr +
-            (x.assist ? '' : '  ·  ' + fmt(x.weight) + U()) + '</span></div>';
+            (x.assist ? '' : '  ·  ' + fmt(x.weight) + ' ' + U()) + '</span></div>';
         });
         if (res.finisher) html += finisherLineHtml(res.finisher);
       }
@@ -4317,7 +4475,7 @@
         '<h3>' + esc(sessionLabel(res)) + '</h3>' +
         (res.dayType ? '' : '<div class="pk-dtype">' + res.exercises.length + ' exercises</div>') +
         '<div class="pk-ex">' + res.exercises.map(function (x) {
-          return esc(x.name) + (x.assist ? '' : ' <span class="pk-w">' + fmt(x.weight) + U() + '</span>');
+          return esc(x.name) + (x.assist ? '' : ' <span class="pk-w">' + fmt(x.weight) + ' ' + U() + '</span>');
         }).join('  ·  ') + '</div>' +
         (res.finisher ? '<div class="pk-fin">Finisher · ' + esc(res.finisher.name || "Conditioning") + ' — ' + esc(metconSubtitle(res.finisher)) + '</div>' : '') +
       '</button>';
@@ -4468,11 +4626,11 @@
   }
 
   // insert a new exercise at the end of the current run; `permanent` also adds it to this program day
-  function addExerciseToRun(exId, sets, reps, weight, permanent, repHigh) {
+  function addExerciseToRun(exId, sets, reps, weight, permanent, repHigh, mode) {
     var dayIdx = runDayIdx(), slotIdx = null;
     if (permanent && programRun()) {
       run.t = ensureOwnActive();
-      slotIdx = tplAddSlot(run.t, dayIdx, exId, sets, reps, weight, db.active.lifts, repHigh);
+      slotIdx = tplAddSlot(run.t, dayIdx, exId, sets, reps, weight, db.active.lifts, repHigh, mode);
     }
     var progressing = !!(slotIdx != null && run.t.progression && run.t.progression[exId]);
     var x = makeRunExercise(exId, sets, reps, weight, progressing, slotIdx, repHigh);
@@ -4517,10 +4675,10 @@
       openSetsConfig(exId, {
         cta: "Add to workout", sets: pp.sets, reps: pp.reps,
         range: isMixed(run.t) && programRun() ? !!pp.repHigh || pp.reps == null : range, repHigh: pp.repHigh || (range ? (pp.reps || 8) + 4 : null),
-        rangeToggle: programRun() && isMixed(run.t),
+        progChoice: programRun() && isMixed(run.t),
         choice: programRun() ? { every: "Every " + dayTitle(run.res.label) } : null,
         onBack: openAddFlow,
-        onDone: function (s, r, w, perm, rh) { closeSheet(); addExerciseToRun(exId, s, r, w, perm, rh); toast(EX[exId].name + (perm ? " added to " + dayTitle(run.res.label) : " added")); }
+        onDone: function (s, r, w, perm, rh, mode) { closeSheet(); addExerciseToRun(exId, s, r, w, perm, rh, mode); toast(EX[exId].name + (perm ? " added to " + dayTitle(run.res.label) : " added")); }
       });
     });
   }
@@ -5559,7 +5717,7 @@
     s.actual.forEach(function (a) {
       if (!a.sets.length) return;
       var skipped = !a.sets.some(function (x) { return x.reps > 0; });
-      var top = skipped ? "skipped" : a.topWeight ? fmt(a.topWeight) + U() + " × " + a.topReps : a.topReps + " reps";
+      var top = skipped ? "skipped" : a.topWeight ? fmt(a.topWeight) + ' ' + U() + " × " + a.topReps : a.topReps + " reps";
       var rirs = a.sets.map(function (x) { return x.rir; }).filter(function (v) { return v != null; });
       var effTag = rirs.length ? ' · ' + effortText(Math.min.apply(null, rirs)) : '';
       html += '<div class="ex-line"><span>' + esc(a.name) + (a.adhoc && !freestyle ? ' <span class="k2" style="font-size: var(--fs-xs);color:var(--text-faint)">' + (swappedIn[a.exId] ? "SWAPPED" : "ADDED") + '</span>' : '') +
@@ -5831,8 +5989,8 @@
   function progCard(title, sub, delta, unit, series, nowVal) {
     var now = nowVal != null
       ? '<span class="lp-w">' + fmt(nowVal) + ' <small>' + unit + '</small></span>' +
-        (delta !== 0 ? '<span class="lp-since">' + (delta > 0 ? '+' : '') + fmt(delta) + ' since start</span>' : '')
-      : (delta >= 0 ? '+' : '') + fmt(delta) + ' <small>' + unit + '</small>';
+        (delta !== 0 ? '<span class="lp-since">' + signed(delta) + ' since start</span>' : '')
+      : (delta === 0 ? '+0' : signed(delta)) + ' <small>' + unit + '</small>';
     return '<div class="lift-prog"><div><h4>' + esc(title) + '</h4>' +
       '<div class="lp-sub">' + esc(sub) + '</div></div>' +
       '<div class="lp-now' + (nowVal != null ? ' has-now' : '') + '">' + now + '</div>' +
@@ -5842,10 +6000,7 @@
     '</div>';
   }
 
-  // opts.trendsOnly: the Body tab already has bodyweight / body-fat heroes, so it
-  // gets just lean mass + measurements, each headed by its latest value
-  function bodyChartsHtml(opts) {
-    opts = opts || {};
+  function bodyChartsHtml() {
     if (!db.body.length) {
       return '<p class="chart-note" style="margin-top:2px">Log your bodyweight or measurements on the Body tab — they chart here too.</p>';
     }
@@ -5853,14 +6008,14 @@
     var html = "";
     progWaiting = 0;
     var withBw = entries.filter(function (e) { return e.bw != null; });
-    if (withBw.length && !opts.trendsOnly) {
+    if (withBw.length) {
       var d = withBw[withBw.length - 1].bw - withBw[0].bw;
       html += progCard("Bodyweight",
         fmt(withBw[0].bw) + " → " + fmt(withBw[withBw.length - 1].bw) + " " + U(),
         d, U(), bodyWeeklySeries(function (e) { return e.bw; }));
     }
     var withBf = entries.filter(function (e) { return e.bf != null; });
-    if (withBf.length && !opts.trendsOnly) {
+    if (withBf.length) {
       html += progCard("Body fat",
         fmt(withBf[0].bf) + " → " + fmt(withBf[withBf.length - 1].bf) + " %",
         withBf[withBf.length - 1].bf - withBf[0].bf, "%", bodyWeeklySeries(function (e) { return e.bf; }));
@@ -5869,21 +6024,70 @@
     if (withLean.length) {
       var l0 = leanMass(withLean[0]).lean, l1 = leanMass(withLean[withLean.length - 1]).lean;
       html += progCard("Lean mass", fmt(l0) + " → " + fmt(l1) + " " + U(), l1 - l0, U(),
-        bodyWeeklySeries(function (e) { var x = leanMass(e); return x ? x.lean : null; }), opts.trendsOnly ? l1 : null);
+        bodyWeeklySeries(function (e) { var x = leanMass(e); return x ? x.lean : null; }));
     }
-    var measHead = 0;
     MEAS.forEach(function (m) {
       var withV = entries.filter(function (e) { return e.m && e.m[m.id] != null; });
       if (!withV.length) return;
       var dd = withV[withV.length - 1].m[m.id] - withV[0].m[m.id];
-      var mLast = withV[withV.length - 1].m[m.id];
-      html += (opts.trendsOnly && !measHead++ ? '<div class="eyebrow">Measurements (' + L() + ')</div>' : '') +
-        progCard(m.name,
-        opts.trendsOnly ? (withV.length > 1 ? "from " + fmt(withV[0].m[m.id]) + " · " + shortDate(withV[0].date) : "logged " + relDate(withV[0].date))
-          : fmt(withV[0].m[m.id]) + " → " + fmt(mLast) + " " + L(),
-        dd, L(), bodyWeeklySeries(function (e) { return (e.m && e.m[m.id] != null) ? e.m[m.id] : null; }), opts.trendsOnly ? mLast : null);
+      html += progCard(m.name,
+        fmt(withV[0].m[m.id]) + " → " + fmt(withV[withV.length - 1].m[m.id]) + " " + L(),
+        dd, L(), bodyWeeklySeries(function (e) { return (e.m && e.m[m.id] != null) ? e.m[m.id] : null; }));
     });
     return (progWaiting ? WAIT_NOTE : '') + html;
+  }
+
+  // every body trend after bodyweight: lean mass, then each measurement → [{ id, title, unit, first, last, firstDate, lastDate, count, series }]
+  function bodyTrendItems() {
+    var entries = db.body.slice().sort(function (a, b) { return a.date - b.date; });
+    var out = [];
+    var add = function (id, title, unit, pick) {
+      var withV = entries.filter(function (e) { return pick(e) != null; });
+      if (!withV.length) return;
+      out.push({ id: id, title: title, unit: unit, first: pick(withV[0]), last: pick(withV[withV.length - 1]),
+        firstDate: withV[0].date, lastDate: withV[withV.length - 1].date, count: withV.length, series: bodyWeeklySeries(pick) });
+    };
+    add("lean", "Lean mass", U(), function (e) { var x = leanMass(e); return x ? x.lean : null; });
+    MEAS.forEach(function (m) { add(m.id, m.name, L(), function (e) { return (e.m && e.m[m.id] != null) ? e.m[m.id] : null; }); });
+    return out;
+  }
+  // a tiny trend line for a tile: no axes, last point marked
+  function sparkline(series) {
+    if (series.length < 2) return '<div class="tt-wait">chart after 2 weeks</div>';
+    var w = 120, h = 30, vs = series.map(function (p) { return p.v; });
+    var mn = Math.min.apply(null, vs), mx = Math.max.apply(null, vs), rng = (mx - mn) || 1;
+    var pts = series.map(function (p, i) { return [2 + (i / (series.length - 1)) * (w - 4), 3 + (h - 6) - ((p.v - mn) / rng) * (h - 6)]; });
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+    var last = pts[pts.length - 1];
+    return '<svg class="tt-spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true"><path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' +
+      '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="2.6" fill="var(--accent)"/></svg>';
+  }
+  // the Body tab's compact trends: lean mass + measurements as tiles, tap one for its full chart
+  function bodyTilesHtml() {
+    var items = bodyTrendItems();
+    if (!items.length) return '';
+    var tile = function (it) {
+      var dl = it.last - it.first;
+      return '<button class="trend-tile" data-trend="' + it.id + '" aria-label="' + esc(it.title) + ' chart">' +
+        '<span class="tt-k">' + esc(it.title) + '</span>' +
+        '<span class="tt-v">' + fmt(it.last) + ' <small>' + esc(it.unit) + '</small></span>' +
+        '<span class="tt-d">' + (it.count > 1 ? signed(dl) + ' since ' + shortDate(it.firstDate) : 'logged ' + relDate(it.lastDate)) + '</span>' +
+        sparkline(it.series) + '</button>';
+    };
+    var lean = items.filter(function (it) { return it.id === "lean"; }), meas = items.filter(function (it) { return it.id !== "lean"; });
+    return (lean.length || meas.length ? '<div class="eyebrow">Trends</div>' : '') +
+      '<div class="trend-grid">' + lean.concat(meas).map(tile).join("") + '</div>' +
+      (meas.length ? '<p class="chart-note" style="margin:-4px 0 6px">Measurements in ' + L() + ' · tap a tile for its chart</p>' : '');
+  }
+  function openTrendSheet(id) {
+    var it = bodyTrendItems().filter(function (x) { return x.id === id; })[0];
+    if (!it) return;
+    progWaiting = 0;
+    openSheet('<h2>' + esc(it.title) + '</h2>' +
+      progCard(it.title, it.count > 1 ? fmt(it.first) + " → " + fmt(it.last) + " " + it.unit : "logged " + relDate(it.lastDate), it.last - it.first, it.unit, it.series, it.last) +
+      (progWaiting ? WAIT_NOTE : '') +
+      '<div class="sh-foot"><button class="btn btn-primary" id="tr-close">Done</button></div>');
+    document.getElementById("tr-close").onclick = closeSheet;
   }
 
   function metconHistoryHtml() {
@@ -6607,7 +6811,7 @@
     var trend = "";
     if (withBw.length > 1) {
       var d = lastW.bw - firstW.bw;
-      trend = (d >= 0 ? "+" : "") + fmt(d) + " " + U() + " since " + shortDate(firstW.date);
+      trend = (d === 0 ? "+0" : signed(d)) + " " + U() + " since " + shortDate(firstW.date);
     } else if (lastW) {
       trend = "logged " + relDate(lastW.date);
     }
@@ -6627,21 +6831,21 @@
       var lean = leanMass(lbf);
       html += '<div class="bw-hero"><div class="k">Body fat · ' + esc(mName(lbf)) + '</div>' +
         '<div class="big">' + fmt(lbf.bf) + '<small> %</small></div>' +
-        '<div class="trend">' + esc(withBf.length > 1 ? (bfd >= 0 ? "+" : "") + fmt(bfd) + " % since " + shortDate(fbf.date) : "logged " + relDate(lbf.date)) + '</div>' +
+        '<div class="trend">' + esc(withBf.length > 1 ?  (bfd === 0 ? "+0" : signed(bfd)) + " % since " + shortDate(fbf.date) : "logged " + relDate(lbf.date)) + '</div>' +
         (lean ? '<div class="trend">lean ' + fmt(lean.lean) + ' ' + U() + '  ·  fat ' + fmt(lean.fat) + ' ' + U() + '</div>' : '') +
         (switched ? '<div class="trend" style="color:var(--hold)">Method changed from ' + esc(mName(prevBf)) + ' — readings may not line up</div>' : '') +
         (bfSeries.length >= 2 ? lineChart(bfSeries) : '') + '</div>';
     }
 
-    // lean mass + measurements, charted the same way as on the Progress tab
-    html += bodyChartsHtml({ trendsOnly: true });
+    // lean mass + measurements as compact tiles; each opens its full chart
+    html += bodyTilesHtml();
 
     html += '<div class="btn-row"><button class="btn btn-primary" id="bd-log">Log an entry</button></div>';
 
     html += '<div class="eyebrow" style="margin-top:20px">History</div>';
     entries.slice().reverse().slice(0, 12).forEach(function (e) {
       var bits = [];
-      if (e.bw != null) bits.push(fmt(e.bw) + U());
+      if (e.bw != null) bits.push(fmt(e.bw) + ' ' + U());
       if (e.bf != null) bits.push(fmt(e.bf) + "% bf");
       MEAS.forEach(function (m) { if (e.m && e.m[m.id] != null) bits.push(m.name.toLowerCase() + " " + fmt(e.m[m.id])); });
       html += '<button class="entry-row" data-entry="' + e.id + '">' +
@@ -6652,6 +6856,7 @@
     c.innerHTML = html;
     document.getElementById("bd-log").onclick = function () { openBodyEntry(null); };
     document.getElementById("bd-nutri").onclick = function () { go("food"); };
+    c.querySelectorAll("[data-trend]").forEach(function (b) { b.onclick = function () { openTrendSheet(b.dataset.trend); }; });
     c.querySelectorAll("[data-entry]").forEach(function (b) {
       b.onclick = function () {
         var e = db.body.filter(function (x) { return x.id === b.dataset.entry; })[0];
