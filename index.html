@@ -5091,7 +5091,10 @@
     '</div>';
   }
 
-  function bodyChartsHtml() {
+  // opts.trendsOnly: the Body tab already has bodyweight / body-fat heroes, so it
+  // gets just lean mass + measurements, each headed by its latest value
+  function bodyChartsHtml(opts) {
+    opts = opts || {};
     if (!db.body.length) {
       return '<p class="chart-note" style="margin-top:2px">Log your bodyweight or measurements on the Body tab — they chart here too.</p>';
     }
@@ -5099,14 +5102,14 @@
     var html = "";
     progWaiting = 0;
     var withBw = entries.filter(function (e) { return e.bw != null; });
-    if (withBw.length) {
+    if (withBw.length && !opts.trendsOnly) {
       var d = withBw[withBw.length - 1].bw - withBw[0].bw;
       html += progCard("Bodyweight",
         fmt(withBw[0].bw) + " → " + fmt(withBw[withBw.length - 1].bw) + " " + U(),
         d, U(), bodyWeeklySeries(function (e) { return e.bw; }));
     }
     var withBf = entries.filter(function (e) { return e.bf != null; });
-    if (withBf.length) {
+    if (withBf.length && !opts.trendsOnly) {
       html += progCard("Body fat",
         fmt(withBf[0].bf) + " → " + fmt(withBf[withBf.length - 1].bf) + " %",
         withBf[withBf.length - 1].bf - withBf[0].bf, "%", bodyWeeklySeries(function (e) { return e.bf; }));
@@ -5115,15 +5118,19 @@
     if (withLean.length) {
       var l0 = leanMass(withLean[0]).lean, l1 = leanMass(withLean[withLean.length - 1]).lean;
       html += progCard("Lean mass", fmt(l0) + " → " + fmt(l1) + " " + U(), l1 - l0, U(),
-        bodyWeeklySeries(function (e) { var x = leanMass(e); return x ? x.lean : null; }));
+        bodyWeeklySeries(function (e) { var x = leanMass(e); return x ? x.lean : null; }), opts.trendsOnly ? l1 : null);
     }
+    var measHead = 0;
     MEAS.forEach(function (m) {
       var withV = entries.filter(function (e) { return e.m && e.m[m.id] != null; });
       if (!withV.length) return;
       var dd = withV[withV.length - 1].m[m.id] - withV[0].m[m.id];
-      html += progCard(m.name,
-        fmt(withV[0].m[m.id]) + " → " + fmt(withV[withV.length - 1].m[m.id]) + " " + L(),
-        dd, L(), bodyWeeklySeries(function (e) { return (e.m && e.m[m.id] != null) ? e.m[m.id] : null; }));
+      var mLast = withV[withV.length - 1].m[m.id];
+      html += (opts.trendsOnly && !measHead++ ? '<div class="eyebrow">Measurements (' + L() + ')</div>' : '') +
+        progCard(m.name,
+        opts.trendsOnly ? (withV.length > 1 ? "from " + fmt(withV[0].m[m.id]) + " · " + shortDate(withV[0].date) : "logged " + relDate(withV[0].date))
+          : fmt(withV[0].m[m.id]) + " → " + fmt(mLast) + " " + L(),
+        dd, L(), bodyWeeklySeries(function (e) { return (e.m && e.m[m.id] != null) ? e.m[m.id] : null; }), opts.trendsOnly ? mLast : null);
     });
     return (progWaiting ? WAIT_NOTE : '') + html;
   }
@@ -5873,21 +5880,8 @@
         (bfSeries.length >= 2 ? lineChart(bfSeries) : '') + '</div>';
     }
 
-    // measurements grid
-    var shown = MEAS.filter(function (m) { return entries.some(function (e) { return e.m && e.m[m.id] != null; }); });
-    if (shown.length) {
-      html += '<div class="eyebrow">Measurements (' + L() + ')</div><div class="meas-grid">';
-      shown.forEach(function (m) {
-        var withVal = entries.filter(function (e) { return e.m && e.m[m.id] != null; });
-        var lv = withVal[withVal.length - 1].m[m.id];
-        var fv = withVal[0].m[m.id];
-        var dd = withVal.length > 1 ? (lv - fv >= 0 ? "+" : "") + fmt(lv - fv) : "";
-        html += '<div class="meas"><div class="k">' + esc(m.name) + '</div>' +
-          '<div class="v">' + fmt(lv) + ' <small>' + L() + '</small></div>' +
-          (dd ? '<div class="d">' + dd + ' since ' + shortDate(withVal[0].date) + '</div>' : '') + '</div>';
-      });
-      html += '</div>';
-    }
+    // lean mass + measurements, charted the same way as on the Progress tab
+    html += bodyChartsHtml({ trendsOnly: true });
 
     html += '<div class="btn-row"><button class="btn btn-primary" id="bd-log">Log an entry</button></div>';
 
