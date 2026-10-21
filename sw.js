@@ -1,9 +1,10 @@
 /* Rack Coach service worker — app-shell caching for offline use.
    Bump CACHE when you change index.html or icons so clients pick it up. */
-var CACHE = "rackcoach-v41";
+var CACHE = "rackcoach-v43";
 var SHELL = [
   "./",
   "./index.html",
+  "./privacy.html",
   "./data-programs.js",
   "./data-wods.js",
   "./data-badges.js",
@@ -14,7 +15,10 @@ var SHELL = [
 ];
 
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
+  // cache: "reload" skips the browser's HTTP cache, so a new version never stores a stale file
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return c.addAll(SHELL.map(function (u) { return new Request(u, { cache: "reload" }); }));
+  }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener("activate", function (e) {
