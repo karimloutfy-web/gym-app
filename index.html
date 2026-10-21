@@ -2365,7 +2365,7 @@
       b.onclick = function () {
         pickExercise("Add to " + dayTitle(t.microcycle[di].label), function (exId) {
           var dbl = isDouble(t) || own;
-          openSetsConfig(exId, { cta: "Add exercise", range: dbl, repHigh: dbl ? 12 : null, onBack: null, onDone: function (sets, reps, w, perm, rh) {
+          openSetsConfig(exId, { cta: "Add exercise", range: dbl, repHigh: dbl ? 12 : null, rangeToggle: own, onBack: null, onDone: function (sets, reps, w, perm, rh) {
             tplAddSlot(t, di, exId, sets, reps, w, null, rh); closeSheet(); keepScroll();
           } });
         });
@@ -2809,7 +2809,8 @@
   }
 
   // sets / reps / weight for an exercise, pre-filled from last time.
-  // opts: { cta, sets?, reps?, weight?, choice?: { every: "Every workout A" }, onBack?, onDone(sets, reps, weight, permanent) }
+  // opts: { cta, sets?, reps?, weight?, range?, repHigh?, rangeToggle?, choice?: { every: "Every workout A" }, onBack?, onDone(sets, reps, weight, permanent, repHigh) }
+  // rangeToggle: let the user pick fixed reps or a rep range (programs you built); `range` is the starting choice
   function openSetsConfig(exId, opts) {
     var ex = EX[exId], isBw = !!ex.bw;
     var wStep = ex.bar ? eq().step : (U() === "lb" ? 5 : 2.5);
@@ -2820,11 +2821,14 @@
     var hint = lp ? 'Last time: ' + lp.sets + ' × ' + lp.reps + (lp.weight ? ' @ ' + fmt(lp.weight) + ' ' + U() : '') + ' · ' + shortDate(lp.date) +
         (sug != null && sug !== lp.weight ? ' — try ' + fmt(sug) + ' ' + U() : '') : 'First time logging this one.';
     var permanent = false;
+    var range = !!opts.range, showHigh = range || !!opts.rangeToggle;
     openSheet('<h2>' + esc(ex.name) + '</h2><p class="sh-lead">' + esc(hint) + '</p>' +
+      (opts.rangeToggle ? '<div class="seg-ctl" id="ac-range" style="margin-bottom:12px">' +
+        '<button data-v="fixed" aria-selected="' + !range + '">Fixed reps</button><button data-v="range" aria-selected="' + range + '">Rep range</button></div>' : '') +
       '<div class="field-inline">' +
         '<div class="fi"><span>Sets</span><div class="stepper"><button data-f="s-">–</button><input class="mono" id="ac-s" inputmode="numeric" value="' + sets + '"><button data-f="s+">+</button></div></div>' +
-        '<div class="fi"><span>' + (opts.range ? 'Reps from' : 'Reps') + '</span><div class="stepper"><button data-f="r-">–</button><input class="mono" id="ac-r" inputmode="numeric" value="' + reps + '"><button data-f="r+">+</button></div></div>' +
-        (opts.range ? '<div class="fi"><span>Up to</span><div class="stepper"><button data-f="h-">–</button><input class="mono" id="ac-h" inputmode="numeric" value="' + (opts.repHigh || reps + 4) + '"><button data-f="h+">+</button></div></div>' : '') +
+        '<div class="fi"><span id="ac-r-k">' + (range ? 'Reps from' : 'Reps') + '</span><div class="stepper"><button data-f="r-">–</button><input class="mono" id="ac-r" inputmode="numeric" value="' + reps + '"><button data-f="r+">+</button></div></div>' +
+        (showHigh ? '<div class="fi" id="ac-h-fi"' + (range ? '' : ' style="display:none"') + '><span>Up to</span><div class="stepper"><button data-f="h-">–</button><input class="mono" id="ac-h" inputmode="numeric" value="' + (opts.repHigh || reps + 4) + '"><button data-f="h+">+</button></div></div>' : '') +
         (isBw ? '' : '<div class="fi"><span>Weight (' + U() + ')</span><div class="stepper"><button data-f="w-">–</button><input class="mono" id="ac-w" inputmode="decimal" value="' + fmt(w) + '"><button data-f="w+">+</button></div></div>') +
       '</div>' +
       (opts.choice ? '<div class="eyebrow" style="margin:12px 0 6px">Keep it</div><div class="seg-ctl" id="ac-keep">' +
@@ -2846,6 +2850,17 @@
         if (f === "w+" && wi) wi.value = fmt((parseFloat(wi.value) || 0) + wStep);
       };
     });
+    var rg = document.getElementById("ac-range");
+    if (rg) rg.querySelectorAll("button").forEach(function (b) {
+      b.onclick = function () {
+        range = b.dataset.v === "range";
+        rg.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+        document.getElementById("ac-h-fi").style.display = range ? "" : "none";
+        document.getElementById("ac-r-k").textContent = range ? "Reps from" : "Reps";
+        var ri = document.getElementById("ac-r"), hi = document.getElementById("ac-h");
+        if (range && (parseInt(hi.value, 10) || 0) <= (parseInt(ri.value, 10) || 0)) hi.value = (parseInt(ri.value, 10) || 8) + 4;
+      };
+    });
     var keep = document.getElementById("ac-keep");
     if (keep) keep.querySelectorAll("button").forEach(function (b) {
       b.onclick = function () {
@@ -2862,7 +2877,7 @@
       var rN = Math.max(1, parseInt(document.getElementById("ac-r").value, 10) || 8);
       var wN = isBw ? null : (parseFloat(document.getElementById("ac-w").value) || 0);
       if (ex.bar && wN != null) wN = roundLoad(wN, eq());
-      var hEl = document.getElementById("ac-h"), hN = hEl ? parseInt(hEl.value, 10) || null : null;
+      var hEl = range ? document.getElementById("ac-h") : null, hN = hEl ? parseInt(hEl.value, 10) || null : null;
       opts.onDone(sN, rN, wN, permanent, hN && hN > rN ? hN : null);
     };
   }
@@ -4501,7 +4516,8 @@
       var pp = programPrescription(exId), range = programRun() && (isDouble(run.t) || isMixed(run.t));
       openSetsConfig(exId, {
         cta: "Add to workout", sets: pp.sets, reps: pp.reps,
-        range: range, repHigh: pp.repHigh || (range ? (pp.reps || 8) + 4 : null),
+        range: isMixed(run.t) && programRun() ? !!pp.repHigh || pp.reps == null : range, repHigh: pp.repHigh || (range ? (pp.reps || 8) + 4 : null),
+        rangeToggle: programRun() && isMixed(run.t),
         choice: programRun() ? { every: "Every " + dayTitle(run.res.label) } : null,
         onBack: openAddFlow,
         onDone: function (s, r, w, perm, rh) { closeSheet(); addExerciseToRun(exId, s, r, w, perm, rh); toast(EX[exId].name + (perm ? " added to " + dayTitle(run.res.label) : " added")); }
