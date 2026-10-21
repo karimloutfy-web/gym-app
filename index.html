@@ -668,6 +668,12 @@
   .pe-dmenu { width: 44px; height: 44px; display: grid; place-items: center; color: var(--text-muted); flex: none; border-radius: 9px; }
   .pe-dmenu svg { width: 20px; height: 20px; }
   .pe-mv { font-size: var(--fs-sm); color: var(--text-muted); padding: 3px 0 3px 2px; }
+  /* finishers: a short WOD after a lifting day's exercises */
+  .pe-fin-k { margin: 12px 0 4px; }
+  .fin-line > span:first-child { color: var(--accent); font-weight: 600; }
+  .pick-card .pk-fin { margin-top: 6px; font-size: var(--fs-sm); color: var(--accent); font-weight: 600; }
+  .fin-moves { margin-top: 14px; text-align: left; }
+  .fin-moves div { font-size: var(--fs-sm); color: var(--text-muted); padding: 4px 0; border-bottom: 1px solid var(--line); }
   .pe-add { min-height: 44px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
   .pe-note { font-size: var(--fs-xs); color: var(--text-faint); line-height: 1.5; margin: 4px 0 8px; }
   .su-custom h3 { font-size: var(--fs-lg); }
@@ -1173,7 +1179,7 @@
       });
     });
     var ordered = (db && db.active && tpl.id === db.active.templateId) ? applyOrder(day.label, exercises) : exercises;
-    return { label: day.label, dayType: day.dayType || null, exercises: ordered };
+    return { label: day.label, dayType: day.dayType || null, exercises: ordered, finisher: day.finisher || null };
   }
 
   /* ===================================================== METCON ENGINE */
@@ -1206,6 +1212,14 @@
       (w.equipmentNote ? '<div class="best">Needs: ' + esc(w.equipmentNote) + '</div>' : '') +
     '</div>';
   }
+  // a lifting day's finisher as one line under its exercises; cls picks the row style of the caller
+  function finisherLineHtml(w, cls) {
+    cls = cls || "ex-line";
+    return '<div class="' + cls + ' fin-line"><span' + (cls === "nc-ex" ? ' class="nx-name"' : '') + '>Finisher · ' + esc(w.name || "Conditioning") + '</span>' +
+      '<span class="' + (cls === "nc-ex" ? "nx-set" : "scheme") + '">' + esc(metconSubtitle(w)) + '</span></div>';
+  }
+  // "Fran 4:12" for a session's logged finisher
+  function finisherScoreText(f) { return (f.wodName || "Finisher") + " " + metconScoreText(f); }
   function resolveMetcon(tpl, active) {
     var mc = tpl.microcycle;
     var day = mc[(active.cycleIndex || 0) % mc.length];
@@ -1336,14 +1350,37 @@
     var u = usedExIds(t);
     t.anchors = (t.anchors || []).filter(function (id) { return u[id]; });
     if (t.progression) Object.keys(t.progression).forEach(function (id) { if (!u[id]) delete t.progression[id]; });
+    releaseFollowers(t);
+  }
+  /* --- "% of a main lift" slots (built programs): the weight follows the main lift, no rule of its own --- */
+  function followsAnchor(slot) { return !!(slot && slot.anchorId && slot.pctOfAnchor); }
+  function setFollow(t, slot, anchorId, pct) {
+    slot.anchorId = anchorId; slot.pctOfAnchor = pct;
+    // its own rule only goes once no other slot of this exercise still uses it
+    var own = t.microcycle.some(function (d) { return (d.slots || []).some(function (s) { return s !== slot && s.exId === slot.exId && !followsAnchor(s); }); });
+    if (!own && t.progression) delete t.progression[slot.exId];
+    touched(t);
+  }
+  function stopFollow(t, slot) {
+    delete slot.anchorId; delete slot.pctOfAnchor;
+    ensureProgression(t, slot.exId, slot.repHigh || slot.reps);
+    touched(t);
+  }
+  // a follower whose main lift stopped being one goes back to progressing on its own
+  function releaseFollowers(t) {
+    if (!isMixed(t)) return;
+    t.microcycle.forEach(function (d) { (d.slots || []).forEach(function (sl) {
+      if (followsAnchor(sl) && (t.anchors || []).indexOf(sl.anchorId) < 0) stopFollow(t, sl);
+    }); });
   }
   // lifts worth charting: the main lifts, or for a program you built, every lift it progresses
   function trackedLifts(t, lifts) {
     if (!lifts) return [];
     if (!isMixed(t)) return (t.anchors || []).filter(function (id) { return lifts[id]; });
     var u = usedExIds(t), anchors = t.anchors || [];
+    // a lift riding on a % of a main lift has no weight of its own to chart
     return anchors.filter(function (id) { return lifts[id] && u[id]; })
-      .concat(Object.keys(lifts).filter(function (id) { return u[id] && anchors.indexOf(id) < 0; }));
+      .concat(Object.keys(lifts).filter(function (id) { return u[id] && anchors.indexOf(id) < 0 && t.progression && t.progression[id]; }));
   }
   function touched(t) { t.updatedAt = Date.now(); if (db && db.active && db.active.templateId === t.id && db.active.order) db.active.order = {}; }
 
@@ -1435,13 +1472,14 @@
     var copy = deepClone(t.microcycle[di]);
     copy.label = nextDayLabel(t);
     if (copy.wod) copy.wod.id = "wod-" + uid();
+    if (copy.finisher) copy.finisher.id = "wod-" + uid();
     t.microcycle.splice(di + 1, 0, copy);
     syncDaysPerWeek(t); touched(t);
     return di + 1;
   }
   function tplSetDayKind(t, di, conditioning) {
     var d = t.microcycle[di];
-    if (conditioning) { d.slots = []; d.wod = d.wod || blankWod(); }
+    if (conditioning) { d.slots = []; d.wod = d.wod || blankWod(); delete d.finisher; }
     else { delete d.wod; d.slots = d.slots || []; }
     pruneAnchors(t); touched(t);
   }
@@ -1452,6 +1490,7 @@
       var d = t.microcycle[i];
       if (d.wod ? !(d.wod.movements || []).length : !(d.slots || []).length)
         return dayTitle(d.label) + (d.wod ? " needs at least one movement" : " needs at least one exercise");
+      if (d.finisher && !(d.finisher.movements || []).length) return dayTitle(d.label) + "’s finisher needs at least one movement";
     }
     return "";
   }
@@ -1715,6 +1754,54 @@
     A(!slotLocked(BP, BP.microcycle[0].slots[0]), "nothing is locked in a program you built");
     A(/You set the rule for each exercise/.test(progressionRuleText(BP)) && progModeLabel(BP) === "your rules", "built programs describe their per-exercise rules");
     A(progMode(SL, SL.progression.squat) === "linear" && progMode(tplById("ppl-hypertrophy") || SL, { increment: 1 }) === (tplById("ppl-hypertrophy") ? "double" : "linear"), "built-ins fall back to their program-wide mode");
+
+    // --- finishers: a WOD after a lifting day, saved with the lifts as one session ---
+    // the save path reads equipment from app state, which self-test mode never loads — lend it the defaults
+    var dbWas = db; if (!db) db = defaults();
+    var FP = blankProgram(); FP.name = "Finisher test";
+    FP.microcycle[0].slots.push({ exId: "squat", sets: 3, reps: 5 }, { exId: "row", sets: 3, reps: 8 });
+    FP.progression = { squat: { mode: "linear", increment: 5, failRule: { misses: 3, pct: 0.9 } }, row: { mode: "linear", increment: 5, failRule: { misses: 3, pct: 0.9 } } };
+    FP.anchors = ["squat"];
+    FP.microcycle[0].finisher = { id: "wod-fin", name: "Burner", format: "fortime", scoreType: "time", capMin: 8, movements: [{ move: "burpee", amount: 30 }] };
+    var fpRes = resolveSession(FP, { options: {}, cycleIndex: 0, weekIndex: 0, lifts: { squat: { weight: 100, start: 100, failCount: 0, history: [] }, row: { weight: 60, start: 60, failCount: 0, history: [] } } }, eq);
+    A(fpRes.finisher && fpRes.finisher.name === "Burner" && fpRes.exercises.length === 2 && !fpRes.wod, "a lifting day resolves its finisher alongside its exercises");
+    A(!resolveSession(FP, { options: {}, cycleIndex: 1, weekIndex: 0, lifts: {} }, eq).finisher, "a day without a finisher resolves none");
+    A(/finisher needs at least one movement/.test((function () { var c = deepClone(FP); c.microcycle[1].slots.push({ exId: "bench", sets: 3, reps: 5 }); c.microcycle[2].slots.push({ exId: "deadlift", sets: 1, reps: 5 }); c.microcycle[0].finisher.movements = []; return planProblem(c); })()), "an empty finisher blocks saving");
+    var fpAct = { templateId: FP.id, options: {}, cycleIndex: 0, weekIndex: 0, lifts: { squat: { weight: 100, start: 100, failCount: 0, history: [] }, row: { weight: 60, start: 60, failCount: 0, history: [] } } };
+    var fpLift = { res: fpRes, chosenIdx: 0, startedAt: Date.now() - 3600000, mods: [], queue: [], i: 0,
+      results: fpRes.exercises.map(function (x) { return { exId: x.exId, name: x.name, target: x.target, plannedWeight: x.weight, sets: [0, 1, 2].map(function () { return { weight: x.weight, reps: 5, target: x.target }; }) }; }) };
+    var fpSessions = [];
+    var fpMet = { kind: "metcon", t: FP, wod: fpRes.finisher, startedAt: Date.now() - 300000, finisherOf: JSON.parse(JSON.stringify(fpLift)) };
+    var fpSess = completeFinisher(fpMet, { timeSec: 245, rx: true }, fpAct, fpSessions);
+    A(fpSessions.length === 1 && fpSess.finisher && fpSess.finisher.wodName === "Burner" && fpSess.finisher.score.timeSec === 245 && fpSess.actual.length === 2 && !fpSess.kind, "logging the finisher saves ONE lift session with the score attached");
+    A(fpAct.cycleIndex === 1 && fpAct.weekIndex === 0 && fpAct.lifts.squat.weight === 105, "finisher session advances the rotation once and progresses once (squat 100→105)");
+    A(metconScoreText(fpSess.finisher) === "4:05" && finisherScoreText(fpSess.finisher) === "Burner 4:05", "finisher score reads like any WOD score");
+    var fpSkip = { templateId: FP.id, options: {}, cycleIndex: 0, weekIndex: 0, lifts: JSON.parse(JSON.stringify(fpAct.lifts)) };
+    fpSkip.lifts.squat.weight = 100;
+    var skipSess = saveLiftRun(Object.assign(JSON.parse(JSON.stringify(fpLift)), { t: FP }), fpSkip, [], null);
+    A(!skipSess.finisher && fpSkip.cycleIndex === 1, "skipping the finisher saves the lifts only");
+    A(tplDuplicateDay(deepClone(FP), 0) === 1, "a day with a finisher duplicates");
+    var fpK = deepClone(FP); tplSetDayKind(fpK, 0, true);
+    A(!fpK.microcycle[0].finisher, "a day turned into conditioning drops its finisher");
+
+    // --- % of a main lift (built programs) ---
+    var PC = blankProgram(); PC.name = "Pct test";
+    PC.microcycle[0].slots.push({ exId: "squat", sets: 5, reps: 5 });
+    PC.microcycle[1].slots.push({ exId: "frontsquat", sets: 3, reps: 5 });
+    var pcEx = PC.microcycle[1].slots[0].exId;
+    PC.anchors = ["squat"];
+    PC.progression = { squat: { mode: "linear", increment: 2.5, failRule: { misses: 3, pct: 0.9 } } };
+    ensureProgression(PC, pcEx, 5);
+    setFollow(PC, PC.microcycle[1].slots[0], "squat", 0.75);
+    A(!PC.progression[pcEx] && followsAnchor(PC.microcycle[1].slots[0]), "following a main lift drops the slot's own progression rule");
+    var pcRes = resolveSession(PC, { options: {}, cycleIndex: 1, weekIndex: 0, lifts: { squat: { weight: 142.5, start: 100, failCount: 0, history: [] } } }, eq);
+    A(pcRes.exercises[0].weight === roundLoad(142.5 * 0.75, eq) && pcRes.exercises[0].workSets[0].weight === pcRes.exercises[0].weight, "a % slot resolves to round(main lift × pct) → " + pcRes.exercises[0].weight);
+    stopFollow(PC, PC.microcycle[1].slots[0]);
+    A(PC.progression[pcEx] && !PC.microcycle[1].slots[0].anchorId && !PC.microcycle[1].slots[0].pctOfAnchor, "stopping restores its own progression rule");
+    setFollow(PC, PC.microcycle[1].slots[0], "squat", 0.8);
+    PC.anchors = []; releaseFollowers(PC);
+    A(!followsAnchor(PC.microcycle[1].slots[0]) && PC.progression[pcEx], "a follower whose main lift stops being one gets its own rule back");
+    db = dbWas;
 
     // --- badges ---
     A(BADGES.length === 151, "badge catalogue has exactly 151 entries → " + BADGES.length);
@@ -2173,7 +2260,7 @@
       var dch = !own && orig && orig.microcycle[di] ? dayChanges(day, orig.microcycle[di]) : 0;
       var open = !!st.open[di];
       var sub = day.wod ? "Conditioning · " + metconSubtitle(day.wod)
-        : slots.length + ' exercise' + (slots.length === 1 ? '' : 's') + (dch ? ' · ' + dch + ' change' + (dch === 1 ? '' : 's') : '');
+        : slots.length + ' exercise' + (slots.length === 1 ? '' : 's') + (day.finisher ? ' + finisher' : '') + (dch ? ' · ' + dch + ' change' + (dch === 1 ? '' : 's') : '');
       html += '<div class="day-block pe-day' + (open ? ' open' : '') + '">' +
         '<div class="pe-dwrap"><button class="pe-dhead" data-day="' + di + '" aria-expanded="' + open + '"><b>' + esc(dayTitle(day.label)) + '</b>' +
           '<span>' + esc(sub) + '</span>' + CHEV + '</button>' +
@@ -2201,6 +2288,14 @@
             '<svg class="pe-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
         });
         html += '<button class="pe-add" data-add="' + di + '">+ Add exercise</button>';
+        if (day.finisher) {
+          var fw = day.finisher;
+          html += '<div class="eyebrow pe-fin-k">Finisher</div>' +
+            '<button class="pe-row" data-fin="' + di + '"><span class="pe-n">' + esc(fw.name || "Untitled finisher") + '</span>' +
+            '<span class="pe-s">' + esc(metconSubtitle(fw)) + '</span>' +
+            '<svg class="pe-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>' +
+            metconMoves(fw).map(function (m) { return '<div class="pe-mv">' + esc(moveLine(m)) + '</div>'; }).join("");
+        }
       }
       html += '</div>';
     });
@@ -2239,6 +2334,9 @@
     });
     c.querySelectorAll("[data-wod]").forEach(function (b) {
       b.onclick = function () { var di = +b.dataset.wod; openWodSheet(t.microcycle[di].wod, dayTitle(t.microcycle[di].label), function () { touched(t); keepScroll(); }); };
+    });
+    c.querySelectorAll("[data-fin]").forEach(function (b) {
+      b.onclick = function () { var d = t.microcycle[+b.dataset.fin]; openWodSheet(d.finisher, dayTitle(d.label), function () { touched(t); keepScroll(); }, "finisher"); };
     });
     c.querySelectorAll("[data-dmenu]").forEach(function (b) {
       b.onclick = function () { openDayMenu(t, +b.dataset.dmenu, st, keepScroll); };
@@ -2291,7 +2389,10 @@
       if (own) {
         var pr = planProblem(t);
         if (pr) { toast(pr); return; }
-        t.microcycle.forEach(function (d) { if (d.wod && !(d.wod.name || "").trim()) d.wod.name = "Conditioning " + d.label; });
+        t.microcycle.forEach(function (d) {
+          if (d.wod && !(d.wod.name || "").trim()) d.wod.name = "Conditioning " + d.label;
+          if (d.finisher && !(d.finisher.name || "").trim()) d.finisher.name = "Finisher " + d.label;
+        });
       }
       if (st.context === "setup") {
         draft.customTpl = (planChanges(t, orig).any || t.name !== personalCopy(orig).name) ? t : null;
@@ -2320,6 +2421,7 @@
 
   // the progression rule as a small tag on an exercise row (built programs only)
   function ruleTag(t, slot) {
+    if (followsAnchor(slot)) return '<span class="pe-tag">' + Math.round(slot.pctOfAnchor * 100) + '% ' + esc(((EX[slot.anchorId] || {}).name || slot.anchorId).toLowerCase()) + '</span>';
     var p = t.progression && t.progression[slot.exId];
     if (!p) return '';
     var m = progMode(t, p);
@@ -2336,6 +2438,8 @@
       item("dm-dup", "Duplicate") +
       (di > 0 ? item("dm-up", "Move earlier") : '') +
       (di < n - 1 ? item("dm-down", "Move later") : '') +
+      (d.wod ? '' : item("dm-fin", d.finisher ? "Edit finisher" : "Add finisher", d.finisher ? esc(metconSubtitle(d.finisher)) : "a short WOD after the lifts") +
+        (d.finisher ? item("dm-finx", "Remove finisher", "", "danger") : '')) +
       item("dm-kind", d.wod ? "Make it a lifting day" : "Make it a conditioning day", d.wod ? "drops the WOD" : ((d.slots || []).length ? "drops its exercises" : "")) +
       (n > 1 ? item("dm-del", "Delete day", "", "danger") : '') +
       '<div class="btn-row"><button class="btn btn-ghost" id="dm-cancel">Cancel</button></div>');
@@ -2362,6 +2466,13 @@
     var up = document.getElementById("dm-up"), dn = document.getElementById("dm-down");
     if (up) up.onclick = function () { tplMoveDay(t, di, -1); moveOpen(di, di - 1); done(); };
     if (dn) dn.onclick = function () { tplMoveDay(t, di, 1); moveOpen(di, di + 1); done(); };
+    var fin = document.getElementById("dm-fin"), finx = document.getElementById("dm-finx");
+    if (fin) fin.onclick = function () {
+      if (!d.finisher) { d.finisher = blankWod(); d.finisher.capMin = 8; touched(t); }
+      st.open[di] = true; closeSheet(); rerender();
+      openWodSheet(d.finisher, title, function () { touched(t); rerender(); }, "finisher");
+    };
+    if (finx) finx.onclick = function () { delete d.finisher; touched(t); done(); toast("Finisher removed"); };
     document.getElementById("dm-kind").onclick = function () {
       var toCond = !d.wod;
       var go2 = function () {
@@ -2384,11 +2495,11 @@
   }
 
   // edit one conditioning workout in a sheet. Changes go straight into `wod`; onDone re-renders the caller.
-  function openWodSheet(wod, dayName, onDone) {
+  function openWodSheet(wod, dayName, onDone, kindLabel) {
     var FORMATS = ["amrap", "fortime", "rft"];
     var stepFor = function (m) { var u = m.unit || moveUnit(m.move); return u === "m" ? 50 : 1; };
     var draw = function () {
-      var html = '<h2>' + esc(dayName) + ' · conditioning</h2>' +
+      var html = '<h2>' + esc(dayName) + ' · ' + (kindLabel || "conditioning") + '</h2>' +
         '<button class="btn btn-ghost" id="ws-bench" style="width:100%;margin-bottom:12px">Pick a benchmark</button>' +
         '<div class="field"><label>Name</label><input class="ed-name" id="ws-name" maxlength="40" value="' + esc(wod.name || "") + '" placeholder="Engine builder"></div>' +
         '<div class="field"><label>Format</label><div class="seg-ctl" id="ws-fmt">' +
@@ -2483,20 +2594,35 @@
   // one exercise in the editor: sets / reps / range, swap, remove
   function openSlotSheet(t, di, si, rerender) {
     var slot = t.microcycle[di].slots[si];
-    var locked = slotLocked(t, slot), canSwap = slotSwappable(slot);
+    var locked = slotLocked(t, slot);
     var own = isMixed(t);
     var segHtml = function (id, opts, cur) {
       return '<div class="seg-ctl" id="' + id + '">' + opts.map(function (o) { return '<button data-v="' + o[0] + '" aria-selected="' + (o[0] === cur) + '">' + o[1] + '</button>'; }).join("") + '</div>';
     };
     var draw = function () {
       var ex = EX[slot.exId] || {}, p = t.progression && t.progression[slot.exId];
+      var canSwap = slotSwappable(slot);   // a lift following a percentage can't be swapped until it stops
       var range = !!(slot.repHigh && slot.repHigh > slot.reps);
       var html = '<h2>' + esc(slotName(slot)) + '</h2>' +
         '<p class="sh-lead">' + esc(dayTitle(t.microcycle[di].label)) + (locked ? ' · locked — this lift drives the program’s progression' : '') + '</p>';
       if (own) html += '<div class="eyebrow" style="margin:0 0 6px">Reps</div>' + segHtml("ss-range", [["fixed", "Fixed reps"], ["range", "Rep range"]], range ? "range" : "fixed");
       html += '<div class="ed-nums" style="margin:10px 0 14px">' + numStep("sets", slot.sets) + numStep("reps", slot.reps) +
           ((own ? range : isDouble(t)) ? numStep("repHigh", slot.repHigh || slot.reps) : "") + '</div>';
-      if (own && p) {
+      // a barbell lift that isn't a main lift itself can ride on a percentage of one
+      var mains = own && ex.bar ? (t.anchors || []).filter(function (id) { return id !== slot.exId && EX[id]; }) : [];
+      var follow = followsAnchor(slot);
+      if (mains.length && (t.anchors || []).indexOf(slot.exId) < 0) {
+        html += '<div class="toggle-line" style="margin-bottom:10px"><div class="tl-k">% of a main lift<p>' +
+            (follow ? "Its weight follows " + esc(EX[slot.anchorId].name) + " — no progression of its own." : "Load it as a percentage of a main lift instead of progressing it on its own.") + '</p></div>' +
+          '<button class="sw" role="switch" id="ss-follow" aria-label="% of a main lift" aria-checked="' + follow + '"></button></div>';
+        if (follow) {
+          var aw = db.active && db.active.templateId === t.id && db.active.lifts && db.active.lifts[slot.anchorId];
+          html += (mains.length > 1 ? segHtml("ss-anchor", mains.map(function (id) { return [id, esc(EX[id].name)]; }), slot.anchorId) : '') +
+            '<div class="ed-nums" style="margin:10px 0 4px"><span class="ns" data-pr="pct"><button data-d="-">–</button><b>' + Math.round(slot.pctOfAnchor * 100) + '</b><button data-d="+">+</button><i>% of ' + esc(EX[slot.anchorId].name) + '</i></span></div>' +
+            (aw ? '<p class="ac-note">Next time: ' + fmt(roundLoad(aw.weight * slot.pctOfAnchor, eq())) + ' ' + U() + ' (' + esc(EX[slot.anchorId].name) + ' is at ' + fmt(aw.weight) + ').</p>' : '');
+        }
+      }
+      if (own && p && !follow) {
         var mode = progMode(t, p);
         var started = db.active && db.active.templateId === t.id && db.active.lifts && db.active.lifts[slot.exId];
         html += '<div class="eyebrow" style="margin:0 0 6px">Progression</div>' +
@@ -2555,7 +2681,8 @@
       sheetRoot.querySelectorAll("[data-pr]").forEach(function (grp) {
         var f = grp.dataset.pr, unit = addedIncrement(slot.exId) / (ex.bar ? 1 : 2);
         var bump = function (dlt) {
-          if (f === "inc") p.increment = Math.max(unit, Math.round((p.increment + dlt * unit) * 100) / 100);
+          if (f === "pct") slot.pctOfAnchor = Math.min(1, Math.max(0.5, Math.round((slot.pctOfAnchor + dlt * 0.05) * 100) / 100));
+          else if (f === "inc") p.increment = Math.max(unit, Math.round((p.increment + dlt * unit) * 100) / 100);
           else if (f === "miss") p.failRule.misses = Math.min(6, Math.max(1, p.failRule.misses + dlt));
           else {
             var cur = slot.seedLoad != null ? slot.seedLoad : (ex.bar ? eq().bar : 10);
@@ -2571,8 +2698,18 @@
         t.anchors = t.anchors || [];
         var i = t.anchors.indexOf(slot.exId);
         if (i >= 0) t.anchors.splice(i, 1); else t.anchors.push(slot.exId);
+        releaseFollowers(t);   // lifts that followed this one get their own rule back
         touched(t); draw();
       };
+      var fl = document.getElementById("ss-follow");
+      if (fl) fl.onclick = function () {
+        if (followsAnchor(slot)) stopFollow(t, slot); else setFollow(t, slot, mains[0], 0.8);
+        draw();
+      };
+      var anc = document.getElementById("ss-anchor");
+      if (anc) anc.querySelectorAll("button").forEach(function (b) {
+        b.onclick = function () { slot.anchorId = b.dataset.v; touched(t); draw(); };
+      });
       var sw = document.getElementById("ss-swap");
       if (sw) sw.onclick = function () {
         pickExercise("Swap " + slotName(slot), function (exId) { tplSwapSlot(t, di, si, exId, null, null); closeSheet(); rerender(); });
@@ -2947,7 +3084,7 @@
   }
   function progKindLabel(t) {
     var k = t.style || tplKind(t);
-    if (k === "custom") return t.microcycle.some(function (d) { return d.wod; }) ? "hybrid" : "built by you";
+    if (k === "custom") return t.microcycle.some(function (d) { return d.wod || d.finisher; }) ? "hybrid" : "built by you";
     return k === "bodybuilding" ? "hypertrophy" : k === "crossfit" ? "CrossFit" : k === "hyrox" ? "Hyrox" : "barbell";
   }
 
@@ -2989,6 +3126,7 @@
         html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' + sc +
           (x.assist ? '' : ' &nbsp; <span class="wt">' + fmt(x.weight) + ' ' + U() + '</span>') + '</span></div>';
       });
+      if (res.finisher) html += finisherLineHtml(res.finisher);
       html += '</div>';
     });
     html += '<div class="btn-row"><button class="btn btn-primary" id="d-use">Use this program</button></div>' +
@@ -3036,10 +3174,14 @@
     if (n.linear) bits.push(n.linear + " add weight every session you hit every rep");
     if (n.double) bits.push(n.double + " work up a rep range, then add weight");
     if (n.none) bits.push(n.none + " keep the weight you set");
+    var follow = t.microcycle.reduce(function (k, d) { return k + (d.slots || []).filter(followsAnchor).length; }, 0);
+    if (follow) bits.push(follow + " follow a percentage of a main lift");
     var cond = t.microcycle.filter(function (d) { return d.wod; }).length;
+    var fins = t.microcycle.filter(function (d) { return !d.wod && d.finisher; }).length;
     var out = bits.length ? "You set the rule for each exercise: " + bits.join(", ") + ". Miss too many sessions in a row and a lift backs off so you can rebuild."
       : "You set the rule for each exercise.";
     if (cond) out += " " + cond + " conditioning day" + (cond === 1 ? "" : "s") + " — log your score, nothing to progress.";
+    if (fins) out += " " + fins + " lifting day" + (fins === 1 ? " ends" : "s end") + " with a finisher — its score is saved with the lifts.";
     return out;
   }
 
@@ -3087,6 +3229,7 @@
           html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' +
             x.workSets.length + '×' + repRange(x.target, x.repHigh) + (x.assist ? '' : '  ·  ' + fmt(x.weight) + U()) + '</span></div>';
         });
+        if (res.finisher) html += finisherLineHtml(res.finisher);
         html += '</div>';
       });
     }
@@ -3473,6 +3616,7 @@
       var dk = dayKey(s.date); dayHits[dk] = 1;
       var kindTag = s.kind === "metcon" ? "metcon" : "strength";
       dayHasKind[dk] = dayHasKind[dk] || {}; dayHasKind[dk][kindTag] = 1;
+      if (s.finisher) dayHasKind[dk].metcon = 1;   // lifts + a finisher is a hybrid day on its own
 
       if (s.templateId) {
         var pk = (tplById(s.templateId) || {}).basedOn || s.templateId;   // your copy of a program is still that program
@@ -3886,6 +4030,7 @@
             : '<span class="nx-set">' + setStr + '</span>&nbsp;&nbsp;<span class="nx-w">' + fmt(x.weight) + ' ' + U() + '</span>') +
           '</span></div>';
       });
+      if (res.finisher) html += finisherLineHtml(res.finisher, "nc-ex");
       html += ncFoot + '</button>';
     }
 
@@ -4097,6 +4242,7 @@
             html += '<div class="ex-line"><span>' + esc(a.name) + '</span><span class="scheme">' +
               a.sets.length + '×' + a.topReps + (a.topWeight ? '  ·  ' + fmt(a.topWeight) + U() : '') + '</span></div>';
           });
+          if (s.finisher) html += '<div class="ex-line fin-line"><span>Finisher · ' + esc(s.finisher.wodName || "Conditioning") + '</span><span class="scheme">' + esc(metconScoreText(s.finisher)) + '</span></div>';
         }
         html += '</div>';
         return;
@@ -4116,6 +4262,7 @@
           html += '<div class="ex-line"><span>' + esc(x.name) + '</span><span class="scheme">' + setStr +
             (x.assist ? '' : '  ·  ' + fmt(x.weight) + U()) + '</span></div>';
         });
+        if (res.finisher) html += finisherLineHtml(res.finisher);
       }
       html += '</div>';
     });
@@ -4157,6 +4304,7 @@
         '<div class="pk-ex">' + res.exercises.map(function (x) {
           return esc(x.name) + (x.assist ? '' : ' <span class="pk-w">' + fmt(x.weight) + U() + '</span>');
         }).join('  ·  ') + '</div>' +
+        (res.finisher ? '<div class="pk-fin">Finisher · ' + esc(res.finisher.name || "Conditioning") + ' — ' + esc(metconSubtitle(res.finisher)) + '</div>' : '') +
       '</button>';
     });
 
@@ -4401,7 +4549,7 @@
     if (!run) { root.innerHTML = ""; persistRun(); return; }
     if (run.kind === "metcon") { renderMetconPlayer(); return; }
     persistRun();
-    if (run.i >= run.queue.length && !run.custom) { finishPlayer(); return; }
+    if (run.i >= run.queue.length && !run.custom && !offersFinisher()) { finishPlayer(); return; }
 
     // build the shell once, then update its parts in place (no full-DOM flash between sets)
     if (!root.querySelector(".player")) {
@@ -4426,6 +4574,7 @@
     }
 
     if (run.i >= run.queue.length) {
+      if (!run.custom) { renderFinisherOffer(); return; }
       if (run.restUntil && Date.now() < run.restUntil) { renderRest(null); return; }
       run.restUntil = null; renderLiveEnd(); return;
     }
@@ -4546,7 +4695,49 @@
     return "Aim for " + step.repHigh + " — the weight goes up when every set hits it." + (last != null ? " Last time: " + last + "." : "");
   }
 
+  /* ---------- finisher: a short WOD after the last work set, saved with the lifts as one session ---------- */
+  function offersFinisher() { return !!(run && run.res && run.res.finisher && !run.past && programRun()); }
+  function renderFinisherOffer() {
+    if (run.tick) { clearInterval(run.tick); run.tick = null; }
+    var w = run.res.finisher;
+    document.getElementById("pl-rail").innerHTML = run.res.exercises.map(function () { return '<i class="done"></i>'; }).join("");
+    document.getElementById("pl-count").textContent = "Lifts done";
+    document.getElementById("pl-body").innerHTML =
+      '<div class="pl-ex">' + esc(w.name || "Finisher") + '</div>' +
+      '<div class="lv-title">Finisher: ' + esc(metconSubtitle(w)) + '</div>' +
+      '<div class="fin-moves">' + metconMoves(w).map(function (m) { return '<div>' + esc(moveLine(m)) + '</div>'; }).join("") + '</div>';
+    document.getElementById("pl-actions").innerHTML =
+      '<div class="pl-prow">' +
+        '<button class="btn btn-ghost pl-back" id="fn-back">Back</button>' +
+        '<button class="btn btn-primary pl-done" id="fn-start">Start finisher</button>' +
+      '</div>' +
+      '<button class="btn btn-ghost pl-cw" id="fn-skip">Skip — save my lifts</button>';
+    document.getElementById("fn-back").onclick = stepBack;
+    document.getElementById("fn-start").onclick = startFinisher;
+    document.getElementById("fn-skip").onclick = function () { finishPlayer(); };
+  }
+  // nothing is saved or progressed yet: the lift run rides along inside the metcon run until the score is in
+  function startFinisher() {
+    var lift = {};
+    Object.keys(run).forEach(function (k) { if (k !== "t" && k !== "tick") lift[k] = run[k]; });
+    document.getElementById("player-root").innerHTML = "";
+    startMetconPlayer(null, run.res.finisher, { finisherOf: lift });
+  }
+  // back to the finished lift run (its template is whatever the program is now)
+  function resumeLiftRun() {
+    var lift = run.finisherOf;
+    if (run.tick) { clearInterval(run.tick); run.tick = null; }
+    lift.t = tplById(db.active.templateId);
+    run = lift;
+  }
+
   function endWorkoutPrompt() {
+    if (run && run.finisherOf) {
+      confirmSheet("Stop the finisher?", "Your lifts are saved and your program moves on — just without a finisher score.", function () {
+        resumeLiftRun(); finishPlayer();
+      }, "Stop");
+      return;
+    }
     confirmSheet("End this workout?", "Nothing from this session is saved" + (programRun() ? " and your program won't advance." : "."), function () {
       if (run && run.tick) { clearInterval(run.tick); run.tick = null; }
       run = null; persistRun();
@@ -5008,11 +5199,23 @@
     };
   }
 
-  function finishPlayer() {
-    var t = run.t;
+  // finisher: { wodId, wodName, format, score, ... } when a finisher was logged with the lifts
+  function finishPlayer(finisher) {
+    var sess = saveLiftRun(run, db.active, db.sessions, finisher);
+    save();
+    afterLiftSave(sess);
+  }
+  function afterLiftSave(sess) {
+    lastSummary = sess;
+    run = null; persistRun();
+    finishAndCelebrate(sess, function () { go("summary"); });
+  }
+  // progression, the rotation advance and the session record — once per lift run, finisher or not
+  function saveLiftRun(lr, active, sessions, finisher) {
+    var t = lr.t;
     // progression: only program lifts (not bodyweight assistance, not ad-hoc additions)
     var progExercises = [];
-    run.results.forEach(function (r) {
+    lr.results.forEach(function (r) {
       if (r.assist || r.adhoc) return;
       var ws = r.sets;
       var topW = ws.reduce(function (m, s) { return Math.max(m, s.weight || 0); }, 0);
@@ -5024,21 +5227,21 @@
         topWeight: topW
       });
     });
-    var notes = applyResult(t, db.active, { dayType: run.res.dayType, cycleIndex: run.chosenIdx, exercises: progExercises }, eq());
+    var notes = applyResult(t, active, { dayType: lr.res.dayType, cycleIndex: lr.chosenIdx, exercises: progExercises }, eq());
 
     // snapshot of working weights after this session — for the weekly progress chart
     var snapshot = {};
-    trackedLifts(t, db.active.lifts).forEach(function (id) { snapshot[id] = db.active.lifts[id].weight; });
+    trackedLifts(t, active.lifts).forEach(function (id) { snapshot[id] = active.lifts[id].weight; });
 
     var sess = {
-      id: uid(), date: run.startedAt, templateId: t.id, dayLabel: run.res.label,
-      dayIdx: run.chosenIdx % t.microcycle.length, mods: run.mods || [],
-      weekIndex: db.active.weekIndex, dayType: run.res.dayType,
-      durationSec: Math.round((Date.now() - run.startedAt) / 1000),
+      id: uid(), date: lr.startedAt, templateId: t.id, dayLabel: lr.res.label,
+      dayIdx: lr.chosenIdx % t.microcycle.length, mods: lr.mods || [],
+      weekIndex: active.weekIndex, dayType: lr.res.dayType,
+      durationSec: Math.round((Date.now() - lr.startedAt) / 1000),
       snapshot: snapshot,
-      actual: run.results.map(function (r, ri) {
+      actual: lr.results.map(function (r, ri) {
         var top = r.sets.reduce(function (m, s) { return (s.weight || 0) >= (m.weight || 0) ? s : m; }, r.sets[0] || {});
-        var rx = run.res.exercises[ri] || {};
+        var rx = lr.res.exercises[ri] || {};
         return {
           exId: r.exId, name: r.name, assist: r.assist, adhoc: r.adhoc, slotIdx: rx.slotIdx != null ? rx.slotIdx : null,
           made: (r.assist || r.adhoc) ? null : (r.sets.length > 0 && r.sets.every(function (s) { return s.reps >= s.target; })),
@@ -5047,12 +5250,9 @@
       }),
       notes: notes
     };
-    db.sessions.push(sess);
-    save();
-
-    lastSummary = sess;
-    run = null; persistRun();
-    finishAndCelebrate(sess, function () { go("summary"); });
+    if (finisher) sess.finisher = finisher;
+    sessions.push(sess);
+    return sess;
   }
 
   /* ===================================================== METCON PLAYER */
@@ -5073,7 +5273,9 @@
     return "Minute " + (min + 1) + " — " + w.minutes[min % w.minutes.length].text;
   }
 
-  function startMetconPlayer(chosenIdx, explicitWod) {
+  // opts.finisherOf: the lift run this WOD finishes — logging the score saves both as one session
+  function startMetconPlayer(chosenIdx, explicitWod, opts) {
+    var finisherOf = (opts && opts.finisherOf) || null;
     var t = db.active ? tplById(db.active.templateId) : null;
     var wod, label, idx = null;
     if (explicitWod) { wod = explicitWod; label = explicitWod.name; }
@@ -5084,7 +5286,7 @@
       wod = r.wod; label = r.label;
     }
     run = {
-      kind: "metcon", t: t, adhoc: !!explicitWod, chosenIdx: idx,
+      kind: "metcon", t: t, adhoc: !!explicitWod && !finisherOf, chosenIdx: idx, finisherOf: finisherOf,
       wod: wod, res: { label: label, dayType: null },
       startedAt: Date.now(), startWall: null, pausedMs: 0, pausedAt: null,
       running: false, roundsDone: 0, checks: {}, emomLastMin: -1
@@ -5249,10 +5451,34 @@
     };
   }
 
+  // the finisher's score is in: save the lift run it carried, with the score attached
+  function completeFinisher(mr, score, active, sessions) {
+    var w = mr.wod, lift = mr.finisherOf;
+    lift.t = mr.t || tplById(active.templateId);
+    return saveLiftRun(lift, active, sessions, { wodId: w.id, wodName: w.name, format: w.format, score: metconScoreRecord(w, score),
+      durationSec: Math.round((Date.now() - mr.startedAt) / 1000), movements: metconMoves(w).map(function (m) { return { move: m.move, amount: m.amount }; }) });
+  }
+  function metconScoreRecord(w, score) {
+    return {
+      type: w.scoreType || "time",
+      rounds: score.rounds != null ? score.rounds : null,
+      reps: score.reps != null ? score.reps : null,
+      timeSec: score.timeSec != null ? score.timeSec : null,
+      load: score.load != null ? score.load : null,
+      cappedOut: !!score.cappedOut,
+      rx: score.rx !== false
+    };
+  }
   function finishMetconPlayer(score) {
     if (!run) return;
     if (run.tick) { clearInterval(run.tick); run.tick = null; }
     var w = run.wod, t = run.t;
+    if (run.finisherOf) {
+      var ls = completeFinisher(run, score, db.active, db.sessions);
+      save();
+      afterLiftSave(ls);
+      return;
+    }
     var sess = {
       id: uid(), date: run.startedAt, kind: "metcon",
       templateId: run.adhoc ? null : (t && t.id), programName: t ? t.name : (run.adhoc ? "Rolled workout" : null),
@@ -5260,15 +5486,7 @@
       dayLabel: run.res.label, wodId: w.id, wodName: w.name, style: w.style, format: w.format,
       weekIndex: db.active ? db.active.weekIndex : null,
       durationSec: Math.round((Date.now() - run.startedAt) / 1000),
-      score: {
-        type: w.scoreType || "time",
-        rounds: score.rounds != null ? score.rounds : null,
-        reps: score.reps != null ? score.reps : null,
-        timeSec: score.timeSec != null ? score.timeSec : null,
-        load: score.load != null ? score.load : null,
-        cappedOut: !!score.cappedOut,
-        rx: score.rx !== false
-      },
+      score: metconScoreRecord(w, score),
       movements: metconMoves(w).map(function (m) { return { move: m.move, amount: m.amount }; }),
       note: ""
     };
@@ -5332,6 +5550,13 @@
         '</span><span class="scheme">' + (skipped ? "skipped" : a.sets.length + (a.sets.length === 1 ? " set · " : " sets · ") + esc(top) + esc(effTag)) + '</span></div>';
     });
     html += '</div>';
+    if (s.finisher) {
+      var f = s.finisher;
+      html += '<div class="eyebrow">Finisher</div><div class="day-block">' +
+        '<div class="ex-line fin-line"><span>' + esc(f.wodName || "Conditioning") + '</span><span class="scheme">' + esc(metconScoreText(f)) + (f.score && !f.score.rx ? ' · scaled' : '') + '</span></div>' +
+        '<div class="mc-detail-sub">' + esc(FORMAT_LABEL[f.format] || f.format || "") + '</div>' +
+      '</div>';
+    }
 
     if (freestyle) {
       html += oneOffExtrasHtml(s) +
@@ -5646,15 +5871,17 @@
   }
 
   function metconHistoryHtml() {
-    var ms = db.sessions.filter(function (s) { return s.kind === "metcon" || s.kind === "freestyle"; });
+    var ms = db.sessions.filter(function (s) { return s.kind === "metcon" || s.kind === "freestyle" || s.finisher; });
     if (!ms.length) return "";
     var html = '<div class="eyebrow" style="margin-top:22px">Workouts</div>';
     ms.slice(-12).reverse().forEach(function (s) {
+      var f = s.kind ? null : s.finisher;   // a lift session's finisher shows by its own name and score
+      var sc = f || s;
       var sum = s.kind === "freestyle"
         ? (s.actual || []).reduce(function (n, a) { return n + a.sets.length; }, 0) + " sets"
-        : esc(metconScoreText(s)) + (s.score && !s.score.rx ? " · scaled" : "");
+        : esc(metconScoreText(sc)) + (sc.score && !sc.score.rx ? " · scaled" : "") + (f ? " · after " + esc(sessionTitle(s)) : "");
       var tag = s.kind === "freestyle" ? 'button data-sess="' + s.id + '"' : 'div';
-      html += '<' + tag + ' class="rec-row">' + '<span class="rr-day">' + esc(s.wodName || s.dayLabel) + '</span>' +
+      html += '<' + tag + ' class="rec-row">' + '<span class="rr-day">' + esc(f ? (f.wodName || "Finisher") : (s.wodName || s.dayLabel)) + '</span>' +
         '<span class="rr-sum">' + sum + '</span>' +
         '<span class="rr-date">' + relDate(s.date) + '</span></' + (s.kind === "freestyle" ? 'button' : 'div') + '>';
     });
@@ -5724,7 +5951,7 @@
           html += '<div class="rec-row"><span class="rr-day">' + esc(s.dayLabel) + '</span>' +
             '<span class="rr-sum">' + (s.actual || []).filter(function (a) { return !a.assist; }).map(function (a) {
               return fmt(a.topWeight) + "×" + a.topReps;
-            }).join("  ") + '</span>' +
+            }).join("  ") + (s.finisher ? "  + " + esc(finisherScoreText(s.finisher)) : "") + '</span>' +
             '<span class="rr-date">' + relDate(s.date) + '</span></div>';
         });
       }
