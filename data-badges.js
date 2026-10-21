@@ -116,8 +116,8 @@
 
   B = B.concat(ladder({ id: "hyrox", cat: "hyrox", glyph: "rocket", stat: S("hyroxCount"),
     steps: [1, 5, 12, 25],
-    name: function (n) { return n === 1 ? "Hyrox Rookie" : "Hyrox ×" + n; },
-    desc: function (n) { return "Finish " + n + " Hyrox session" + (n > 1 ? "s" : ""); } }));
+    name: function (n) { return n === 1 ? "Race Rookie" : "Race Prep ×" + n; },
+    desc: function (n) { return "Finish " + n + " hybrid-race session" + (n > 1 ? "s" : ""); } }));
   B = B.concat(ladder({ id: "hyroxsim", cat: "hyrox", glyph: "rocket", stat: S("hyroxFullSims"),
     steps: [1, 5, 12],
     name: function (n) { return "Full Sim ×" + n; },
@@ -175,7 +175,7 @@
     { id: "sp-daybreak", name: "Day & Night", desc: "Train before 6am and after 9pm", cat: "time", tier: "silver", glyph: "moon", check: function (c) { return c.stats.earlyCount > 0 && c.stats.lateCount > 0; } },
     { id: "sp-midnight", name: "Witching Hour", desc: "Start a workout between midnight and 4am", cat: "time", tier: "gold", glyph: "moon", check: function (c) { return c.stats.midnight; } },
     { id: "sp-alldays", name: "Every Day Counts", desc: "Train on all 7 days of the week", cat: "consistency", tier: "gold", glyph: "calendar", check: function (c) { return c.stats.daysOfWeek >= 7; } },
-    { id: "sp-triple", name: "Barbell Trinity", desc: "Run Starting Strength, StrongLifts and Texas Method", cat: "variety", tier: "platinum", glyph: "shield", check: function (c) { return c.stats.ranBarbellTrio; } },
+    { id: "sp-triple", name: "Barbell Trinity", desc: "Run all three classic barbell programs", cat: "variety", tier: "platinum", glyph: "shield", check: function (c) { return c.stats.ranBarbellTrio; } },
     { id: "sp-loyalist", name: "Program Loyalist", desc: "30 sessions on one program", cat: "consistency", tier: "gold", glyph: "shield", check: function (c) { return c.stats.maxProgramSessions >= 30; } },
     { id: "sp-deload", name: "Bounce Back", desc: "Recover a lift after a deload", cat: "strength", tier: "silver", glyph: "bolt", check: function (c) { return c.stats.deloadRecovered; } },
     { id: "sp-marathon", name: "The Long Haul", desc: "A single workout over 90 minutes", cat: "effort", tier: "silver", glyph: "timer", check: function (c) { return c.stats.longestSessionSec >= 5400; } },
@@ -183,8 +183,8 @@
     { id: "sp-hybrid", name: "Hybrid Athlete", desc: "A lifting and a conditioning session on the same day", cat: "variety", tier: "gold", glyph: "infinity", check: function (c) { return c.stats.hybridDay; } },
     { id: "sp-architect", name: "The Architect", desc: "Create your first custom program", cat: "variety", tier: "bronze", glyph: "shield", check: function (c) { return (c.customPlans || []).length > 0; } },
     { id: "sp-freestyle", name: "Freestyler", desc: "Build and finish your own one-off workout", cat: "variety", tier: "bronze", glyph: "star", check: function (c) { return c.stats.freestyleCount > 0; } },
-    { id: "sp-hyrox-90", name: "Sub-90 Hyrox", desc: "Full Hyrox simulation under 90 minutes", cat: "hyrox", tier: "gold", glyph: "rocket", check: function (c) { return c.stats.bestHyroxSec != null && c.stats.bestHyroxSec < 5400; } },
-    { id: "sp-hyrox-75", name: "Sub-75 Hyrox", desc: "Full Hyrox simulation under 75 minutes", cat: "hyrox", tier: "platinum", glyph: "rocket", check: function (c) { return c.stats.bestHyroxSec != null && c.stats.bestHyroxSec < 4500; } },
+    { id: "sp-hyrox-90", name: "Sub-90 Race Sim", desc: "Full race simulation under 90 minutes", cat: "hyrox", tier: "gold", glyph: "rocket", check: function (c) { return c.stats.bestHyroxSec != null && c.stats.bestHyroxSec < 5400; } },
+    { id: "sp-hyrox-75", name: "Sub-75 Race Sim", desc: "Full race simulation under 75 minutes", cat: "hyrox", tier: "platinum", glyph: "rocket", check: function (c) { return c.stats.bestHyroxSec != null && c.stats.bestHyroxSec < 4500; } },
     { id: "sp-double", name: "Double Progression", desc: "Earn a weight bump on a bodybuilding program", cat: "strength", tier: "bronze", glyph: "bolt", check: function (c) { return c.stats.doubleBumps > 0; } },
     { id: "sp-doublemaster", name: "Range Master", desc: "50 double-progression weight bumps", cat: "strength", tier: "gold", glyph: "bolt", check: function (c) { return c.stats.doubleBumps >= 50; } },
     { id: "sp-notes", name: "Keeping Track", desc: "Add a note to a body log", cat: "body", tier: "bronze", glyph: "check", check: function (c) { return c.stats.noteCount > 0; } },

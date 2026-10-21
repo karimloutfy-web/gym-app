@@ -70,7 +70,7 @@
         { move: "burpeejump", amount: 80, unit: "m" }
       ] },
     { id: "r-hy-fullsim", name: "Full Simulation", style: "hyrox", format: "hyrox", scoreType: "time", capMin: 120,
-      equipmentNote: "Full Hyrox rig",
+      equipmentNote: "Full race rig (all 8 stations)",
       stations: [
         { move: "skierg", amount: 1000, unit: "m" },
         { move: "sledpush", amount: 50, unit: "m", load: 152 },

@@ -46,7 +46,12 @@
     background: var(--surface); margin: 10px 0; }
   .feed-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .feed-head b { font-size: var(--fs-md); }
-  .feed-head span { font-size: var(--fs-sm); color: var(--text-faint); white-space: nowrap; }
+  .feed-head span { font-size: var(--fs-sm); color: var(--text-faint); white-space: nowrap; display: inline-flex; align-items: center; gap: 2px; }
+  /* Sign in with Apple: black on light, white on dark, per Apple's button guidelines */
+  .btn-apple { background: #000; color: #fff; border: 1px solid #000; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-apple { background: #fff; color: #000; border-color: #fff; } }
+  :root[data-theme="dark"] .btn-apple { background: #fff; color: #000; border-color: #fff; }
+  .feed-more { width: 44px; height: 32px; margin: -6px -10px -6px 0; color: var(--text-muted); font-size: var(--fs-lg); line-height: 1; }
   .feed-sub { font-size: var(--fs-sm); color: var(--text-muted); margin-top: 2px; }
   .feed-lifts { list-style: none; margin: 8px 0 0; padding: 0; }
   .feed-lifts li { font-size: var(--fs-sm); color: var(--text); padding: 2px 0;
@@ -525,7 +530,7 @@
   .nu-in { width: 104px; padding: 7px 10px; text-align: center; }
   .nu-u { display: inline-block; width: 22px; font-size: var(--fs-xs); color: var(--text-faint); margin-left: 6px; }
   .nu-act { width: 100%; text-align: left; margin-top: 2px; }
-  .nu-note { font-size: var(--fs-xs); color: var(--text-faint); line-height: 1.45; margin-top: 6px; }
+  .nu-note { font-size: var(--fs-note); color: var(--text-faint); line-height: 1.45; margin-top: 6px; }
   .nu-range { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; background: transparent; margin: 4px 0 0; touch-action: pan-y; }
   .nu-range:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
   .nu-range::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: var(--line-strong); }
@@ -689,6 +694,7 @@
   .pe-add { min-height: 44px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
   .pe-note { font-size: var(--fs-xs); color: var(--text-faint); line-height: 1.5; margin: 4px 0 8px; }
   .su-custom h3 { font-size: var(--fs-lg); }
+  .health-note { margin: 8px 0 24px; font-size: var(--fs-note); color: var(--text-faint); line-height: 1.5; }
   .ac-note { font-size: var(--fs-note); color: var(--text-faint); margin-top: 6px; line-height: 1.45; }
   /* the primary action stays reachable at the foot of a long sheet */
   .sh-foot { position: sticky; bottom: calc(-1 * max(18px, env(safe-area-inset-bottom))); margin: 14px -16px calc(-1 * max(18px, env(safe-area-inset-bottom))); padding: 10px 16px max(18px, env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); z-index: 1; }
@@ -938,8 +944,8 @@
     {
       id: "starting-strength",
       kind: "barbell",
-      name: "Starting Strength",
-      author: "Mark Rippetoe",
+      name: "Novice Linear 3×5",
+      author: "Classic novice template",
       blurb: "The classic novice barbell program. Three big lifts a day, three days a week, a little more weight every single session.",
       bestFor: "Brand-new lifters, first 3–9 months under the bar",
       daysPerWeek: 3,
@@ -974,8 +980,8 @@
     {
       id: "stronglifts-5x5",
       kind: "barbell",
-      name: "StrongLifts 5×5",
-      author: "Mehdi",
+      name: "5×5 Linear",
+      author: "Classic 5×5 template",
       blurb: "Five sets of five on the core barbell lifts. Start light, add 2.5 kg every workout, deload when you stall.",
       bestFor: "Beginners who want a simple, rigid structure",
       daysPerWeek: 3,
@@ -1006,8 +1012,8 @@
     {
       id: "texas-method",
       kind: "barbell",
-      name: "Texas Method",
-      author: "Rippetoe / Kilgore",
+      name: "Volume–Light–Intensity",
+      author: "Classic intermediate template",
       blurb: "An intermediate weekly cycle: a hard volume day, an easy recovery day, then a new 5-rep record on the intensity day.",
       bestFor: "Lifters who have stalled on daily linear progression",
       daysPerWeek: 3,
@@ -1211,7 +1217,7 @@
   }
 
   /* ===================================================== METCON ENGINE */
-  var FORMAT_LABEL = { amrap: "AMRAP", emom: "EMOM", fortime: "For Time", rft: "Rounds For Time", chipper: "Chipper", hyrox: "Hyrox" };
+  var FORMAT_LABEL = { amrap: "AMRAP", emom: "EMOM", fortime: "For Time", rft: "Rounds For Time", chipper: "Chipper", hyrox: "Race sim" };
   // countdown formats show a shrinking clock; the rest count up
   function metconCountsDown(wod) { return wod.format === "amrap" || wod.format === "emom"; }
   function metconMoves(wod) { return wod.format === "hyrox" ? (wod.stations || []) : (wod.movements || []); }
@@ -1219,7 +1225,7 @@
     if (wod.scheme) return wod.scheme + " " + (FORMAT_LABEL[wod.format] || "For Time");
     if (wod.format === "amrap") return (wod.capMin || "?") + ":00 AMRAP";
     if (wod.format === "emom") return "EMOM " + (wod.capMin || (wod.minutes ? wod.minutes.length : "?"));
-    if (wod.format === "hyrox") return "Hyrox — " + ((wod.stations || []).length) + " stations";
+    if (wod.format === "hyrox") return "Race sim — " + ((wod.stations || []).length) + " stations";
     if (wod.format === "rft" || wod.format === "chipper") {
       var r = wod.targetRounds ? wod.targetRounds + " rounds for time" : FORMAT_LABEL[wod.format];
       return r + (wod.capMin ? " · cap " + wod.capMin + ":00" : "");
@@ -1252,7 +1258,7 @@
   function metconShort(w) {
     if (w.format === "amrap") return "AMRAP " + (w.capMin || "?");
     if (w.format === "emom") return "EMOM " + (w.capMin || (w.minutes ? w.minutes.length : "?"));
-    if (w.format === "hyrox") return "Hyrox";
+    if (w.format === "hyrox") return "Race sim";
     var cap = w.capMin ? " · " + w.capMin + " min" : "";
     if (w.format === "rft" || w.format === "chipper") return (w.targetRounds ? w.targetRounds + " rounds" : FORMAT_LABEL[w.format]) + cap;
     return (w.scheme ? w.scheme + " " : "") + "for time" + cap;
@@ -2146,8 +2152,8 @@
     var GROUPS = [
       ["barbell", "Barbell strength"],
       ["bodybuilding", "Bodybuilding"],
-      ["crossfit", "CrossFit"],
-      ["hyrox", "Hyrox"]
+      ["crossfit", "Metcon"],
+      ["hyrox", "Hybrid race"]
     ];
     function card(t) {
       return '<button class="prog-card" data-tpl="' + t.id + '">' +
@@ -2181,7 +2187,7 @@
     if (WOD_POOL.length) {
       html += '<div class="eyebrow" style="margin-top:18px">No commitment</div>' +
         '<button class="prog-card" id="ch-roll"><h3>Roll a random workout</h3>' +
-        '<p>Skip the program — get a random CrossFit or Hyrox piece to do right now. It still lands in your history.</p></button>';
+        '<p>Skip the program — get a random metcon or hybrid-race piece to do right now. It still lands in your history.</p></button>';
     }
 
     if (db.customWorkouts.length) {
@@ -3190,7 +3196,7 @@
   function progKindLabel(t) {
     var k = t.style || tplKind(t);
     if (k === "custom") return t.microcycle.some(function (d) { return d.wod || d.finisher; }) ? "hybrid" : "built by you";
-    return k === "bodybuilding" ? "hypertrophy" : k === "crossfit" ? "CrossFit" : k === "hyrox" ? "Hyrox" : "barbell";
+    return k === "bodybuilding" ? "hypertrophy" : k === "crossfit" ? "metcon" : k === "hyrox" ? "hybrid race" : "barbell";
   }
 
   function showDetail(tplId) { detailId = tplId; go("detail"); }
@@ -3964,7 +3970,7 @@
       '</svg>';
   }
 
-  var CAT_LABEL = { consistency: "Consistency", volume: "Volume", strength: "Strength", variety: "Variety", crossfit: "Conditioning", hyrox: "Hyrox", roller: "Roller", effort: "Effort", time: "Time & season", body: "Body" };
+  var CAT_LABEL = { consistency: "Consistency", volume: "Volume", strength: "Strength", variety: "Variety", crossfit: "Conditioning", hyrox: "Race prep", roller: "Roller", effort: "Effort", time: "Time & season", body: "Body" };
   var CAT_ORDER = ["consistency", "strength", "volume", "crossfit", "hyrox", "effort", "variety", "time", "roller", "body"];
 
   // { have, need } for a locked badge that can report it, else null
@@ -4263,7 +4269,7 @@
       item("se-empty", "Start an empty workout", "Add exercises as you go") +
       item("se-past", "Log a past workout", "Already trained? Record it") +
       (t && !isMetcon(t) && t.microcycle.length > 1 ? item("se-day", "A different day of " + esc(t.name), "Skip ahead or repeat a day") : '') +
-      (WOD_POOL.length ? item("se-roll", "Roll a random WOD", "A CrossFit or Hyrox piece to do now") : '') +
+      (WOD_POOL.length ? item("se-roll", "Roll a random WOD", "A metcon or hybrid-race piece to do now") : '') +
       savedWorkoutsHtml());
     document.getElementById("se-empty").onclick = function () { closeSheet(); startEmptyWorkout(null); };
     document.getElementById("se-past").onclick = openPastSheet;
@@ -4505,13 +4511,13 @@
       '<p class="lead">Spin the wheel and get a random conditioning piece — no program, no progression, just a workout to do today. It still counts in your history and Grit Score.</p>' +
       '<div class="seg-ctl" data-roll-filter>' +
         ['all', 'crossfit', 'hyrox'].map(function (f) {
-          return '<button data-f="' + f + '" aria-selected="' + (rollState.filter === f) + '">' + (f === "all" ? "All" : f === "crossfit" ? "CrossFit" : "Hyrox") + '</button>';
+          return '<button data-f="' + f + '" aria-selected="' + (rollState.filter === f) + '">' + (f === "all" ? "All" : f === "crossfit" ? "Metcon" : "Hybrid race") + '</button>';
         }).join("") +
       '</div>';
 
     if (w) {
       html += '<div class="next-card" style="margin-top:16px">' +
-        '<div class="nc-eye">' + esc((w.style === "hyrox" ? "Hyrox" : "CrossFit")) + '</div>' +
+        '<div class="nc-eye">' + esc((w.style === "hyrox" ? "Hybrid race" : "Metcon")) + '</div>' +
         '<div class="nc-wod">' + esc(w.name) + '</div>' +
         '<div class="nc-wod-sub">' + esc(metconSubtitle(w)) + '</div>' +
         metconMoves(w).map(function (m) { return '<div class="nc-ex"><span class="nx-name">' + esc(moveLine(m)) + '</span></div>'; }).join("") +
@@ -5767,7 +5773,7 @@
     document.getElementById("sm-progress").onclick = function () { go("progress", false); };
   };
 
-  // "· Starting Strength still has Workout B next" — one-offs never move the program
+  // "· Novice Linear 3×5 still has Workout B next" — one-offs never move the program
   function nextProgramNote() {
     if (!db.active) return "";
     var t = tplById(db.active.templateId);
@@ -6277,6 +6283,9 @@
       } }
   };
   /* ---------- nutrition */
+  // App Store guideline 1.4.1: health numbers say what they are and where they come from
+  var HEALTH_NOTE_HTML = '<p class="nu-note health-note">General fitness estimates, not medical advice. Talk to a doctor or registered dietitian before a big change in diet or training — especially if you are pregnant, under 18, or have a health condition.' +
+    '<br>Sources: Mifflin MD, St Jeor ST et al., <i>Am J Clin Nutr</i> 1990 (calories); Jackson AS, Pollock ML, <i>Br J Nutr</i> 1978 and Jackson, Pollock, Ward, <i>Med Sci Sports Exerc</i> 1980 (skinfold body fat).</p>';
   // Mifflin–St Jeor BMR × activity, plus the effect of eating `delta` kcal/day above or below maintenance
   function nutritionPlan(p) {
     if (!(p.weightKg > 0) || !(p.heightCm > 0) || !(p.age > 0) || (p.sex !== "m" && p.sex !== "f")) return null;
@@ -6363,7 +6372,8 @@
           (n.goalKg > 0 ? fmt(Math.round(fromKg(n.goalKg) * 10) / 10) : "") + '" placeholder="—"><span class="nu-u">' + U() + '</span></div></div>' +
         '<div class="nu-note" id="nu-goal-t"></div>' +
       '</div>' +
-      '<p class="nu-note" style="margin:6px 0 24px">Estimates, using the Mifflin–St Jeor equation. Real change varies — weigh in a few times a week and adjust after 2–3 weeks.</p>';
+      '<p class="nu-note" style="margin:6px 0 8px">Estimates, using the Mifflin–St Jeor equation. Real change varies — weigh in a few times a week and adjust after 2–3 weeks.</p>' +
+      HEALTH_NOTE_HTML;
     c.innerHTML = html;
 
     // repaint the numbers only, so typing and dragging never lose focus
@@ -6959,7 +6969,7 @@
         h += '<div class="fi"><span>' + SF_SITES[k] + ' (mm) <button class="sf-i" data-sfi="' + k + '" aria-label="Where to measure ' + SF_SITES[k] + '">i</button></span><div class="stepper"><button data-sfb="' + k + '-">–</button>' +
           '<input class="mono" data-sf="' + k + '" inputmode="decimal" value="' + (sf.folds[k] != null ? fmt(sf.folds[k]) : "") + '" placeholder="—"><button data-sfb="' + k + '+">+</button></div></div>';
       });
-      h += '</div><div class="sf-help" id="be-sf-help" hidden></div><div class="bf-out" id="be-sf-out"></div>';
+      h += '</div><div class="sf-help" id="be-sf-help" hidden></div><div class="bf-out" id="be-sf-out"></div>' + HEALTH_NOTE_HTML;
       sfBox.innerHTML = h;
       var help = document.getElementById("be-sf-help"), helpFor = null;
       sfBox.querySelectorAll("[data-sfi]").forEach(function (b) {
@@ -7124,14 +7134,17 @@
       (db.account
         ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' + avatarHtml(db.account.avatarUrl, db.account.displayName, 40) +
             '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.4;margin:0">Signed in as <b>' + esc(db.account.displayName) + '</b>. Finished workouts post to the shared feed.</p></div>' +
-          '<div class="btn-row"><button class="btn btn-ghost" id="st-editprofile">Edit profile</button><button class="btn btn-ghost" id="st-signout">Sign out</button></div>'
+          '<div class="btn-row"><button class="btn btn-ghost" id="st-editprofile">Edit profile</button><button class="btn btn-ghost" id="st-signout">Sign out</button></div>' +
+          '<div class="btn-row"><button class="btn btn-ghost" id="st-blocked">Blocked people</button><button class="btn btn-ghost" id="st-delacct" style="color:var(--miss)">Delete account</button></div>' +
+          (supportLine() ? '<p class="nu-note" style="margin-top:8px">' + supportLine() + '</p>' : '')
         : '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Sign in to share your workouts and see what everyone else is lifting.</p>' +
           '<div class="btn-row"><button class="btn btn-ghost" id="st-signin">Sign in</button></div>') +
       '<div class="eyebrow" style="margin:18px 0 8px">Your data</div>' +
       '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Saved on this device only — nothing is sent anywhere, and it works offline. It won\'t sync to another phone, and clearing this site\'s data erases it, so export a backup every few weeks and keep the file somewhere safe.</p>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="st-export">Export backup</button><button class="btn btn-ghost" id="st-import">Restore</button></div>' +
       '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:10px">To keep it on your home screen: Share → Add to Home Screen.</p>' +
-      (hasData ? '<div class="btn-row" style="margin-top:16px"><button class="btn btn-danger" id="st-wipe">Erase everything</button></div>' : '')
+      (hasData ? '<div class="btn-row" style="margin-top:16px"><button class="btn btn-danger" id="st-wipe">Erase everything</button></div>' : '') +
+      '<p class="nu-note" style="margin-top:18px"><a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>'
     );
     // flip the toggle in place — re-opening the sheet replays its slide-in and jumps back to the top
     var SET = {
@@ -7172,6 +7185,10 @@
     if (siBtn) siBtn.onclick = function () { closeSheet(); openSignIn(); };
     var soBtn = document.getElementById("st-signout");
     if (soBtn) soBtn.onclick = rcSignOut;
+    var blBtn = document.getElementById("st-blocked");
+    if (blBtn) blBtn.onclick = openBlockedList;
+    var daBtn = document.getElementById("st-delacct");
+    if (daBtn) daBtn.onclick = openDeleteAccount;
     var epBtn = document.getElementById("st-editprofile");
     if (epBtn) epBtn.onclick = openEditProfile;
     document.getElementById("st-usda").onclick = function () { openUsdaKey(openSettings); };
@@ -7312,20 +7329,27 @@
     });
   }
 
+  // App Store guideline 4.8: an app that offers Google sign-in must offer Sign in with Apple too.
+  // Flip on once the Apple provider is configured in Supabase (Authentication → Providers → Apple).
+  var APPLE_SIGNIN = false;
   function openSignIn() {
     if (!sb()) { toast("No connection yet — try again in a moment"); return; }
-    openSheet('<h2>Sign in</h2><p class="sh-lead">Sign in with Google to share your workouts to the feed. Nothing is posted without you finishing a session.</p>' +
-      '<div class="btn-row"><button class="btn btn-primary" id="si-google">Continue with Google</button></div>');
-    document.getElementById("si-google").onclick = function () {
-      var btn = this; btn.disabled = true; btn.textContent = "Opening Google…";
+    openSheet('<h2>Sign in</h2><p class="sh-lead">Sign in to share your workouts to the feed. Nothing is posted without you finishing a session.</p>' +
+      (APPLE_SIGNIN ? '<div class="btn-row"><button class="btn btn-apple" id="si-apple">Continue with Apple</button></div>' : '') +
+      '<div class="btn-row"><button class="btn ' + (APPLE_SIGNIN ? 'btn-ghost' : 'btn-primary') + '" id="si-google">Continue with Google</button></div>');
+    var start = function (btn, provider, label) {
+      btn.disabled = true; btn.textContent = "Opening " + label + "…";
       sb().auth.signInWithOAuth({
-        provider: "google",
+        provider: provider,
         options: { redirectTo: location.origin + location.pathname }
       }).then(function (r) {
-        if (r.error) { toast(r.error.message || "Couldn't start Google sign-in"); btn.disabled = false; btn.textContent = "Continue with Google"; }
-        // success => full-page redirect to Google; nothing else to do here
+        if (r.error) { toast(r.error.message || "Couldn't start " + label + " sign-in"); btn.disabled = false; btn.textContent = "Continue with " + label; }
+        // success => full-page redirect to the provider; nothing else to do here
       });
     };
+    document.getElementById("si-google").onclick = function () { start(this, "google", "Google"); };
+    var ap = document.getElementById("si-apple");
+    if (ap) ap.onclick = function () { start(this, "apple", "Apple"); };
   }
 
   function googleName(user) {
@@ -7357,6 +7381,119 @@
         toast("You're in");
         go("feed");
       });
+    };
+  }
+
+  /* ---- safety: report, block, delete account (App Store 1.2 and 5.1.1(v)) ---- */
+  // where people reach a human about the feed; shown in Settings and after a report. Fill before release.
+  var SUPPORT_EMAIL = "";
+  function supportLine() {
+    return SUPPORT_EMAIL ? 'Questions or a problem with someone in the feed? Email <a href="mailto:' + esc(SUPPORT_EMAIL) + '">' + esc(SUPPORT_EMAIL) + '</a>.' : '';
+  }
+  var REPORT_REASONS = [["spam", "Spam"], ["offensive", "Offensive or hateful"], ["inappropriate", "Inappropriate name or photo"], ["other", "Something else"]];
+
+  // ⋯ on someone else's post (or the profile sheet): report it, or block the person
+  function openPostMenu(target) {
+    var who = target.name || "this person";
+    openSheet('<h2>' + esc(who) + '</h2>' +
+      (target.workoutId ? '<button class="menu-item" id="pm-report"><span>Report this post</span></button>' : '<button class="menu-item" id="pm-report"><span>Report ' + esc(who) + '</span></button>') +
+      '<button class="menu-item danger" id="pm-block"><span>Block ' + esc(who) + '</span><span class="k2">hides all their posts</span></button>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="pm-cancel">Cancel</button></div>');
+    document.getElementById("pm-cancel").onclick = closeSheet;
+    document.getElementById("pm-report").onclick = function () { openReport(target); };
+    document.getElementById("pm-block").onclick = function () { confirmBlock(target); };
+  }
+  function openReport(target) {
+    var reason = null;
+    var draw = function () {
+      openSheet('<h2>Report</h2><p class="sh-lead">' + (target.workoutId ? 'This post' : esc(target.name || 'This person')) + ' goes to the Rack Coach team for review. They won\'t know who reported it.</p>' +
+        REPORT_REASONS.map(function (r) { return '<button class="menu-item" data-reason="' + r[0] + '" aria-pressed="' + (reason === r[0]) + '"><span>' + r[1] + '</span>' + (reason === r[0] ? '<span class="k2">✓</span>' : '') + '</button>'; }).join("") +
+        '<div class="field"><label>Anything to add? (optional)</label><textarea class="num-in" id="rp-details" maxlength="500" rows="3" style="width:100%;resize:vertical"></textarea></div>' +
+        '<div class="sh-foot"><button class="btn btn-primary" id="rp-send"' + (reason ? '' : ' disabled style="opacity:.5"') + '>Send report</button></div>');
+      sheetRoot.querySelectorAll("[data-reason]").forEach(function (b) {
+        b.onclick = function () { var d = document.getElementById("rp-details").value; reason = b.dataset.reason; draw(); document.getElementById("rp-details").value = d; };
+      });
+      document.getElementById("rp-send").onclick = function () {
+        if (!reason || !sb() || !db.account) return;
+        var details = document.getElementById("rp-details").value.trim();
+        var btn = this; btn.disabled = true;
+        sb().from("reports").insert({ reporter_id: db.account.userId, reported_user_id: target.userId || null, workout_id: target.workoutId || null,
+          reason: reason, details: details || null }).then(function (r) {
+          if (r.error) { btn.disabled = false; toast("Couldn't send the report — try again"); return; }
+          // out of sight straight away; the team decides what happens next
+          if (target.workoutId) feed.items = feed.items.filter(function (w) { return w.id !== target.workoutId; });
+          closeSheet(); if (cur === "feed") renderers.feed();
+          toast("Thanks — reported. It's hidden from your feed.");
+        }, function () { btn.disabled = false; toast("Couldn't send the report — try again"); });
+      };
+    };
+    draw();
+  }
+  function confirmBlock(target) {
+    confirmSheet("Block " + (target.name || "this person") + "?", "You won't see their workouts and they're removed from people you follow. They aren't told. Unblock any time in Settings.", function () {
+      if (!sb() || !db.account) return;
+      sb().from("blocks").insert({ blocker_id: db.account.userId, blocked_id: target.userId }).then(function (r) {
+        if (r.error && !/duplicate/i.test(r.error.message || "")) { toast("Couldn't block — try again"); return; }
+        sb().from("follows").delete().eq("follower_id", db.account.userId).eq("followee_id", target.userId).then(function () {});
+        if (followingIds) followingIds = followingIds.filter(function (id) { return id !== target.userId; });
+        feed.items = feed.items.filter(function (w) { return w.user_id !== target.userId; });
+        if (cur === "feed") renderers.feed();
+        toast((target.name || "They") + " is blocked");
+      }, function () { toast("Couldn't block — try again"); });
+    }, "Block");
+  }
+  function openBlockedList() {
+    if (!sb() || !db.account) return;
+    openSheet('<h2>Blocked people</h2><p class="lead">Loading…</p>');
+    sb().from("blocks").select("blocked_id, profiles!blocks_blocked_id_fkey(display_name, avatar_url)").eq("blocker_id", db.account.userId).then(function (r) {
+      var rows = (r && r.data) || [];
+      openSheet('<h2>Blocked people</h2>' +
+        (rows.length ? rows.map(function (b) {
+          var p = b.profiles || {};
+          return '<div class="toggle-line"><div class="tl-k" style="display:flex;align-items:center;gap:10px">' + avatarHtml(p.avatar_url, p.display_name, 28) + esc(p.display_name || "Someone") + '</div>' +
+            '<button class="rx-reset" data-unblock="' + esc(b.blocked_id) + '">Unblock</button></div>';
+        }).join("") : '<p class="sh-lead">Nobody. Block someone from the ⋯ on their post.</p>') +
+        '<div class="btn-row"><button class="btn btn-ghost" id="bl-back">Back</button></div>');
+      document.getElementById("bl-back").onclick = openSettings;
+      sheetRoot.querySelectorAll("[data-unblock]").forEach(function (b) {
+        b.onclick = function () {
+          sb().from("blocks").delete().eq("blocker_id", db.account.userId).eq("blocked_id", b.dataset.unblock).then(function (r) {
+            if (r.error) { toast("Couldn't unblock — try again"); return; }
+            feed.loaded = false; openBlockedList(); toast("Unblocked");
+          });
+        };
+      });
+    }, function () { openSheet('<h2>Blocked people</h2><p class="lead">Couldn\'t load the list.</p>'); });
+  }
+  // deletes the online account and everything it published; workouts on this device stay
+  function openDeleteAccount() {
+    openSheet('<h2>Delete your account?</h2>' +
+      '<p class="sh-lead">This permanently deletes your Rack Coach account: your profile, picture, everything you posted to the feed, follows and kudos. It can\'t be undone.</p>' +
+      '<p class="sh-lead">Your program and workout history on this phone stay — erase those separately under Your data.</p>' +
+      '<div class="field"><label>Type DELETE to confirm</label><input class="ed-name" id="da-confirm" autocomplete="off" autocapitalize="characters"></div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="da-no">Cancel</button><button class="btn btn-danger" id="da-yes" disabled style="opacity:.5">Delete account</button></div>');
+    var inp = document.getElementById("da-confirm"), yes = document.getElementById("da-yes");
+    inp.oninput = function () { var ok = inp.value.trim().toUpperCase() === "DELETE"; yes.disabled = !ok; yes.style.opacity = ok ? "" : ".5"; };
+    document.getElementById("da-no").onclick = openSettings;
+    yes.onclick = function () {
+      if (!sb() || !db.account) return;
+      yes.disabled = true; yes.textContent = "Deleting…";
+      var uid = db.account.userId, store = sb().storage.from("avatars");
+      var fail = function () { yes.disabled = false; yes.textContent = "Delete account"; toast("Couldn't delete your account — check your connection and try again"); };
+      // avatar files first (Storage won't let SQL delete them), then the account itself
+      store.list(uid).then(function (r) {
+        var files = ((r && r.data) || []).map(function (f) { return uid + "/" + f.name; });
+        return files.length ? store.remove(files) : null;
+      }).then(function () {
+        return sb().rpc("delete_account");
+      }).then(function (r) {
+        if (r && r.error) { fail(); return; }
+        sb().auth.signOut();
+        db.account = null; save();
+        feed = { items: [], loading: false, done: false, error: null, loaded: false, scope: "everyone" }; followingIds = null;
+        closeSheet(); renderTabs(); go("home");
+        toast("Account deleted");
+      }, fail);
     };
   }
 
@@ -7499,12 +7636,15 @@
           '<div><h2 style="margin:0">' + esc(name) + '</h2>' +
             '<p class="sh-lead" style="margin:2px 0 0">' + followers + ' follower' + (followers === 1 ? '' : 's') + ' · ' + following + ' following</p></div>' +
         '</div>' +
-        (isSelf ? '' : '<div class="btn-row"><button class="btn ' + (amFollowing ? 'btn-ghost' : 'btn-primary') + '" id="pf-follow">' + (amFollowing ? 'Following' : 'Follow') + '</button></div>') +
+        (isSelf ? '' : '<div class="btn-row"><button class="btn ' + (amFollowing ? 'btn-ghost' : 'btn-primary') + '" id="pf-follow">' + (amFollowing ? 'Following' : 'Follow') + '</button>' +
+          '<button class="btn btn-ghost" id="pf-more" style="flex:0 0 auto" aria-label="Report or block">⋯</button></div>') +
         '<div class="eyebrow" style="margin-top:16px">Recent workouts</div>' +
         (workouts.length ? feedItemsHtml(workouts, true) : '<p class="lead">No workouts yet.</p>');
       openSheet(html);
       var fb = document.getElementById("pf-follow");
       if (fb) fb.onclick = function () { toggleFollow(userId, amFollowing, fb); };
+      var pm = document.getElementById("pf-more");
+      if (pm) pm.onclick = function () { openPostMenu({ userId: userId, name: name }); };
     }, function () {
       openSheet('<h2>Profile</h2><p class="lead">Couldn\'t load this profile.</p>');
     });
@@ -7695,7 +7835,7 @@
       return '<div class="feed-card">' +
         '<div class="feed-head">' +
           '<button class="feed-who" data-profile="' + esc(w.user_id) + '">' + avatarHtml(prof.avatar_url, who, 28) + '<b>' + esc(who) + '</b></button>' +
-          '<span>' + esc(when) + '</span>' +
+          '<span>' + esc(when) + (isMine || readOnly ? '' : '<button class="feed-more" data-more="' + esc(w.id) + '" aria-label="More options for ' + esc(who) + '’s post">⋯</button>') + '</span>' +
         '</div>' +
         '<div class="feed-sub">' + esc(w.program_name || "Workout") +
           (w.day_label ? ' · ' + esc(w.day_label) : '') + (dur ? ' · ' + dur : '') + '</div>' +
@@ -7715,6 +7855,12 @@
     root.querySelectorAll("[data-kudos]").forEach(function (b) {
       b.onclick = function () { toggleKudos(b.dataset.kudos, b); };
     });
+    root.querySelectorAll("[data-more]").forEach(function (b) {
+      b.onclick = function () {
+        var w = feed.items.filter(function (x) { return x.id === b.dataset.more; })[0];
+        if (w) openPostMenu({ workoutId: w.id, userId: w.user_id, name: (w.profiles || {}).display_name });
+      };
+    });
   }
 
   renderers.feed = function () {
@@ -7723,15 +7869,15 @@
       // a faded preview of what the feed looks like, so signing in has an obvious payoff
       var ago = function (h) { return new Date(Date.now() - h * 3600000).toISOString(); };
       var sample = [
-        { id: "x1", user_id: "x1", completed_at: ago(2), program_name: "Starting Strength", day_label: "A", duration_sec: 3300,
+        { id: "x1", user_id: "x1", completed_at: ago(2), program_name: "Novice Linear 3×5", day_label: "A", duration_sec: 3300,
           profiles: { display_name: "Example lifter" }, kudos: [{}, {}, {}],
           summary: { unit: U(), lifts: [{ name: "Back Squat", weight: U() === "lb" ? 225 : 100, reps: 5, sets: 3, made: true }, { name: "Overhead Press", weight: U() === "lb" ? 95 : 42.5, reps: 5, sets: 3, made: true }] } },
-        { id: "x2", user_id: "x2", completed_at: ago(5), program_name: "CrossFit Benchmarks", day_label: "Fran", duration_sec: 540,
+        { id: "x2", user_id: "x2", completed_at: ago(5), program_name: "Benchmark WODs", day_label: "Fran", duration_sec: 540,
           profiles: { display_name: "Example athlete" }, kudos: [{}, {}], summary: { score: "4:12 · RX" } }
       ];
       c.innerHTML = '<h2 class="title">Feed</h2>' +
-        '<p class="lead">See what everyone’s lifting, follow friends and give kudos. Sign in with Google to join.</p>' +
-        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="fd-signin">Sign in with Google</button></div>' +
+        '<p class="lead">See what everyone’s lifting, follow friends and give kudos. Sign in to join.</p>' +
+        '<div class="btn-row"><button class="btn btn-primary btn-lg" id="fd-signin">' + (APPLE_SIGNIN ? 'Sign in' : 'Sign in with Google') + '</button></div>' +
         (sb() ? '' : '<p class="lead" style="color:var(--text-faint);font-size: var(--fs-sm);margin-top:10px">Waiting for a connection…</p>') +
         '<div class="feed-preview" aria-hidden="true"><div class="fp-k">Preview</div>' + feedItemsHtml(sample, true) + '</div>';
       var b = document.getElementById("fd-signin");
