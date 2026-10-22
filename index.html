@@ -7144,7 +7144,8 @@
       '<div class="btn-row"><button class="btn btn-ghost" id="st-export">Export backup</button><button class="btn btn-ghost" id="st-import">Restore</button></div>' +
       '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:10px">To keep it on your home screen: Share → Add to Home Screen.</p>' +
       (hasData ? '<div class="btn-row" style="margin-top:16px"><button class="btn btn-danger" id="st-wipe">Erase everything</button></div>' : '') +
-      '<p class="nu-note" style="margin-top:18px"><a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>'
+      '<p class="nu-note" style="margin-top:18px"><a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a>' +
+        (SUPPORT_EMAIL ? ' · <a href="mailto:' + esc(SUPPORT_EMAIL) + '">Contact support</a>' : '') + '</p>'
     );
     // flip the toggle in place — re-opening the sheet replays its slide-in and jumps back to the top
     var SET = {
@@ -7386,7 +7387,7 @@
 
   /* ---- safety: report, block, delete account (App Store 1.2 and 5.1.1(v)) ---- */
   // where people reach a human about the feed; shown in Settings and after a report. Fill before release.
-  var SUPPORT_EMAIL = "";
+  var SUPPORT_EMAIL = "support@rep-star.app";
   function supportLine() {
     return SUPPORT_EMAIL ? 'Questions or a problem with someone in the feed? Email <a href="mailto:' + esc(SUPPORT_EMAIL) + '">' + esc(SUPPORT_EMAIL) + '</a>.' : '';
   }
