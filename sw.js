@@ -1,6 +1,6 @@
 /* Rep Star service worker — app-shell caching for offline use.
    Bump CACHE when you change index.html or icons so clients pick it up. */
-var CACHE = "rackcoach-v46";
+var CACHE = "rackcoach-v47";
 var SHELL = [
   "./",
   "./index.html",
@@ -11,7 +11,9 @@ var SHELL = [
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./icon.svg",
+  "./favicon-32.png"
 ];
 
 self.addEventListener("install", function (e) {
