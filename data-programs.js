@@ -1,4 +1,4 @@
-/* Rack Coach — extra program templates (bodybuilding / CrossFit / Hyrox).
+/* Rep Star — extra program templates (bodybuilding / CrossFit / Hyrox).
    Plain synchronous script: sets a global the main IIFE reads at boot.
    Bump sw.js CACHE when this file changes.
 
@@ -23,7 +23,7 @@
     kind: "bodybuilding",
     style: "bodybuilding",
     name: "PPL Hypertrophy",
-    author: "Rack Coach",
+    author: "Rep Star",
     blurb: "A six-day push / pull / legs split built for size. Every exercise runs a rep range — chase the top of it and the weight climbs.",
     bestFor: "Lifters past the beginner stage who can train 5–6 days a week for size",
     daysPerWeek: 6,
@@ -91,7 +91,7 @@
     kind: "bodybuilding",
     style: "bodybuilding",
     name: "Upper / Lower",
-    author: "Rack Coach",
+    author: "Rep Star",
     blurb: "Four days a week, alternating upper and lower. Heavier compound work up front, rep-range accessories after.",
     bestFor: "Intermediate lifters who want size on a four-day week",
     daysPerWeek: 4,
@@ -185,7 +185,7 @@
     kind: "metcon",
     style: "crossfit",
     name: "Metcon Conditioning",
-    author: "Rack Coach",
+    author: "Rep Star",
     blurb: "Eight short, mixed-modal conditioning pieces — AMRAPs and intervals under 20 minutes. Approachable, scalable, sweaty.",
     bestFor: "Building a conditioning base without max-effort barbell work",
     daysPerWeek: 4,
@@ -235,7 +235,7 @@
     kind: "metcon",
     style: "hyrox",
     name: "Hybrid Race Prep",
-    author: "Rack Coach",
+    author: "Rep Star",
     blurb: "Six sessions to get ready for race day — station practice, compromised running, and a full eight-station simulation.",
     bestFor: "Anyone with a hybrid fitness race on the calendar in the next 8–12 weeks",
     daysPerWeek: 3,
@@ -266,7 +266,7 @@
     kind: "metcon",
     style: "hyrox",
     name: "Hybrid Engine",
-    author: "Rack Coach",
+    author: "Rep Star",
     blurb: "Six running-biased sessions that build the aerobic engine hybrid races reward, with just enough station work to stay sharp.",
     bestFor: "Off-season base building, or a runner moving into hybrid racing",
     daysPerWeek: 3,

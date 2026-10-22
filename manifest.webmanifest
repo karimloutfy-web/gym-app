@@ -1,7 +1,7 @@
 {
-  "name": "Rack Coach",
-  "short_name": "Rack Coach",
-  "description": "A personal strength-training coach that runs a proven barbell program.",
+  "name": "Rep Star",
+  "short_name": "Rep Star",
+  "description": "Hybrid training for everyday athletes: build your program, lift, sweat and track your progress.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,4 +1,4 @@
-/* Rack Coach — random-workout pool (CrossFit + Hyrox style WODs).
+/* Rep Star — random-workout pool (CrossFit + Hyrox style WODs).
    Plain synchronous script: sets a global the main IIFE reads at boot.
    Same WOD schema as data-programs.js. Bump sw.js CACHE when this changes. */
 
