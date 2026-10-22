@@ -1,0 +1,8 @@
+<!-- Rep Star app icon (1024×1024). scripts/render-icons.py draws the same design
+     as PNGs; change both together. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#111c2b"/>
+  <circle cx="512" cy="512" r="330" fill="none" stroke="#1f3042" stroke-width="64"/>
+  <path d="M512.0,182.0 A330,330 0 1 1 226.2,347.0" fill="none" stroke="#35c8b6" stroke-width="64" stroke-linecap="round"/>
+  <polygon points="512.0,365.0 556.6,468.6 668.9,479.0 584.2,553.5 609.0,663.5 512.0,605.9 415.0,663.5 439.8,553.5 355.1,479.0 467.4,468.6" fill="#ffffff" stroke="#ffffff" stroke-width="44" stroke-linejoin="round"/>
+</svg>
