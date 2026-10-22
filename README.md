@@ -1,6 +1,6 @@
 # gym-app
 
-Personal strength-training PWA ("Rack Coach"). The app is the files at the repo
+Personal hybrid-training PWA ("Rep Star", formerly "Rack Coach"). The app is the files at the repo
 root (`index.html`, `sw.js`, `manifest.webmanifest`, icons). Older versions are in
 `archive/`.
 

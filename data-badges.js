@@ -1,4 +1,4 @@
-/* Rack Coach — badge catalogue (151 achievements).
+/* Rep Star — badge catalogue (151 achievements).
    Plain synchronous script: sets a global the main IIFE reads at boot.
    Each entry: { id, name, desc, cat, tier, glyph, check(ctx) -> boolean, progress?(ctx) -> { have, need } }
    ctx = { stats, sessions, active, body, customPlans, customWorkouts }

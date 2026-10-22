@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rack Coach</title>
-<meta name="description" content="A personal strength-training coach that runs a proven barbell program.">
+<title>Rep Star</title>
+<meta name="description" content="Hybrid training for everyday athletes: build your program, lift, sweat and track your progress.">
 <meta name="theme-color" content="#0f8a7c" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0c1420" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Rack Coach">
+<meta name="apple-mobile-web-app-title" content="Rep Star">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -31,7 +31,7 @@
         { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" } }
       );
     } catch (e) {
-      console.warn("Rack Coach: social backend unavailable —", e && e.message);
+      console.warn("Rep Star: social backend unavailable —", e && e.message);
     }
     window.dispatchEvent(new Event("rc-sb-ready"));
   })();
@@ -785,7 +785,7 @@
 
 <div class="app">
   <header class="top">
-    <div class="brand"><span class="mark"></span>Rack<b>Coach</b></div>
+    <div class="brand"><span class="mark"></span>Rep<b>Star</b></div>
     <div class="spacer"></div>
     <button class="pos-chip" id="pos-chip" hidden></button>
     <button class="icon-btn" id="btn-settings" aria-label="Settings">
@@ -1906,7 +1906,7 @@
 
     var el = document.createElement("div");
     el.className = "selftest";
-    el.innerHTML = "RACK COACH — SELF TEST\n" + (ok ? "<span class='pass'>ALL PASSED</span>" : "<span class='fail'>FAILURES ABOVE</span>") + "\n\n" +
+    el.innerHTML = "REP STAR — SELF TEST\n" + (ok ? "<span class='pass'>ALL PASSED</span>" : "<span class='fail'>FAILURES ABOVE</span>") + "\n\n" +
       out.map(function (l) { return l.replace(/^PASS/, "<span class='pass'>PASS</span>").replace(/^FAIL/, "<span class='fail'>FAIL</span>"); }).join("\n") +
       "\n\n(add ?selftest to the URL to see this; reload without it to use the app)";
     document.body.appendChild(el);
@@ -7100,7 +7100,7 @@
   function openSettings() {
     var hasData = db.sessions.length > 0 || db.active;
     openSheet(
-      '<h2>Settings</h2><p class="sh-lead">Rack Coach</p>' +
+      '<h2>Settings</h2><p class="sh-lead">Rep Star</p>' +
       '<div class="day-block">' +
         '<div class="toggle-line"><div class="tl-k">Weight</div><div class="mini-seg" data-set="unit">' +
           '<button data-v="kg" aria-selected="' + (U() === "kg") + '">kg</button><button data-v="lb" aria-selected="' + (U() === "lb") + '">lb</button></div></div>' +
@@ -7208,7 +7208,7 @@
 
   function exportData() {
     var payload = JSON.stringify(db, null, 2);
-    var name = "rackcoach-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    var name = "repstar-backup-" + new Date().toISOString().slice(0, 10) + ".json";
     try {
       var blob = new Blob([payload], { type: "application/json" });
       var url = URL.createObjectURL(blob);
@@ -7226,14 +7226,14 @@
   }
 
   function openImport() {
-    openSheet('<h2>Restore backup</h2><p class="sh-lead">Paste an exported Rack Coach backup. This replaces everything on this device.</p>' +
+    openSheet('<h2>Restore backup</h2><p class="sh-lead">Paste an exported Rep Star backup (Rack Coach backups work too). This replaces everything on this device.</p>' +
       '<textarea class="num-in" id="imp" style="height:160px;font-size: var(--fs-xs);padding:10px;width:100%" placeholder="Paste backup JSON…"></textarea>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="imp-cancel">Cancel</button><button class="btn btn-primary" id="imp-do">Restore</button></div>');
     document.getElementById("imp-cancel").onclick = openSettings;
     document.getElementById("imp-do").onclick = function () {
       var raw = document.getElementById("imp").value.trim();
       var obj; try { obj = JSON.parse(raw); } catch (e) { toast("Not valid backup text"); return; }
-      if (!obj || !obj.equipment || !Array.isArray(obj.sessions)) { toast("Not a Rack Coach backup"); return; }
+      if (!obj || !obj.equipment || !Array.isArray(obj.sessions)) { toast("Not a Rep Star backup"); return; }
       db = Object.assign(defaults(), obj);
       db.settings = Object.assign(defaults().settings, obj.settings || {});
       try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
@@ -7406,7 +7406,7 @@
   function openReport(target) {
     var reason = null;
     var draw = function () {
-      openSheet('<h2>Report</h2><p class="sh-lead">' + (target.workoutId ? 'This post' : esc(target.name || 'This person')) + ' goes to the Rack Coach team for review. They won\'t know who reported it.</p>' +
+      openSheet('<h2>Report</h2><p class="sh-lead">' + (target.workoutId ? 'This post' : esc(target.name || 'This person')) + ' goes to the Rep Star team for review. They won\'t know who reported it.</p>' +
         REPORT_REASONS.map(function (r) { return '<button class="menu-item" data-reason="' + r[0] + '" aria-pressed="' + (reason === r[0]) + '"><span>' + r[1] + '</span>' + (reason === r[0] ? '<span class="k2">✓</span>' : '') + '</button>'; }).join("") +
         '<div class="field"><label>Anything to add? (optional)</label><textarea class="num-in" id="rp-details" maxlength="500" rows="3" style="width:100%;resize:vertical"></textarea></div>' +
         '<div class="sh-foot"><button class="btn btn-primary" id="rp-send"' + (reason ? '' : ' disabled style="opacity:.5"') + '>Send report</button></div>');
@@ -7468,7 +7468,7 @@
   // deletes the online account and everything it published; workouts on this device stay
   function openDeleteAccount() {
     openSheet('<h2>Delete your account?</h2>' +
-      '<p class="sh-lead">This permanently deletes your Rack Coach account: your profile, picture, everything you posted to the feed, follows and kudos. It can\'t be undone.</p>' +
+      '<p class="sh-lead">This permanently deletes your Rep Star account: your profile, picture, everything you posted to the feed, follows and kudos. It can\'t be undone.</p>' +
       '<p class="sh-lead">Your program and workout history on this phone stay — erase those separately under Your data.</p>' +
       '<div class="field"><label>Type DELETE to confirm</label><input class="ed-name" id="da-confirm" autocomplete="off" autocapitalize="characters"></div>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="da-no">Cancel</button><button class="btn btn-danger" id="da-yes" disabled style="opacity:.5">Delete account</button></div>');
@@ -7758,7 +7758,7 @@
     loadFeedCalls = loadFeedCalls.filter(function (t) { return now - t < 3000; });
     loadFeedCalls.push(now);
     if (loadFeedCalls.length > 8) {
-      console.error("Rack Coach: feed load loop detected — stopped automatically.");
+      console.error("Rep Star: feed load loop detected — stopped automatically.");
       feed.loading = false; feed.loaded = true; feed.error = "Couldn't load the feed. Pull to refresh.";
       if (cur === "feed") renderers.feed();
       return;
