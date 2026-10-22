@@ -6494,9 +6494,11 @@
     return { src: "off", ref: String(p.code || name), name: name, brand: brand.charAt(0).toUpperCase() + brand.slice(1),
       per: { kcal: Math.round(kc * 10) / 10, p: num(n.proteins_100g), c: num(n.carbohydrates_100g), f: num(n.fat_100g) }, portions: portions };
   }
-  var USDA_DEMO = "DEMO_KEY";
+  // Rep Star's own FoodData Central key (api.data.gov, 3,600 searches an hour). Not a secret:
+  // it identifies the app for USDA's fair-use limit. Replace it at api.data.gov if it's ever abused.
+  var USDA_KEY = "PmrW7mTRBwjq66TcbfDPzbzcpcRGMbMLC9nPJTgW";
   function searchUsda(q, signal) {
-    return fetch("https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + encodeURIComponent(db.settings.usdaKey || USDA_DEMO), {
+    return fetch("https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + encodeURIComponent(USDA_KEY), {
       method: "POST", signal: signal, headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: q, pageSize: 15, dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"] })
     }).then(function (r) {
@@ -6625,8 +6627,7 @@
           return row(f, [f.brand, kcal(f.per.kcal) + " kcal · P " + fmt(Math.round(f.per.p)) + " g per 100 g"].filter(Boolean).join(" · "), "›");
         }).join("");
       };
-      var limitMsg = db.settings.usdaKey ? "USDA search is busy — try again in a minute."
-        : 'The shared USDA key has hit its hourly limit. <button class="fd-link" id="fs-key">Add your free key</button>';
+      var limitMsg = "Food search is busy — try again in a minute.";
       h += grp("Basic foods", S.usda, S.usdaErr, S.usdaErr === "limit" ? limitMsg : navigator.onLine === false ? "You're offline." : "USDA search isn't responding right now.");
       h += grp("Products", S.off, S.offErr, navigator.onLine === false ? "You're offline." : "Open Food Facts isn't responding right now.");
       box.innerHTML = h; wire();
@@ -6637,8 +6638,6 @@
       });
       var qa = document.getElementById("fs-quick");
       if (qa) qa.onclick = function () { openQuickAdd(day, null); };
-      var k = document.getElementById("fs-key");
-      if (k) k.onclick = function () { openUsdaKey(function () { foodSearch.usda = foodSearch.usdaErr = null; openFoodSearch(day); }); };
     }
     function run() {
       var S = foodSearch, q = S.q.trim();
@@ -6751,19 +6750,6 @@
       save(); closeSheet();
       if (cur === "food") renderers.food(); else go("food");
       toast(existing ? "Saved" : "Added " + kcal(rec.kcal) + " kcal");
-    };
-  }
-
-  function openUsdaKey(after) {
-    after = typeof after === "function" ? after : closeSheet;
-    openSheet('<h2>USDA food key</h2><p class="sh-lead">Basic foods (rice, chicken, eggs…) come from the USDA. The shared key only allows a handful of searches an hour — a free personal key allows 1,000.</p>' +
-      '<p class="nu-note" style="margin:0 0 10px">Get one in a minute at <b>fdc.nal.usda.gov/api-key-signup</b> — it\'s emailed to you. Kept on this device.</p>' +
-      '<input class="fd-q mono" id="uk-k" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste your key" value="' + esc(db.settings.usdaKey || "") + '">' +
-      '<div class="btn-row"><button class="btn btn-ghost" id="uk-x">Cancel</button><button class="btn btn-primary" id="uk-ok">Save</button></div>');
-    document.getElementById("uk-x").onclick = after;
-    document.getElementById("uk-ok").onclick = function () {
-      db.settings.usdaKey = document.getElementById("uk-k").value.trim() || null; save();
-      after(); toast(db.settings.usdaKey ? "Key saved" : "Using the shared key");
     };
   }
 
@@ -7130,9 +7116,6 @@
           '<input class="num-in mono" id="st-by" inputmode="numeric" maxlength="4" value="' + (db.settings.birthYear || "") + '" placeholder="YYYY" style="width:96px;padding:7px 10px;text-align:center"></div>' +
       '</div>' +
       '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat and calorie calculators. Kept on this device — not shared to the feed.</p>' +
-      '<div class="eyebrow" style="margin:18px 0 8px">Food search</div>' +
-      '<div class="day-block"><div class="toggle-line" style="border-bottom:0;padding:0"><div class="tl-k">USDA key<p>' + (db.settings.usdaKey ? 'Your own key' : 'Shared key · a few searches an hour') + '</p></div>' +
-        '<button class="rx-reset" id="st-usda">' + (db.settings.usdaKey ? 'Change' : 'Add') + '</button></div></div>' +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
       (db.account
         ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' + avatarHtml(db.account.avatarUrl, db.account.displayName, 40) +
@@ -7195,7 +7178,6 @@
     if (daBtn) daBtn.onclick = openDeleteAccount;
     var epBtn = document.getElementById("st-editprofile");
     if (epBtn) epBtn.onclick = openEditProfile;
-    document.getElementById("st-usda").onclick = function () { openUsdaKey(openSettings); };
     document.getElementById("st-export").onclick = exportData;
     document.getElementById("st-import").onclick = openImport;
     var w = document.getElementById("st-wipe");
