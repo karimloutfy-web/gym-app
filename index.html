@@ -1926,6 +1926,7 @@
       body: [],  // [{ id, date, bw, bf, sf:{method,sex,birthYear,age,folds}, m:{chest,arms,waist,hips,thighs,calves}, note }]
       customPlans: [],     // full template objects authored/duplicated by the user
       customWorkouts: [],  // one-off single sessions (strength or metcon)
+      hiddenPosts: [],     // feed posts reported from this device
       badges: { earned: {}, seen: {} },  // earned[id] = ts ; seen[id] = 1
       account: null,       // { userId, displayName } once signed in to the feed
       pendingPush: [],     // session ids waiting to sync to the feed backend
@@ -1958,6 +1959,7 @@
   db.backfilledFor = (db.backfilledFor && typeof db.backfilledFor === "object") ? db.backfilledFor : {};
   // exercises you've created live alongside the built-in list
   db.customExercises = Array.isArray(db.customExercises) ? db.customExercises : [];
+  db.hiddenPosts = Array.isArray(db.hiddenPosts) ? db.hiddenPosts : [];   // feed posts you reported stay out of your feed
   db.customExercises.forEach(function (x) { EX[x.id] = { name: x.name, bar: !!x.bar, bw: !!x.bw, grp: x.grp || "Other", custom: true }; });
   db.knownProfiles = (db.knownProfiles && typeof db.knownProfiles === "object") ? db.knownProfiles : {};
   if (db.account && db.account.displayName) db.knownProfiles[db.account.userId] = { displayName: db.account.displayName, avatarUrl: db.account.avatarUrl || null };
@@ -7422,7 +7424,12 @@
           reason: reason, details: details || null }).then(function (r) {
           if (r.error) { btn.disabled = false; toast("Couldn't send the report — try again"); return; }
           // out of sight straight away; the team decides what happens next
-          if (target.workoutId) feed.items = feed.items.filter(function (w) { return w.id !== target.workoutId; });
+          if (target.workoutId) {
+            feed.items = feed.items.filter(function (w) { return w.id !== target.workoutId; });
+            // remembered on this device, so a refresh doesn't bring it back
+            if (db.hiddenPosts.indexOf(target.workoutId) < 0) db.hiddenPosts = db.hiddenPosts.concat([target.workoutId]).slice(-500);
+            save();
+          }
           closeSheet(); if (cur === "feed") renderers.feed();
           toast("Thanks — reported. It's hidden from your feed.");
         }, function () { btn.disabled = false; toast("Couldn't send the report — try again"); });
@@ -7631,7 +7638,7 @@
       var followers = results[1].count || 0;
       var following = results[2].count || 0;
       var amFollowing = !!(results[3] && results[3].data);
-      var workouts = (results[4] && results[4].data) || [];
+      var workouts = withoutHidden((results[4] && results[4].data) || []);
       var html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">' +
           avatarHtml(prof.avatar_url, name, 56) +
           '<div><h2 style="margin:0">' + esc(name) + '</h2>' +
@@ -7783,7 +7790,7 @@
         if (r.error) { feed.error = "Couldn't load the feed. Pull to refresh."; }
         else {
           var rows = r.data || [];
-          feed.items = feed.items.concat(rows);
+          feed.items = feed.items.concat(withoutHidden(rows));
           if (rows.length < FEED_PAGE) feed.done = true;
         }
         if (cur === "feed") renderers.feed();
@@ -7815,6 +7822,12 @@
         if (r.error) { item.kudos = item.kudos.filter(function (k) { return k.user_id !== db.account.userId; }); if (cur === "feed") renderers.feed(); }
       });
     }
+  }
+
+  // drop posts this device has reported
+  function withoutHidden(rows) {
+    var hidden = db.hiddenPosts || [];
+    return hidden.length ? rows.filter(function (w) { return hidden.indexOf(w.id) < 0; }) : rows;
   }
 
   function feedItemsHtml(items, readOnly) {
