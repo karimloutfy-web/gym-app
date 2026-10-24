@@ -21,12 +21,13 @@
      app still runs fully offline; only the Feed tab needs it. */
   (async function () {
     window.RC = window.RC || {};
+    if (window.RC.storageReady) await window.RC.storageReady;
     try {
       var mod = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
       window.RC.sb = mod.createClient(
         "https://sfskyokfctaqzlbgztjx.supabase.co",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmc2t5b2tmY3RhcXpsYmd6dGp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NTc5ODgsImV4cCI6MjEwNDAzMzk4OH0.M46Y2x8PgvfR9HG5p3BKiNzIXsHSIrSPp8Ruhd_PXqY",
-        { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" } }
+        { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: !window.RC.native, flowType: "pkce" } }
       );
     } catch (e) {
       console.warn("Rep Star: social backend unavailable —", e && e.message);
@@ -898,11 +899,44 @@
 <div id="sheet-root"></div>
 <div class="toast" id="toast"></div>
 
+<!-- the iOS build (scripts/build-www.js) loads capacitor.js here -->
+<script>
+  /* Native app (Capacitor on iOS). iOS may clear a web view's localStorage when
+     the phone is low on space, so every write to our keys is mirrored into the
+     app's own storage (Preferences) and copied back before the app starts. */
+  (function () {
+    window.RC = window.RC || {};
+    var cap = window.Capacitor;
+    RC.native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+    if (!RC.native) return;
+    document.documentElement.classList.add("is-native");
+    var Prefs = cap.registerPlugin("Preferences");
+    RC.Browser = cap.registerPlugin("Browser");
+    RC.App = cap.registerPlugin("App");
+    RC.StatusBar = cap.registerPlugin("StatusBar");
+    var mirrored = function (k) { return /^(rackcoach\.|sb-)/.test(k); };
+    var set = Storage.prototype.setItem, remove = Storage.prototype.removeItem;
+    Storage.prototype.setItem = function (k, v) {
+      set.call(this, k, v);
+      if (this === window.localStorage && mirrored(k)) Prefs.set({ key: k, value: String(v) });
+    };
+    Storage.prototype.removeItem = function (k) {
+      remove.call(this, k);
+      if (this === window.localStorage && mirrored(k)) Prefs.remove({ key: k });
+    };
+    RC.storageReady = Prefs.keys().then(function (r) {
+      return Promise.all((r.keys || []).filter(mirrored).map(function (k) {
+        if (localStorage.getItem(k) != null) return null;
+        return Prefs.get({ key: k }).then(function (g) { if (g.value != null) set.call(localStorage, k, g.value); });
+      }));
+    }).catch(function () {});
+  })();
+</script>
 <script src="data-programs.js"></script>
 <script src="data-wods.js"></script>
 <script src="data-badges.js"></script>
 <script>
-(function () {
+(window.RC.storageReady || { then: function (f) { f(); } }).then(function () {
   "use strict";
 
   /* ============================================================ EXERCISES */
@@ -2093,12 +2127,17 @@
     return '<div class="home-quote"><p>&ldquo;' + esc(q) + '&rdquo;</p><span>Ronnie Coleman</span></div>';
   }
 
+  var darkQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
   function applyTheme() {
     var t = db.settings.theme;
     if (t === "system") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", t);
+    // native status bar: "DARK" is Capacitor's name for light text on a dark app
+    var dark = t === "dark" || (t === "system" && darkQuery && darkQuery.matches);
+    if (window.RC.native) window.RC.StatusBar.setStyle({ style: dark ? "DARK" : "LIGHT" }).catch(function () {});
   }
   applyTheme();
+  if (window.RC.native && darkQuery && darkQuery.addEventListener) darkQuery.addEventListener("change", applyTheme);
 
   /* ============================================================ TOAST */
   var toastEl = document.getElementById("toast"), toastT = null;
@@ -7260,11 +7299,11 @@
         : '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Sign in to share your workouts and see what everyone else is lifting.</p>' +
           '<div class="btn-row"><button class="btn btn-ghost" id="st-signin">Sign in</button></div>') +
       '<div class="eyebrow" style="margin:18px 0 8px">Your data</div>' +
-      '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Saved on this device only — nothing is sent anywhere, and it works offline. It won\'t sync to another phone, and clearing this site\'s data erases it, so export a backup every few weeks and keep the file somewhere safe.</p>' +
+      '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Saved on this device only — nothing is sent anywhere, and it works offline. It won\'t sync to another phone, and ' + (window.RC.native ? 'deleting the app' : 'clearing this site\'s data') + ' erases it, so export a backup every few weeks and keep the file somewhere safe.</p>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="st-export">Export backup</button><button class="btn btn-ghost" id="st-import">Restore</button></div>' +
-      '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:10px">To keep it on your home screen: Share → Add to Home Screen.</p>' +
+      (window.RC.native ? '' : '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:10px">To keep it on your home screen: Share → Add to Home Screen.</p>') +
       (hasData ? '<div class="btn-row" style="margin-top:16px"><button class="btn btn-danger" id="st-wipe">Erase everything</button></div>' : '') +
-      '<p class="nu-note" style="margin-top:18px"><a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a>' +
+      '<p class="nu-note" style="margin-top:18px"><a href="' + (window.RC.native ? PRIVACY_URL : 'privacy.html') + '" target="_blank" rel="noopener" id="st-privacy">Privacy policy</a>' +
         (SUPPORT_EMAIL ? ' · <a href="mailto:' + esc(SUPPORT_EMAIL) + '">Contact support</a>' : '') + '</p>'
     );
     // flip the toggle in place — re-opening the sheet replays its slide-in and jumps back to the top
@@ -7313,6 +7352,9 @@
     var epBtn = document.getElementById("st-editprofile");
     if (epBtn) epBtn.onclick = openEditProfile;
     document.getElementById("st-export").onclick = exportData;
+    if (window.RC.native) document.getElementById("st-privacy").onclick = function (e) {
+      e.preventDefault(); window.RC.Browser.open({ url: PRIVACY_URL, presentationStyle: "popover" });
+    };
     document.getElementById("st-import").onclick = openImport;
     var w = document.getElementById("st-wipe");
     if (w) w.onclick = function () {
@@ -7449,6 +7491,32 @@
     });
   }
 
+  // Native sign-in: the provider redirects to repstar://auth-callback?code=…, which iOS
+  // hands back to the app; swap the code for a session (PKCE, verifier in localStorage).
+  // Needs repstar://auth-callback in Supabase → Authentication → URL Configuration.
+  var NATIVE_AUTH_REDIRECT = "repstar://auth-callback";
+  var nativeSignInReset = null;
+  if (window.RC.native) {
+    window.RC.App.addListener("appUrlOpen", function (e) {
+      var url = (e && e.url) || "";
+      if (url.indexOf(NATIVE_AUTH_REDIRECT) !== 0) return;
+      window.RC.Browser.close().catch(function () {});
+      var q = url.split("?")[1] || "";
+      var code = /(?:^|&)code=([^&#]+)/.exec(q), err = /(?:^|&)error_description=([^&#]+)/.exec(q);
+      if (code && sb()) {
+        sb().auth.exchangeCodeForSession(decodeURIComponent(code[1])).then(function (r) {
+          if (r.error) { toast(r.error.message || "Sign-in didn't complete — try again"); if (nativeSignInReset) nativeSignInReset(); }
+          // success => onAuthStateChange(SIGNED_IN) takes it from here
+        });
+      } else {
+        toast(err ? decodeURIComponent(err[1].replace(/\+/g, " ")) : "Sign-in didn't complete — try again");
+        if (nativeSignInReset) nativeSignInReset();
+      }
+    });
+    // closing the sign-in sheet without finishing puts the button back
+    window.RC.Browser.addListener("browserFinished", function () { if (nativeSignInReset && !(db.account && db.account.userId)) nativeSignInReset(); });
+  }
+
   // App Store guideline 4.8: an app that offers Google sign-in must offer Sign in with Apple too.
   // Flip on once the Apple provider is configured in Supabase (Authentication → Providers → Apple).
   var APPLE_SIGNIN = false;
@@ -7459,13 +7527,17 @@
       '<div class="btn-row"><button class="btn ' + (APPLE_SIGNIN ? 'btn-ghost' : 'btn-primary') + '" id="si-google">Continue with Google</button></div>');
     var start = function (btn, provider, label) {
       btn.disabled = true; btn.textContent = "Opening " + label + "…";
+      var reset = function () { btn.disabled = false; btn.textContent = "Continue with " + label; };
       sb().auth.signInWithOAuth({
         provider: provider,
-        options: { redirectTo: location.origin + location.pathname }
+        // the app can't be redirected back to; the provider sends the code to repstar:// instead
+        options: window.RC.native ? { redirectTo: NATIVE_AUTH_REDIRECT, skipBrowserRedirect: true } : { redirectTo: location.origin + location.pathname }
       }).then(function (r) {
-        if (r.error) { toast(r.error.message || "Couldn't start " + label + " sign-in"); btn.disabled = false; btn.textContent = "Continue with " + label; }
-        // success => full-page redirect to the provider; nothing else to do here
+        if (r.error) { toast(r.error.message || "Couldn't start " + label + " sign-in"); reset(); return; }
+        // web: full-page redirect to the provider; nothing else to do here
+        if (window.RC.native) window.RC.Browser.open({ url: r.data.url, presentationStyle: "popover" }).catch(function () { toast("Couldn't open " + label); reset(); });
       });
+      if (window.RC.native) nativeSignInReset = reset;
     };
     document.getElementById("si-google").onclick = function () { start(this, "google", "Google"); };
     var ap = document.getElementById("si-apple");
@@ -7507,6 +7579,8 @@
   /* ---- safety: report, block, delete account (App Store 1.2 and 5.1.1(v)) ---- */
   // where people reach a human about the feed; shown in Settings and after a report. Fill before release.
   var SUPPORT_EMAIL = "support@rep-star.app";
+  // public copy of privacy.html (also the App Store privacy-policy URL)
+  var PRIVACY_URL = "https://karimloutfy-web.github.io/gym-app/privacy.html";
   function supportLine() {
     return SUPPORT_EMAIL ? 'Questions or a problem with someone in the feed? Email <a href="mailto:' + esc(SUPPORT_EMAIL) + '">' + esc(SUPPORT_EMAIL) + '</a>.' : '';
   }
@@ -8055,13 +8129,14 @@
   /* ============================================================ BOOT */
   go("home");
   restoreRun();
-})();
+});
 </script>
 
 <script>
   // offline support + auto-update: cache the shell so it runs with no signal,
-  // and reload once when a new version has been deployed.
-  if ("serviceWorker" in navigator) {
+  // and reload once when a new version has been deployed. The iOS app ships its
+  // files inside the app bundle, so it needs neither.
+  if ("serviceWorker" in navigator && !window.RC.native) {
     var hadController = !!navigator.serviceWorker.controller;
     var reloading = false;
     navigator.serviceWorker.addEventListener("controllerchange", function () {

@@ -5,3 +5,7 @@ rack-coach-app.zip
 .DS_Store
 *.log
 Thumbs.db
+
+# capacitor build output (ios/ has its own .gitignore)
+node_modules/
+www/
