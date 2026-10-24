@@ -245,7 +245,7 @@
 
   /* day/session preview */
   .day-block { background: var(--surface); border: 1px solid transparent; border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px; }
-  .day-block h4 { font-size: var(--fs-md); color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .day-block h4 { font-size: var(--fs-lg); color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
   .day-block h4 .dtype { font-size: var(--fs-xs); border: 1px solid var(--line-strong); border-radius: 4px; padding: 1px 5px; }
   .ex-line { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
   .ex-line:last-child { border-bottom: none; }
@@ -514,18 +514,19 @@
   /* summary + progress */
   .statbar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0 18px; }
   .stat { background: var(--surface); border: 1px solid transparent; border-radius: var(--radius-sm); padding: 10px 11px 9px; }
-  .stat .k { font-size: var(--fs-xs); color: var(--text-faint); font-weight: 600; }
-  .stat .v { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-xl); margin-top: 2px; line-height: 1; }
+  .stat .k { font-size: var(--fs-sm); color: var(--text-faint); font-weight: 600; }
+  .stat .v { font-family: var(--font-display); font-weight: 800; font-size: 26px; margin-top: 4px; line-height: 1; font-variant-numeric: tabular-nums; }
   .stat .v small { font-size: var(--fs-sm); color: var(--text-muted); font-weight: 500; }
   .stat.hot .v { color: var(--accent-ink); }
 
-  .change-row { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
+  .change-row { display: flex; align-items: center; gap: 9px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-md); }
+  .change-row > span:nth-child(2) { flex: none; font-weight: 700; white-space: nowrap; }
   .change-row:last-child { border-bottom: none; }
   .change-row .cr-ic { width: 20px; text-align: center; font-weight: 700; }
   .change-row .cr-ic.up { color: var(--accent-ink); }
   .change-row .cr-ic.hold { color: var(--hold); }
   .change-row .cr-ic.deload { color: var(--miss); }
-  .change-row .cr-w { margin-left: auto; font-family: var(--font-num); color: var(--text-muted); font-size: var(--fs-sm); }
+  .change-row .cr-w { margin-left: auto; min-width: 0; text-align: right; font-family: var(--font-num); color: var(--text-muted); font-size: var(--fs-sm); }
 
   .lift-prog { background: var(--surface); border: 1px solid transparent; border-radius: var(--radius); padding: 12px 13px; margin-bottom: 9px; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
   .lift-prog h4 { font-size: var(--fs-md); }
@@ -4128,7 +4129,7 @@
     } else {
       var vol = 0, sets = 0;
       (sess.actual || []).forEach(function (a) { a.sets.forEach(function (x) { vol += (x.weight || 0) * (x.reps || 0); sets++; }); });
-      stats = [["Volume", fmt(Math.round(vol)) + " " + U()], ["Sets", sets], ["Time", Math.max(1, Math.round(sess.durationSec / 60)) + " min"]];
+      stats = [["Volume", Math.round(vol).toLocaleString() + " " + U()], ["Sets", sets], ["Time", Math.max(1, Math.round(sess.durationSec / 60)) + " min"]];
     }
     var g = gritScore();
     fx.innerHTML = '<div class="celebrate">' +
@@ -5821,7 +5822,7 @@
     var html = '<h2 class="title">' + esc(sessionTitle(s)) + ' done</h2>' +
       '<p class="lead">' + (freestyle ? (s.past ? 'Logged for ' + esc(shortDate(s.date)) : 'One-off workout') + nextProgramNote() : esc(t.name) + ' · Week ' + programWeekAt(s.date)) + '</p>' +
       '<div class="statbar">' +
-        '<div class="stat"><div class="k">Volume</div><div class="v">' + fmt(Math.round(vol)) + '<small> ' + U() + '</small></div></div>' +
+        '<div class="stat"><div class="k">Volume</div><div class="v">' + Math.round(vol).toLocaleString() + '<small> ' + U() + '</small></div></div>' +
         '<div class="stat"><div class="k">Sets</div><div class="v">' + sets + '</div></div>' +
         '<div class="stat"><div class="k">Time</div><div class="v">' + mins + '<small> min</small></div></div>' +
       '</div>';
