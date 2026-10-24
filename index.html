@@ -302,16 +302,17 @@
   .next-card .nc-start { margin-top: 14px; }
   .next-card .nc-start svg { width: 16px; height: 16px; }
   .nc-ex .nx-w { display: inline-block; min-width: 64px; text-align: right; font-size: var(--fs-md); font-weight: 800; }
-  /* streak: a flame with the week count, then this week's days */
+  /* streak: the logo's star with the week count, then this week's days */
   .streak-card { background: var(--surface); border-radius: var(--radius); padding: 16px 18px 18px; margin-bottom: 14px; }
   .sk-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
   .sk-head h3 { font-size: var(--fs-lg); }
   .sk-head span { font-size: var(--fs-sm); color: var(--text-faint); }
   .sk-body { display: flex; align-items: center; gap: 12px; }
-  .sk-flame { position: relative; width: 60px; flex: none; display: flex; flex-direction: column; align-items: center; }
-  .sk-flame svg { width: 50px; height: 57px; fill: var(--accent); }
-  .sk-flame b { position: absolute; top: 25px; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-size: 19px; font-weight: 800; line-height: 1; color: var(--accent-text); }
-  .sk-flame span { font-size: var(--fs-sm); font-weight: 800; color: var(--accent-ink); }
+  .sk-star { position: relative; width: 60px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .sk-star svg { width: 58px; height: 56px; fill: var(--accent); stroke: var(--accent); stroke-width: 44; stroke-linejoin: round; }
+  .sk-star b { position: absolute; top: 20px; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-size: 17px; font-weight: 800; line-height: 1; color: var(--accent-text); }
+  .sk-star b.long { font-size: 13px; top: 22px; }
+  .sk-star span { font-size: var(--fs-sm); font-weight: 800; color: var(--accent-ink); }
   .sk-days { flex: 1; list-style: none; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
   .sk-days li { display: flex; flex-direction: column; align-items: center; gap: 8px; }
   .sk-d { font-size: var(--fs-sm); font-weight: 700; color: var(--text-faint); }
@@ -4258,9 +4259,9 @@
     return '<section class="streak-card">' +
       '<div class="sk-head"><h3>Your streak</h3><span>Week of ' + esc(shortDate(start)) + '</span></div>' +
       '<div class="sk-body">' +
-        '<div class="sk-flame" role="img" aria-label="' + n + '-week streak">' +
-          '<svg viewBox="0 0 44 50" aria-hidden="true"><path d="M22 2c3 9 14 13 14 27a14 14 0 01-28 0c0-7 4-11 7-14 0 5 2 8 5 9-2-8 0-15 2-22z"/></svg>' +
-          '<b>' + n + '</b><span>' + (n === 1 ? 'week' : 'weeks') + '</span></div>' +
+        '<div class="sk-star" role="img" aria-label="' + n + '-week streak">' +
+          '<svg viewBox="333 343 358 345" aria-hidden="true"><polygon points="512,365 556.6,468.6 668.9,479 584.2,553.5 609,663.5 512,605.9 415,663.5 439.8,553.5 355.1,479 467.4,468.6"/></svg>' +
+          '<b' + (n > 99 ? ' class="long"' : '') + '>' + n + '</b><span>' + (n === 1 ? 'week' : 'weeks') + '</span></div>' +
         '<ol class="sk-days">' + days + '</ol>' +
       '</div></section>';
   }
