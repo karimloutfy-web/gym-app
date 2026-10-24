@@ -1,0 +1,22 @@
+{
+  "name": "rep-star",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Rep Star iOS wrapper: the web app in index.html, bundled with Capacitor.",
+  "scripts": {
+    "build:www": "node scripts/build-www.js",
+    "ios": "npm run build:www && npx cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  }
+}
