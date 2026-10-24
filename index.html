@@ -1851,6 +1851,7 @@
     A(tplDuplicateDay(BP, 0) === 1 && BP.microcycle[1].slots.length === 3 && BP.microcycle[1].label === "C", "duplicating a day copies its exercises under a new label");
     A(!slotLocked(BP, BP.microcycle[0].slots[0]), "nothing is locked in a program you built");
     A(/You set the rule for each exercise/.test(progressionRuleText(BP)) && progModeLabel(BP) === "your rules", "built programs describe their per-exercise rules");
+    A(/How it progresses/.test(ruleBoxHtml(SL)) && /How it progresses/.test(ruleBoxHtml(BP)), "rule box renders for built-in and built programs (no self-call)");
     A(progMode(SL, SL.progression.squat) === "linear" && progMode(tplById("ppl-hypertrophy") || SL, { increment: 1 }) === (tplById("ppl-hypertrophy") ? "double" : "linear"), "built-ins fall back to their program-wide mode");
 
     // --- finishers: a WOD after a lifting day, saved with the lifts as one session ---
@@ -2030,7 +2031,7 @@
 
   /* ============================================================ HELPERS */
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-  function U() { return db.settings.unit; }
+  function U() { return (db && db.settings && db.settings.unit) || "kg"; }   // kg until settings load (self-test runs first)
   function fmt(n) {
     if (n == null || isNaN(n)) return "0";
     var r = Math.round(n * 100) / 100;
@@ -3355,7 +3356,7 @@
 
   // the "How it progresses" box: a short list for a program you built, the prose rule otherwise
   function ruleBoxHtml(t) {
-    if (!isMixed(t)) return ruleBoxHtml(t);
+    if (!isMixed(t)) return '<div class="rule-box"><b>How it progresses</b>' + esc(progressionRuleText(t)) + '</div>';
     var n = { linear: 0, double: 0, none: 0 }, u = usedExIds(t);
     Object.keys(t.progression || {}).forEach(function (id) { if (u[id]) n[progMode(t, t.progression[id])]++; });
     var follow = t.microcycle.reduce(function (k, d) { return k + (d.slots || []).filter(followsAnchor).length; }, 0);
