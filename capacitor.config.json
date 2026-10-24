@@ -1,0 +1,12 @@
+{
+  "appId": "app.repstar.ios",
+  "appName": "Rep Star",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "scheme": "Rep Star"
+  },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 0, "launchAutoHide": true }
+  }
+}
