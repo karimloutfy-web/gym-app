@@ -293,7 +293,53 @@
   button.next-card:hover { border-color: var(--accent-line); }
   .next-card .nc-eye { font-size: var(--fs-xs); font-weight: 700; color: var(--accent-ink); }
   .next-card h3 { font-size: var(--fs-xl); margin: 3px 0 12px; }
-  .nc-foot { margin-top: 10px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-faint); display: flex; align-items: center; gap: 5px; }
+  .nc-foot { margin: 6px auto -6px; min-height: 44px; padding: 0 10px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .next-card .nc-title { font-size: 28px; margin: 2px 0 10px; }
+  .next-card .nc-start { margin-top: 14px; }
+  .next-card .nc-start svg { width: 16px; height: 16px; }
+  .nc-ex .nx-w { display: inline-block; min-width: 64px; text-align: right; font-size: var(--fs-md); font-weight: 800; }
+  /* streak: a flame with the week count, then this week's days */
+  .streak-card { background: var(--surface); border-radius: var(--radius); padding: 16px 18px 18px; margin-bottom: 14px; }
+  .sk-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .sk-head h3 { font-size: var(--fs-lg); }
+  .sk-head span { font-size: var(--fs-sm); color: var(--text-faint); }
+  .sk-body { display: flex; align-items: center; gap: 12px; }
+  .sk-flame { position: relative; width: 60px; flex: none; display: flex; flex-direction: column; align-items: center; }
+  .sk-flame svg { width: 50px; height: 57px; fill: var(--accent); }
+  .sk-flame b { position: absolute; top: 25px; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-size: 19px; font-weight: 800; line-height: 1; color: var(--accent-text); }
+  .sk-flame span { font-size: var(--fs-sm); font-weight: 800; color: var(--accent-ink); }
+  .sk-days { flex: 1; list-style: none; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+  .sk-days li { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .sk-d { font-size: var(--fs-sm); font-weight: 700; color: var(--text-faint); }
+  .sk-c { width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center; font-size: var(--fs-sm); font-weight: 700; color: var(--text-faint); background: var(--surface-2); }
+  .sk-c svg { width: 17px; height: 17px; }
+  .sk-c.done { background: var(--accent); color: var(--accent-text); }
+  .sk-c.today { background: transparent; border: 2px solid var(--accent-line); color: var(--text); }
+  .sk-c.planned { background: transparent; border: 1.5px dashed var(--line-strong); color: var(--text-muted); }
+  /* last workout, feed style */
+  .last-card { display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left; background: var(--surface); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; }
+  .lw-who { display: flex; align-items: center; gap: 12px; }
+  .lw-who b { display: block; font-size: var(--fs-md); font-weight: 800; }
+  .lw-who small { display: block; font-size: var(--fs-sm); color: var(--text-faint); }
+  .lw-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+  .lw-stats, .wk-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .lw-stats small, .wk-stats small { display: block; font-size: var(--fs-sm); color: var(--text-faint); }
+  .lw-stats b, .wk-stats b { display: block; font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  /* progress: this week + compact lift rows */
+  .week-card { background: var(--surface); border-radius: var(--radius); padding: 18px; margin-top: 14px; }
+  .week-card h3 { font-size: 22px; margin-bottom: 12px; }
+  .wk-k { font-size: var(--fs-sm); color: var(--text-faint); margin: 16px 0 6px; }
+  .lift-list { background: var(--surface); border-radius: var(--radius); padding: 4px 18px; }
+  .plift-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 0; text-align: left; border-top: 1px solid var(--line); }
+  .plift-row:first-child { border-top: none; }
+  .plift-name { flex: 1; min-width: 0; }
+  .plift-name b { display: block; font-size: var(--fs-md); font-weight: 800; }
+  .plift-name small { display: block; font-size: var(--fs-sm); color: var(--accent-ink); font-weight: 700; }
+  .plift-name small.muted { color: var(--text-faint); font-weight: 600; }
+  .plift-spark { width: 64px; flex: none; display: block; }
+  .plift-spark .tt-wait { font-size: var(--fs-xs); color: var(--text-faint); text-align: center; }
+  .plift-kg { width: 78px; flex: none; text-align: right; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 800; }
+  .plift-kg small { font-size: var(--fs-sm); color: var(--text-muted); font-weight: 600; }
   .nc-foot span { font-size: var(--fs-md); line-height: 1; }
   .sc-sub { font-family: var(--font-num); font-size: var(--fs-sm); color: var(--text-muted); margin-bottom: 6px; }
   .sc-tag { margin-left: auto; font-size: var(--fs-xs); font-weight: 700; border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
@@ -310,12 +356,11 @@
   .day-picker button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent-line); }
   .nc-ex { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   .nc-ex:last-of-type { border-bottom: none; }
-  .nc-ex .nx-name { font-size: var(--fs-md); font-weight: 500; }
+  .nc-ex .nx-name { font-size: var(--fs-md); font-weight: 600; }
   .nc-ex .nx-set { font-family: var(--font-num); font-size: var(--fs-sm); color: var(--text-muted); }
-  .nc-ex .nx-w { font-family: var(--font-num); font-weight: 500; font-size: var(--fs-sm); }
 
   .recent { margin-top: 20px; }
-  .rec-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 7px; font-size: var(--fs-sm); }
+  .rec-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid transparent; border-radius: var(--radius-sm); margin-bottom: 8px; font-size: var(--fs-sm); }
   .rec-row .rr-day { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-sm); min-width: 30px; max-width: 82px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
   .rec-row .rr-sum { flex: 1; color: var(--text-muted); font-family: var(--font-num); font-size: var(--fs-sm); }
   .rec-row .rr-date { color: var(--text-faint); font-size: var(--fs-xs); }
@@ -328,14 +373,14 @@
   .home-hero .h-eyebrow { font-size: var(--fs-sm); font-weight: 700; color: var(--accent-ink); }
   .home-hero h2.title { font-size: var(--fs-2xl); margin: 4px 0 14px; }
   .home-hero .lead { margin-bottom: 22px; }
-  .h-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .h-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 4px 0 14px; }
   .h-prog { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xl); line-height: 1; display: inline-flex; align-items: center; gap: 7px; }
   .h-info { position: relative; width: 22px; height: 22px; color: var(--text-faint); flex: none; }
   .h-info::after, .sf-i::after { content: ""; position: absolute; inset: -11px; }   /* 44pt tap area, same look */
   .h-info svg { width: 100%; height: 100%; }
   .h-info:hover { color: var(--accent-ink); }
   .h-week { font-size: var(--fs-sm); font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
-  .home-secondary { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line-strong); }
+  .home-secondary { margin-top: 18px; }
   .btn.btn-lg { height: 56px; font-size: var(--fs-lg); }
   .home-links { display: flex; gap: 9px; margin-top: 10px; }
   .rest-ex { margin-top: 8px; }
@@ -349,8 +394,8 @@
     background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
   .filter-chips { display: flex; gap: 6px; overflow-x: auto; margin: 4px -16px 0; padding: 4px 16px 2px; scrollbar-width: none; }
   .filter-chips::-webkit-scrollbar { display: none; }
-  .filter-chips button { flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; }
-  .filter-chips button[aria-selected="true"] { background: var(--text); border-color: var(--text); color: var(--bg); }
+  .filter-chips button { flex: none; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--text); font-size: var(--fs-md); font-weight: 700; }
+  .filter-chips button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
   .filter-all { display: block; margin: 14px auto 0; min-height: 44px; padding: 0 12px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
   .home-alt { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
   .home-alt button { min-height: 44px; padding: 0 8px; color: var(--accent-ink); font-size: var(--fs-sm); font-weight: 600; }
@@ -362,7 +407,7 @@
   .home-stat .hs-v small { font-size: var(--fs-sm); color: var(--text-muted); font-weight: 500; }
   .home-stat .hs-sub { display: block; font-size: var(--fs-xs); color: var(--text-faint); font-variant-numeric: tabular-nums; margin-top: 4px; }
 
-  .grit-card { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; margin: 0 0 16px; }
+  .grit-card { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid transparent; border-radius: var(--radius); padding: 16px 18px; margin: 0 0 16px; }
   .grit-ring { width: 56px; height: 56px; flex: none; }
   .grit-ring .grit-num { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-lg); fill: var(--text); }
   .grit-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -478,7 +523,7 @@
   .change-row .cr-ic.deload { color: var(--miss); }
   .change-row .cr-w { margin-left: auto; font-family: var(--font-num); color: var(--text-muted); font-size: var(--fs-sm); }
 
-  .lift-prog { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 13px; margin-bottom: 9px; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+  .lift-prog { background: var(--surface); border: 1px solid transparent; border-radius: var(--radius); padding: 12px 13px; margin-bottom: 9px; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
   .lift-prog h4 { font-size: var(--fs-md); }
   .lift-prog .lp-sub { font-size: var(--fs-xs); color: var(--text-faint); font-variant-numeric: tabular-nums; margin-top: 2px; }
   .lift-prog .lp-now { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-lg); text-align: right; }
@@ -4157,6 +4202,82 @@
     '</div>';
   }
 
+  /* ---- Volt home pieces: weekly streak, this week's days, last workout ---- */
+  function isLiftSession(s) { return !s.kind || s.kind === "barbell" || s.kind === "bodybuilding" || s.kind === "freestyle"; }
+  // the Sunday before a week's Sunday, safe across daylight-saving changes
+  function prevWeekKey(wk) { return weekKey(wk - 3 * 86400000); }
+  // consecutive weeks with at least one workout. This week joins the run once you've
+  // trained in it, and doesn't break the run before then.
+  function weekStreak() {
+    var has = {};
+    db.sessions.forEach(function (s) { has[weekKey(s.date)] = 1; });
+    var wk = weekKey(Date.now()), n = 0;
+    if (!has[wk]) wk = prevWeekKey(wk);
+    while (has[wk]) { n++; wk = prevWeekKey(wk); }
+    return n;
+  }
+  function sessionVolume(s) {
+    return (s.actual || []).reduce(function (n, a) {
+      return n + (a.sets || []).reduce(function (m, st) { return m + (st.weight || 0) * (st.reps || 0); }, 0);
+    }, 0);
+  }
+  function durText(sec) {
+    var m = Math.round((sec || 0) / 60);
+    return m >= 60 ? Math.floor(m / 60) + "h " + (m % 60) + "m" : m + "m";
+  }
+  function volumeText(v) {
+    return U() === "kg" && v >= 10000 ? fmt(Math.round(v / 100) / 10) + " t" : Math.round(v).toLocaleString() + " " + U();
+  }
+  var DUMBBELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M2.5 10v4M6 7v10M18 7v10M21.5 10v4M6 12h12"/></svg>';
+  var BOLT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>';
+  function streakCardHtml() {
+    var n = weekStreak();
+    var start = weekKey(Date.now()), today = dayKey(Date.now());
+    var td = (db.active && db.active.trainingDays) || [];
+    var byDay = {};
+    db.sessions.forEach(function (s) {
+      var k = dayKey(s.date);
+      if (k < start) return;
+      byDay[k] = byDay[k] === "lift" ? "lift" : (s.kind === "metcon" ? "metcon" : "lift");
+    });
+    var days = "";
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(start); d.setDate(d.getDate() + i);
+      var k = dayKey(d.getTime()), kind = byDay[k];
+      var cls = kind ? "done" : k === today ? "today" : (k > today && td.indexOf(d.getDay()) >= 0) ? "planned" : "";
+      var label = DAY_SHORT[d.getDay()] + " " + d.getDate() + (kind ? (kind === "metcon" ? ", conditioning done" : ", lifting done") : cls === "today" ? ", today" : cls === "planned" ? ", training day" : "");
+      days += '<li aria-label="' + esc(label) + '"><span class="sk-d" aria-hidden="true">' + DAY_ABBR[d.getDay()] + '</span>' +
+        '<span class="sk-c ' + cls + '" aria-hidden="true">' + (kind ? (kind === "metcon" ? BOLT_SVG : DUMBBELL_SVG) : d.getDate()) + '</span></li>';
+    }
+    return '<section class="streak-card">' +
+      '<div class="sk-head"><h3>Your streak</h3><span>Week of ' + esc(shortDate(start)) + '</span></div>' +
+      '<div class="sk-body">' +
+        '<div class="sk-flame" role="img" aria-label="' + n + '-week streak">' +
+          '<svg viewBox="0 0 44 50" aria-hidden="true"><path d="M22 2c3 9 14 13 14 27a14 14 0 01-28 0c0-7 4-11 7-14 0 5 2 8 5 9-2-8 0-15 2-22z"/></svg>' +
+          '<b>' + n + '</b><span>' + (n === 1 ? 'week' : 'weeks') + '</span></div>' +
+        '<ol class="sk-days">' + days + '</ol>' +
+      '</div></section>';
+  }
+  var FORMAT_SHORT = { amrap: "AMRAP", emom: "EMOM", fortime: "For time", rft: "RFT", chipper: "Chipper", hyrox: "Race sim" };
+  function lastWorkoutCardHtml() {
+    if (!db.sessions.length) return "";
+    var s = db.sessions.reduce(function (a, b) { return b.date >= a.date ? b : a; });
+    var who = (db.account && db.account.displayName) || "You";
+    var prog = s.programName || ((tplById(s.templateId) || {}).name) || "";
+    var stats = s.kind === "metcon"
+      ? [[s.score && s.score.type === "rounds" ? "Score" : "Time", metconScoreText(s)], ["Format", FORMAT_SHORT[s.format] || "WOD"], ["Level", s.score && s.score.rx === false ? "Scaled" : "Rx"]]
+      : [["Time", durText(s.durationSec)], ["Volume", volumeText(sessionVolume(s))],
+         ["Sets", String((s.actual || []).reduce(function (n, a) { return n + (a.sets || []).filter(function (x) { return x.reps > 0; }).length; }, 0))]];
+    if (s.finisher) stats[2] = [s.finisher.wodName || "Finisher", finisherScoreText(s.finisher).replace((s.finisher.wodName || "Finisher") + " ", "")];
+    return '<button class="last-card" data-go="progress">' +
+      '<span class="lw-who"><span class="avatar avatar-fallback" style="width:40px;height:40px;font-size:15px">' + esc(initials(who)) + '</span>' +
+        '<span><b>' + esc(who) + '</b><small>' + esc(relDate(s.date)) + (prog ? ' · ' + esc(prog) : '') + '</small></span></span>' +
+      '<span class="lw-title">' + esc(sessionTitle(s)) + '</span>' +
+      '<span class="lw-stats">' + stats.map(function (x) {
+        return '<span><small>' + esc(x[0]) + '</small><b>' + esc(x[1]) + '</b></span>';
+      }).join("") + '</span></button>';
+  }
+
   renderers.home = function () {
     var c = screens.home;
 
@@ -4185,8 +4306,6 @@
     if (!t) { db.active = null; save(); go("choose"); return; }
     var res = resolveSession(t, db.active, eq());
     var metcon = !!res.wod;
-    // bodyweight tile: last entry that actually has a weight (a body-fat-only log shouldn't blank it)
-    var lb = db.body.filter(function (e) { return e.bw != null; }).pop() || null;
 
     var html = '<div class="home-hero">' +
       '<div class="h-head"><span class="h-prog">' + esc(t.name) +
@@ -4195,55 +4314,31 @@
         '<span class="h-week">Week ' + programWeek() + '</span></div>' +
       '<div class="home-primary">';
 
-    // next-workout summary (tap for the month ahead)
-    var ncFoot = '<div class="nc-foot">See the month ahead <span>›</span></div>';
+    html += streakCardHtml();
+
+    // next workout: what's on, with the start button right on the card
     var ntl = nextTrainingLabel();
-    var ntlSuffix = ntl ? ' · ' + ntl : '';
+    html += '<section class="next-card"><div class="nc-eye">Next up' + (ntl ? ' · ' + esc(ntl) : '') + '</div>';
     if (metcon) {
-      var mres = res;
-      html += '<button class="next-card" id="nc-open"><div class="nc-eye">Next up · ' + esc(mres.label) + esc(ntlSuffix) + '</div>' +
-        '<div class="nc-wod">' + esc(mres.title) + '</div>' +
-        '<div class="nc-wod-sub">' + esc(mres.subtitle) + '</div>' +
-        metconMoves(mres.wod).slice(0, 6).map(function (m) {
+      html += '<h3 class="nc-title">' + esc(res.title) + '</h3><div class="nc-wod-sub">' + esc(res.subtitle) + '</div>' +
+        metconMoves(res.wod).slice(0, 6).map(function (m) {
           return '<div class="nc-ex"><span class="nx-name">' + esc(moveLine(m)) + '</span></div>';
-        }).join("") + ncFoot +
-      '</button>';
+        }).join("");
     } else {
-      html += '<button class="next-card" id="nc-open"><div class="nc-eye">Next up · ' + esc(sessionLabel(res)) + esc(ntlSuffix) + '</div>';
+      html += '<h3 class="nc-title">' + esc(sessionLabel(res)) + '</h3>';
       res.exercises.forEach(function (x) {
         var setStr = x.workSets.length + "×" + repRange(x.target, x.repHigh) + (x.assist && x.workSets[0].amrap ? "+" : "");
         html += '<div class="nc-ex"><span class="nx-name">' + esc(x.name) + '</span>' +
-          '<span>' + (x.assist
-            ? '<span class="nx-set">' + setStr + '</span>'
-            : '<span class="nx-set">' + setStr + '</span>&nbsp;&nbsp;<span class="nx-w">' + fmt(x.weight) + ' ' + U() + '</span>') +
-          '</span></div>';
+          '<span><span class="nx-set">' + setStr + '</span>' + (x.assist ? '' : '<span class="nx-w">' + fmt(x.weight) + ' ' + U() + '</span>') + '</span></div>';
       });
       if (res.finisher) html += finisherLineHtml(res.finisher, "nc-ex");
-      html += ncFoot + '</button>';
     }
-
-    html += '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-start">Start ' + esc(metcon ? "workout" : sessionLabel(res)) + '</button></div>' +
+    html += '<button class="btn btn-primary btn-lg nc-start" id="h-start"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Start ' + esc(metcon ? res.title : sessionLabel(res)) + '</button>' +
+      '<button class="nc-foot" id="nc-open">See the month ahead <span aria-hidden="true">›</span></button></section>' +
       '<div class="home-alt"><button id="h-else">Something else today</button></div>' +
       '</div>' + // close .home-primary
-      '<div class="home-secondary">' + gritCardHtml();
-
-    // quick stats
-    var last = db.sessions.length ? db.sessions[db.sessions.length - 1] : null;
-    var lastLbl = last ? sessionTitle(last) : null;
-    html += '<div class="home-stats">' +
-      '<button class="home-stat" data-go="body">' +
-        '<span class="hs-k">Bodyweight</span>' +
-        '<span class="hs-v">' + (lb && lb.bw != null ? fmt(lb.bw) + ' <small>' + U() + '</small>' : '<small>—</small>') + '</span>' +
-        '<span class="hs-sub">' + (lb && lb.bw != null ? relDate(lb.date) : 'tap to log') + '</span>' +
-      '</button>' +
-      '<button class="home-stat" data-go="progress">' +
-        '<span class="hs-k">Last workout</span>' +
-        '<span class="hs-v">' + (last ? esc(lastLbl) : '<small>—</small>') + '</span>' +
-        '<span class="hs-sub">' + (last ? relDate(last.date) : 'none yet') + '</span>' +
-      '</button>' +
-    '</div>';
-
-    html += '</div>' + // close .home-secondary
+      '<div class="home-secondary">' + lastWorkoutCardHtml() + gritCardHtml() +
+      '</div>' + // close .home-secondary
     '</div>'; // close .home-hero
 
     c.innerHTML = html;
@@ -6138,63 +6233,89 @@
     }
     var t = tplById(db.active.templateId);
     if (!t) { db.active = null; save(); go("choose"); return; }
-    var metcon = isMetcon(t);
+    var pf = progressFilter;
+    var inFilter = function (s) { return pf === "all" ? true : pf === "lifting" ? isLiftSession(s) : !isLiftSession(s) || !!s.finisher; };
     var liftSessions = db.sessions.filter(function (s) { return !s.kind || s.kind === "barbell" || s.kind === "bodybuilding"; });
 
     var html = '<h2 class="title">Progress</h2>' +
-      '<p class="lead">' + esc(t.name) + ' · started ' + relDate(db.active.startedAt) + ' · ' + db.sessions.length + ' session' + (db.sessions.length === 1 ? '' : 's') + '</p>';
+      '<p class="lead">' + esc(t.name) + ' · started ' + relDate(db.active.startedAt) + ' · ' + db.sessions.length + ' session' + (db.sessions.length === 1 ? '' : 's') + '</p>' +
+      '<div class="filter-chips" role="tablist" aria-label="Show">' + [["all", "All"], ["lifting", "Lifting"], ["conditioning", "Conditioning"]].map(function (f) {
+        return '<button role="tab" data-pf="' + f[0] + '" aria-selected="' + (pf === f[0]) + '">' + f[1] + '</button>';
+      }).join("") + '</div>';
 
-    if (!metcon) {
-      html += '<div class="eyebrow" style="margin-top:4px">Lifts</div>';
-      if (!liftSessions.length) {
-        html += '<p class="chart-note" style="margin-bottom:6px">Finish your first workout and your lifts start charting here.</p>';
-      } else {
-        progWaiting = 0;
-        var liftCards = "";
-        trackedLifts(t, db.active.lifts).forEach(function (id) {
-          var lift = db.active.lifts[id];
-          if (!lift) return;
-          var lastTop = lastLiftedTop(id);
-          var now = lastTop != null ? lastTop : lift.start;
-          var bits = [];
-          if (lift.weight !== now) bits.push("next " + fmt(lift.weight));
-          if (now !== lift.start) bits.push("from " + fmt(lift.start));
-          if (lift.failCount) bits.push(lift.failCount + " miss" + (lift.failCount > 1 ? "es" : ""));
-          var sub = bits.length
-            ? bits.join("  ·  ") + " " + U()
-            : (lastTop != null ? "holding at " + fmt(now) + " " + U() : "not trained yet");
-          liftCards += progCard(EX[id].name, sub, now - lift.start, U(),
-            weeklySeries(id, lift.start, db.active.startedAt), now);
-        });
-        html += (progWaiting ? WAIT_NOTE : '') + liftCards;
-      }
+    // this week, and the last 12 weeks of training time
+    var thisWk = weekKey(Date.now());
+    var wkSess = db.sessions.filter(function (s) { return s.date >= thisWk && inFilter(s); });
+    var wkTime = wkSess.reduce(function (n, s) { return n + (s.durationSec || 0); }, 0);
+    var wkVol = wkSess.filter(isLiftSession).reduce(function (n, s) { return n + sessionVolume(s); }, 0);
+    var series = [], wk = thisWk;
+    for (var i = 0; i < 12; i++) { series.unshift({ t: wk, v: 0 }); wk = prevWeekKey(wk); }
+    db.sessions.forEach(function (s) {
+      if (!inFilter(s)) return;
+      var k = weekKey(s.date);
+      series.forEach(function (p) { if (p.t === k) p.v += (s.durationSec || 0) / 3600; });
+    });
+    series.forEach(function (p) { p.v = Math.round(p.v * 10) / 10; });
+    html += '<section class="week-card"><h3>This week</h3><div class="wk-stats">' +
+      '<span><small>Time</small><b>' + durText(wkTime) + '</b></span>' +
+      '<span><small>Sessions</small><b>' + wkSess.length + '</b></span>' +
+      (pf === "conditioning" ? '' : '<span><small>Volume</small><b>' + volumeText(wkVol) + '</b></span>') +
+      '</div><p class="wk-k">Past 12 weeks · hours</p>' + lineChart(series) + '</section>';
+
+    // lifts: one compact row each, tap for the full chart
+    if (pf !== "conditioning") {
+      var rows = trackedLifts(t, db.active.lifts).map(function (id) {
+        var lift = db.active.lifts[id];
+        if (!lift || !EX[id]) return "";
+        var lastTop = lastLiftedTop(id);
+        var now = lastTop != null ? lastTop : lift.start;
+        var gain = now - lift.start;
+        var sub = lastTop == null ? "not trained yet" : gain ? signed(gain) + " " + U() + " since start" : "holding at " + fmt(now) + " " + U();
+        return '<button class="plift-row" data-lift="' + esc(id) + '"><span class="plift-name"><b>' + esc(EX[id].name) + '</b><small' + (lastTop == null ? ' class="muted"' : '') + '>' + esc(sub) + '</small></span>' +
+          '<span class="plift-spark">' + sparkline(weeklySeries(id, lift.start, db.active.startedAt)) + '</span>' +
+          '<span class="plift-kg">' + fmt(now) + ' <small>' + U() + '</small></span></button>';
+      }).join("");
+      if (rows) html += '<div class="eyebrow" style="margin-top:18px">Lifts</div><section class="lift-list">' + rows + '</section>';
+      else if (!liftSessions.length) html += '<p class="chart-note" style="margin-top:14px">Finish your first workout and your lifts start charting here.</p>';
     }
-
-    html += metconHistoryHtml();
-
-    html += '<div class="eyebrow" style="margin-top:22px">Body</div>' + bodyChartsHtml();
-
-    if (db.sessions.length) {
-      html += '<div class="statbar" style="margin-top:22px">' +
-        '<div class="stat hot"><div class="k">Week</div><div class="v">' + programWeek() + '</div></div>' +
-        '<div class="stat"><div class="k">Sessions</div><div class="v">' + db.sessions.length + '</div></div>' +
-        '<div class="stat"><div class="k">Per week</div><div class="v">' + t.daysPerWeek + '</div></div>' +
-      '</div>';
-
-      if (!metcon && liftSessions.length) {
-        html += '<div class="eyebrow" style="margin-top:22px">Recent sessions</div>';
-        liftSessions.slice(-6).reverse().forEach(function (s) {
-          html += '<div class="rec-row"><span class="rr-day">' + esc(s.dayLabel) + '</span>' +
-            '<span class="rr-sum">' + (s.actual || []).filter(function (a) { return !a.assist; }).map(function (a) {
-              return fmt(a.topWeight) + "×" + a.topReps;
-            }).join("  ") + (s.finisher ? "  + " + esc(finisherScoreText(s.finisher)) : "") + '</span>' +
-            '<span class="rr-date">' + relDate(s.date) + '</span></div>';
-        });
-      }
+    if (pf !== "lifting") html += metconHistoryHtml();
+    if (pf !== "conditioning" && liftSessions.length) {
+      html += '<div class="eyebrow" style="margin-top:22px">Recent sessions</div>';
+      liftSessions.slice(-6).reverse().forEach(function (s) {
+        html += '<div class="rec-row"><span class="rr-day">' + esc(s.dayLabel) + '</span>' +
+          '<span class="rr-sum">' + (s.actual || []).filter(function (a) { return !a.assist; }).map(function (a) {
+            return fmt(a.topWeight) + "×" + a.topReps;
+          }).join("  ") + (s.finisher ? "  + " + esc(finisherScoreText(s.finisher)) : "") + '</span>' +
+          '<span class="rr-date">' + relDate(s.date) + '</span></div>';
+      });
     }
     c.innerHTML = html;
     wireHistory(c);
+    c.querySelectorAll("[data-pf]").forEach(function (b) {
+      b.onclick = function () { progressFilter = b.dataset.pf; renderers.progress(); };
+    });
+    c.querySelectorAll("[data-lift]").forEach(function (b) {
+      b.onclick = function () { openLiftSheet(b.dataset.lift); };
+    });
   };
+  var progressFilter = "all";
+  // a lift's full weekly chart, from its row on Progress
+  function openLiftSheet(id) {
+    var lift = db.active && db.active.lifts[id];
+    if (!lift || !EX[id]) return;
+    var lastTop = lastLiftedTop(id);
+    var now = lastTop != null ? lastTop : lift.start;
+    var bits = [];
+    if (lift.weight !== now) bits.push("next " + fmt(lift.weight));
+    if (now !== lift.start) bits.push("from " + fmt(lift.start));
+    if (lift.failCount) bits.push(lift.failCount + " miss" + (lift.failCount > 1 ? "es" : ""));
+    progWaiting = 0;
+    var card = progCard(EX[id].name, bits.length ? bits.join("  ·  ") + " " + U() : "holding at " + fmt(now) + " " + U(),
+      now - lift.start, U(), weeklySeries(id, lift.start, db.active.startedAt), now);
+    openSheet('<h2>' + esc(EX[id].name) + '</h2>' + card + (progWaiting ? WAIT_NOTE : '') +
+      '<div class="sh-foot"><button class="btn btn-primary" id="ls-close">Done</button></div>');
+    document.getElementById("ls-close").onclick = closeSheet;
+  }
 
   // weekly line chart with a visible dot at every week
   function lineChart(series) {
