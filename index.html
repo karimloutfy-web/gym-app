@@ -198,8 +198,8 @@
   }
   .screen.active { transform: translateX(0); visibility: visible; }
   .screen.anim { transition: transform .3s cubic-bezier(.32,.72,0,1); }
-  .screen.lead { z-index: 2; }
-  .screen.trail { z-index: 1; }
+  .screen.scr-lead { z-index: 2; }
+  .screen.scr-trail { z-index: 1; }
   .screen.from-right { transform: translateX(100%); }
   .screen.from-left  { transform: translateX(-26%); }
   .screen.to-left    { transform: translateX(-26%); }
@@ -673,7 +673,7 @@
   /* sheet */
   .sheet-wrap { position: fixed; inset: 0; z-index: 60; background: rgba(10,8,6,.5); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s ease both; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-  .sheet { background: var(--surface); width: 100%; max-width: 560px; max-height: min(88vh, calc(100% - 24px)); border-radius: 18px 18px 0 0; box-shadow: var(--shadow-sheet); padding: 8px 16px max(18px, env(safe-area-inset-bottom)); overflow-y: auto; animation: slideup .26s cubic-bezier(.22,1,.36,1) both; }
+  .sheet { background: var(--surface); width: 100%; max-width: 560px; max-height: min(88vh, calc(100% - 24px)); border-radius: 18px 18px 0 0; box-shadow: var(--shadow-sheet); padding: 8px 16px max(18px, env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; animation: slideup .26s cubic-bezier(.22,1,.36,1) both; }
   @keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
   .grab { width: 36px; height: 4px; border-radius: 999px; background: var(--line-strong); margin: 6px auto 12px; }
   .sheet h2 { font-size: var(--fs-xl); margin-bottom: 3px; }
@@ -2170,7 +2170,7 @@
   // rough "depth" so a plain go() can infer push vs pop direction
   var DEPTH = { home: 0, progress: 0, body: 0, badges: 0, feed: 0, choose: 1, food: 1, nutrition: 2, summary: 1, pick: 1, roll: 1, schedule: 1, detail: 2, setup: 3, editor: 3 };
   var cur = null, sliding = false;
-  var SCR_RESET = ["anim", "from-right", "from-left", "to-left", "to-right", "behind", "lead", "trail"];
+  var SCR_RESET = ["anim", "from-right", "from-left", "to-left", "to-right", "behind", "scr-lead", "scr-trail"];
   function snapScreens() {
     Object.keys(screens).forEach(function (k) {
       SCR_RESET.forEach(function (c) { screens[k].classList.remove(c); });
@@ -2182,7 +2182,8 @@
   function go(name, back) {
     if (sliding) snapScreens();
     if (name === cur) { renderChip(); renderTabs(); var rr = renderers[name]; if (rr) rr(); return; }
-    var outgoing = cur ? screens[cur] : null;
+    var outgoing = null;
+    Object.keys(screens).forEach(function (k) { if (screens[k].classList.contains("active") && k !== name) outgoing = screens[k]; });
     var incoming = screens[name];
     if (back == null && cur) back = (DEPTH[name] || 0) < (DEPTH[cur] || 0);
     cur = name;
@@ -2195,7 +2196,7 @@
 
     var RESET = SCR_RESET;
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!outgoing || reduce) {
+    if (!outgoing || outgoing === incoming || reduce) {
       Object.keys(screens).forEach(function (k) {
         RESET.forEach(function (c) { screens[k].classList.remove(c); });
         screens[k].classList.toggle("active", k === name);
@@ -2205,8 +2206,8 @@
 
     sliding = true;
     // forward: incoming rides in on top from the right; back: outgoing slides off to the right, revealing incoming underneath
-    incoming.classList.add("anim", "active", back ? "from-left" : "from-right", back ? "trail" : "lead");
-    outgoing.classList.add("anim", back ? "lead" : "trail");
+    incoming.classList.add("anim", "active", back ? "from-left" : "from-right", back ? "scr-trail" : "scr-lead");
+    outgoing.classList.add("anim", back ? "scr-lead" : "scr-trail");
     if (!back) outgoing.classList.add("behind");
     void incoming.offsetWidth;                // reflow so the start transform sticks
     incoming.classList.remove("from-left", "from-right");
@@ -6268,7 +6269,14 @@
   renderers.progress = function () {
     var c = screens.progress;
     if (!db.active) {
-      if (!db.sessions.length) { go("home"); return; }
+      if (!db.sessions.length) {
+        c.innerHTML = '<h2 class="title">Progress</h2>' +
+          '<div class="empty"><div class="em-ic">📈</div><h3>No workouts yet</h3>' +
+          '<p>Record a workout to see your progress — lifts, PRs and trends show up here.</p>' +
+          '<button class="btn btn-primary" id="pg-start">Start a workout</button></div>';
+        document.getElementById("pg-start").onclick = function () { startEmptyWorkout(null); };
+        return;
+      }
       var html0 = '<h2 class="title">History</h2>' +
         '<p class="lead">' + db.sessions.length + ' workout' + (db.sessions.length === 1 ? '' : 's') + ' logged · no active program</p>' +
         metconHistoryHtml() +
@@ -7232,6 +7240,45 @@
     var wrap = sheetRoot.querySelector(".sheet-wrap");
     fitSheetToViewport();
     wrap.addEventListener("click", function (e) { if (e.target === wrap) closeSheet(); });
+    dragToClose(wrap, wrap.querySelector(".sheet"));
+  }
+  // pulling down from the top of a sheet drags it with the finger; let go far or fast enough and it closes
+  function dragToClose(wrap, sh) {
+    var y0 = 0, x0 = 0, t0 = 0, dy = 0, armed = false, dragging = false;
+    sh.addEventListener("touchstart", function (e) {
+      if (e.touches.length !== 1) { armed = false; return; }
+      y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; t0 = Date.now(); dy = 0;
+      armed = sh.scrollTop <= 0; dragging = false;
+    }, { passive: true });
+    sh.addEventListener("touchmove", function (e) {
+      if (!armed) return;
+      var d = e.touches[0].clientY - y0;
+      if (!dragging) {
+        // only a downward, mostly vertical pull at the top starts a drag; anything else scrolls as usual
+        if (d <= 4 || Math.abs(e.touches[0].clientX - x0) > d || sh.scrollTop > 0) { if (d < -4) armed = false; return; }
+        dragging = true;
+        sh.style.animation = "none"; sh.style.transition = "none";
+      }
+      e.preventDefault();
+      dy = Math.max(0, d);
+      sh.style.transform = "translateY(" + dy + "px)";
+    }, { passive: false });
+    var end = function () {
+      if (!dragging) return;
+      dragging = false; armed = false;
+      var fast = dy / Math.max(1, Date.now() - t0) > 0.6;
+      if (dy > Math.min(140, sh.offsetHeight * 0.3) || (fast && dy > 30)) {
+        sh.style.transition = "transform .2s ease-in";
+        sh.style.transform = "translateY(100%)";
+        wrap.style.animation = "none"; wrap.style.transition = "opacity .2s"; wrap.style.opacity = "0";
+        setTimeout(function () { if (wrap.parentNode) closeSheet(); }, 200);
+      } else {
+        sh.style.transition = "transform .22s cubic-bezier(.22,1,.36,1)";
+        sh.style.transform = "";
+      }
+    };
+    sh.addEventListener("touchend", end);
+    sh.addEventListener("touchcancel", end);
   }
   function confirmSheet(title, body, onYes, yesLabel) {
     openSheet('<h2>' + esc(title) + '</h2><p class="sh-lead">' + esc(body) + '</p>' +
