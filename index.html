@@ -1998,6 +1998,62 @@
     var ft = foodTotals([{ kcal: 284, p: 53.3, c: 0, f: 6.2 }, { kcal: 150, p: 5, c: 27, f: 3 }]);
     A(ft.kcal === 434 && Math.abs(ft.p - 58.3) < 1e-9, "day totals add up");
 
+    // --- cloud sync ---
+    var syS = function (id, date, extra) { return Object.assign({ id: id, date: date }, extra || {}); };
+    var syLocal = { version: 2, settings: { unit: "kg" }, sessions: [syS("a", 1)], account: { userId: "u1" }, pendingPush: ["a"],
+      backfilledFor: { u1: true }, knownProfiles: { u1: {} }, food: { log: [{ id: "f1" }], recent: [] } };
+    var syDoc = syncDoc(syLocal, { settings: 5 });
+    A(!syDoc.db.account && !syDoc.db.pendingPush && !syDoc.db.backfilledFor && !syDoc.db.knownProfiles &&
+      syDoc.db.food.log[0].id === "f1" && syDoc.db.sessions.length === 1 && syDoc.stamps.settings === 5, "sync doc leaves out device-only parts, keeps the rest");
+    syDoc.db.sessions.push(syS("x", 2));
+    A(syLocal.sessions.length === 1, "sync doc is a copy, not the live db");
+    A(isEmptyDb({ sessions: [], body: [], active: null, food: { log: [] } }) && !isEmptyDb({ sessions: [syS("a", 1)] }) && !isEmptyDb({ active: { templateId: "x" } }),
+      "empty db = no program, workouts, body, custom items or food");
+
+    var syRemote = { version: 3, settings: { unit: "lb" }, sessions: [syS("r1", 5), syS("r2", 0)], badges: { earned: { b1: 9 }, seen: {} } };
+    var syM = mergeDb({ sessions: [] }, syRemote, null, {}, {});
+    A(syM.sessions.map(function (s) { return s.id; }).join() === "r2,r1" && syM.settings.unit === "lb", "first sync, empty phone: takes everything online");
+    syM = mergeDb(syLocal, syRemote, null, {}, {});
+    A(syM.sessions.map(function (s) { return s.id; }).join() === "r2,a,r1", "first sync: workouts from both sides, in date order");
+    A(syM.version === 3 && !syM.account && syM.food.log.length === 1 && syM.badges.earned.b1 === 9, "first sync: keeps parts only one side has, never device-only ones");
+
+    var syBase = syncBase({ settings: { unit: "kg" }, sessions: [syS("a", 1), syS("b", 2)], body: [{ id: "w1" }] });
+    syM = mergeDb({ settings: { unit: "kg" }, sessions: [syS("a", 1)], body: [{ id: "w1" }] },
+      { settings: { unit: "kg" }, sessions: [syS("a", 1), syS("b", 2)], body: [] }, syBase, {}, {});
+    A(syM.sessions.length === 1 && syM.sessions[0].id === "a", "deleted here since the last sync: stays deleted though still online");
+    A(syM.body.length === 0, "deleted on the other phone: removed here too");
+    syM = mergeDb({ sessions: [syS("a", 1), syS("b", 2), syS("c", 3)] }, { sessions: [syS("a", 1), syS("b", 2), syS("d", 4)] }, syBase, {}, {});
+    A(syM.sessions.map(function (s) { return s.id; }).join() === "a,b,c,d", "logged on both phones offline: both kept");
+
+    syM = mergeDb({ customPlans: [{ id: "p", name: "old", updatedAt: 10 }] }, { customPlans: [{ id: "p", name: "new", updatedAt: 20 }] }, null, { customPlans: 99 }, {});
+    A(syM.customPlans[0].name === "new", "same item on both: later updatedAt wins over stamps");
+    syM = mergeDb({ body: [{ id: "w", bw: 80 }] }, { body: [{ id: "w", bw: 81 }] }, null, { body: 5 }, { body: 7 });
+    A(syM.body[0].bw === 81, "same item, no updatedAt: the side that changed the list last wins");
+
+    var syB2 = syncBase({ settings: { unit: "kg" }, equipment: { bar: 20 } });
+    syM = mergeDb({ settings: { unit: "kg" }, equipment: { bar: 15 } }, { settings: { unit: "lb" }, equipment: { bar: 20 } }, syB2, {}, {});
+    A(syM.settings.unit === "lb" && syM.equipment.bar === 15, "a setting changed on one side only: that side wins, either way round");
+    syM = mergeDb({ settings: { unit: "kg", theme: "dark" } }, { settings: { unit: "lb" } }, syB2, { settings: 10 }, { settings: 20 });
+    A(syM.settings.unit === "lb", "changed on both: the later change wins");
+    syM = mergeDb({ settings: { unit: "kg", theme: "dark" } }, { settings: { unit: "lb" } }, syB2, { settings: 30 }, { settings: 20 });
+    A(syM.settings.theme === "dark", "changed on both: the later change wins (this phone)");
+    syM = mergeDb({ active: null }, { active: { templateId: "t" } }, syncBase({ active: null }), {}, {});
+    A(syM.active && syM.active.templateId === "t", "program started on the other phone comes over");
+
+    syM = mergeDb({ badges: { earned: { a: 5, b: 3 }, seen: { a: 1 } } }, { badges: { earned: { a: 2, c: 4 }, seen: { c: 1 } } }, null, {}, {});
+    A(syM.badges.earned.a === 2 && syM.badges.earned.b === 3 && syM.badges.earned.c === 4 && syM.badges.seen.a && syM.badges.seen.c, "badges: all of them, earliest date");
+    syM = mergeDb({ hiddenPosts: ["p1", "p2"] }, { hiddenPosts: ["p2", "p3"] }, null, {}, {});
+    A(syM.hiddenPosts.join() === "p1,p2,p3", "hidden posts: union");
+    syM = mergeDb({ food: { log: [{ id: "f1" }], recent: [1] } }, { food: { log: [{ id: "f2" }], recent: [2] } },
+      syncBase({ food: { log: [], recent: [2] } }), {}, {});
+    A(syM.food.log.length === 2 && syM.food.recent[0] === 1, "food log merges by entry, recent foods by whoever changed them");
+
+    var syMeta = {};
+    A(!stampChanges(syMeta, { settings: { unit: "kg" }, body: [] }, 100) && !syMeta.stamps.settings, "first look records, stamps nothing");
+    A(stampChanges(syMeta, { settings: { unit: "lb" }, body: [] }, 200) && syMeta.stamps.settings === 200 && !syMeta.stamps.body, "a change stamps only the part that changed");
+    A(!stampChanges(syMeta, { settings: { unit: "lb" }, body: [], account: { userId: "z" } }, 300), "device-only parts never count as changes");
+    A(mergeStamps({ a: 1, b: 5 }, { a: 3, c: 2 }).a === 3 && mergeStamps({ a: 1, b: 5 }, { a: 3, c: 2 }).b === 5, "stamps merge to the latest per part");
+
     var el = document.createElement("div");
     el.className = "selftest";
     el.innerHTML = "REP STAR — SELF TEST\n" + (ok ? "<span class='pass'>ALL PASSED</span>" : "<span class='fail'>FAILURES ABOVE</span>") + "\n\n" +
@@ -7462,6 +7518,138 @@
     if (!document.hidden && run && run.kind === "metcon") metconTick();
     if (!document.hidden && run && run.restUntil) restTick();
   });
+
+  /* ============================================================ CLOUD SYNC
+     A signed-in account keeps a copy of `db` in Supabase (user_data, one row per
+     user) so a reinstall or a second phone gets everything back. These are the
+     pure pieces: what gets sent, how a change is noticed, and how two copies
+     merge. Merges are three-way against what both sides last agreed on (`base`),
+     so something deleted on one phone isn't brought back by the other. */
+
+  // functions rather than vars so the self-test (which runs before this point) can use them
+  function syncSkip(k) { return k === "account" || k === "pendingPush" || k === "backfilledFor" || k === "knownProfiles"; }   // this device only
+  // merged item by item, by id; everything else is one value per part
+  function syncLists() { return ["sessions", "body", "customPlans", "customWorkouts", "customExercises", "food.log"]; }
+
+  function hashStr(s) {   // FNV-1a, enough to notice a change
+    var h = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+    return (h >>> 0).toString(36);
+  }
+  function hashOf(v) { return v === undefined ? "-" : hashStr(JSON.stringify(v)); }
+  function itemKey(x) { return x && x.id != null ? String(x.id) : "#" + hashOf(x); }
+
+  // db → { part: value } for everything that syncs; the food object splits into its parts
+  function syncParts(d) {
+    var out = {};
+    Object.keys(d || {}).forEach(function (k) {
+      if (syncSkip(k)) return;
+      if (k === "food" && d.food && typeof d.food === "object") Object.keys(d.food).forEach(function (f) { out["food." + f] = d.food[f]; });
+      else out[k] = d[k];
+    });
+    return out;
+  }
+  function fromSyncParts(p) {
+    var d = {};
+    Object.keys(p).forEach(function (k) {
+      if (p[k] === undefined) return;
+      if (k.indexOf("food.") === 0) { d.food = d.food || {}; d.food[k.slice(5)] = p[k]; }
+      else d[k] = p[k];
+    });
+    return d;
+  }
+  function syncHashes(d) {
+    var p = syncParts(d), h = {};
+    Object.keys(p).forEach(function (k) { h[k] = hashOf(p[k]); });
+    return h;
+  }
+  // the document stored online: a copy of db without the device-only parts, plus when each part last changed
+  function syncDoc(d, stamps) {
+    return { v: 1, db: JSON.parse(JSON.stringify(fromSyncParts(syncParts(d)))), stamps: stamps || {} };
+  }
+  // what both sides agree on right after a sync: each part's hash and the ids in each list
+  function syncBase(d) {
+    var p = syncParts(d), ids = {};
+    syncLists().forEach(function (k) { ids[k] = (Array.isArray(p[k]) ? p[k] : []).map(itemKey); });
+    return { hashes: syncHashes(d), ids: ids };
+  }
+  // note which parts changed since this device last looked, and when. The first
+  // look only records hashes: data from before sync existed has no edit time.
+  function stampChanges(meta, d, now) {
+    var h = syncHashes(d), first = !meta.seen, changed = false;
+    meta.seen = meta.seen || {}; meta.stamps = meta.stamps || {};
+    Object.keys(h).forEach(function (k) {
+      if (meta.seen[k] === h[k]) return;
+      if (!first) { meta.stamps[k] = now; changed = true; }
+      meta.seen[k] = h[k];
+    });
+    return changed;
+  }
+  function mergeStamps(a, b) {
+    var out = Object.assign({}, a || {});
+    Object.keys(b || {}).forEach(function (k) { out[k] = Math.max(out[k] || 0, b[k] || 0); });
+    return out;
+  }
+  // nothing worth keeping yet: a fresh install just restores what's online
+  function isEmptyDb(d) {
+    if (!d) return true;
+    var n = function (a) { return Array.isArray(a) ? a.length : 0; };
+    return !d.active && !n(d.sessions) && !n(d.body) && !n(d.customPlans) && !n(d.customWorkouts) && !n(d.customExercises) &&
+      !n(d.food && d.food.log);
+  }
+
+  // an id both sides had at the last sync but one side no longer has was deleted
+  // there; an id the last sync never saw is new and kept. Same id on both sides:
+  // the later updatedAt, else the side that changed this list more recently.
+  function mergeList(L, R, baseIds, lNewer) {
+    var inBase = {}, rByKey = {}, inL = {}, out = [];
+    (baseIds || []).forEach(function (k) { inBase[k] = 1; });
+    R.forEach(function (x) { rByKey[itemKey(x)] = x; });
+    L.forEach(function (x) {
+      var k = itemKey(x), r = rByKey[k];
+      inL[k] = 1;
+      if (!r) { if (!inBase[k]) out.push(x); return; }
+      if (x.updatedAt != null && r.updatedAt != null && x.updatedAt !== r.updatedAt) out.push(x.updatedAt > r.updatedAt ? x : r);
+      else out.push(lNewer ? x : r);
+    });
+    R.forEach(function (x) { var k = itemKey(x); if (!inL[k] && !inBase[k]) out.push(x); });
+    return out;
+  }
+  function mergeBadges(l, r) {
+    l = l || {}; r = r || {};
+    var earned = Object.assign({}, r.earned || {});
+    Object.keys(l.earned || {}).forEach(function (id) { earned[id] = earned[id] ? Math.min(earned[id], l.earned[id]) : l.earned[id]; });
+    return Object.assign({}, r, l, { earned: earned, seen: Object.assign({}, r.seen || {}, l.seen || {}) });
+  }
+  function unionList(l, r) {
+    var out = (l || []).slice();
+    (r || []).forEach(function (x) { if (out.indexOf(x) < 0) out.push(x); });
+    return out;
+  }
+  // three-way merge of two synced copies of db. base = syncBase() from the last sync
+  // both saw (none on a first sync, which keeps everything from both); stamps say
+  // when each side last changed a part and settle it when both did.
+  function mergeDb(local, remote, base, lStamps, rStamps) {
+    base = base || {}; lStamps = lStamps || {}; rStamps = rStamps || {};
+    var bh = base.hashes || {}, bids = base.ids || {};
+    var L = syncParts(local), R = syncParts(remote), out = {}, keys = {};
+    Object.keys(L).concat(Object.keys(R)).forEach(function (k) { keys[k] = 1; });
+    Object.keys(keys).forEach(function (k) {
+      var l = L[k], r = R[k], lNewer = (lStamps[k] || 0) >= (rStamps[k] || 0);
+      if (syncLists().indexOf(k) >= 0) out[k] = mergeList(Array.isArray(l) ? l : [], Array.isArray(r) ? r : [], bids[k], lNewer);
+      else if (k === "badges") out[k] = mergeBadges(l, r);
+      else if (k === "hiddenPosts") out[k] = unionList(l, r).slice(-500);
+      else if (k === "version") out[k] = Math.max(l || 0, r || 0);
+      else if (l === undefined || r === undefined) out[k] = l === undefined ? r : l;
+      else {
+        var lh = hashOf(l), rh = hashOf(r);
+        out[k] = lh === rh || rh === bh[k] ? l : lh === bh[k] ? r : lNewer ? l : r;
+      }
+    });
+    var m = fromSyncParts(out);
+    if (m.sessions) m.sessions.sort(function (a, b) { return (a.date || 0) - (b.date || 0); });
+    return m;
+  }
 
   /* ============================================================ SOCIAL / FEED
      A thin layer over Supabase: email-OTP sign-in, one shared profile per
