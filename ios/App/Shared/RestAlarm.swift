@@ -3,7 +3,11 @@ import UserNotifications
 
 /// The "Rest over" notification: booked for the moment a rest ends, so the phone
 /// buzzes and says what's next even when it's locked and the app is asleep.
-/// Time Sensitive, so it comes through Focus modes.
+/// Marked Time Sensitive so it comes through Focus modes — that only takes effect
+/// once the app is signed with App/App.entitlements, which needs the paid Apple
+/// Developer account (personal teams can't sign it): then set the App target's
+/// CODE_SIGN_ENTITLEMENTS to App/App.entitlements. Until then iOS delivers it as
+/// an ordinary notification.
 enum RestAlarm {
     static let id = "rest-over"
 
