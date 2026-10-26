@@ -916,6 +916,7 @@
     RC.Browser = cap.registerPlugin("Browser");
     RC.App = cap.registerPlugin("App");
     RC.StatusBar = cap.registerPlugin("StatusBar");
+    RC.Live = cap.registerPlugin("RepStarLive");   // ios/App/App/RepStarLivePlugin.swift
     var mirrored = function (k) { return /^(rackcoach\.|sb-)/.test(k); };
     var set = Storage.prototype.setItem, remove = Storage.prototype.removeItem;
     Storage.prototype.setItem = function (k, v) {
@@ -4764,6 +4765,7 @@
   var RUN_KEY = KEY + ".run";
   var RUN_MAX_AGE = 12 * 60 * 60 * 1000;
   function persistRun() {
+    liveSync();
     try {
       if (!run) { localStorage.removeItem(RUN_KEY); return; }
       var snap = {};
@@ -4771,6 +4773,47 @@
       snap.tId = run.t ? run.t.id : null;
       localStorage.setItem(RUN_KEY, JSON.stringify(snap));
     } catch (e) {}
+  }
+  // the lock-screen card (iOS Live Activity) mirrors the workout on every change;
+  // the clocks on it tick by themselves, so nothing needs to run while the phone is locked
+  var liveSent = null;
+  function liveSync() {
+    if (!window.RC.Live) return;
+    try {
+      var st = run && !run.past ? liveState() : null, key = st ? JSON.stringify(st) : "";
+      if (key === liveSent) return;
+      liveSent = key;
+      if (st) window.RC.Live.update({ id: String(run.startedAt), state: st }).catch(function () {});
+      else window.RC.Live.end().catch(function () {});
+    } catch (e) {}
+  }
+  function liveState() {
+    var st = { title: "", phase: "idle", headline: "", detail: "", startedAt: run.startedAt };
+    if (run.kind === "metcon") {
+      var w = run.wod, cap = (w.capMin || 0) * 60000, down = metconCountsDown(w);
+      st.title = run.finisherOf ? "Finisher" : (run.t && !run.adhoc && run.t.name) || "Conditioning";
+      st.phase = "clock"; st.headline = w.name || "Workout"; st.detail = metconSubtitle(w);
+      if (!run.startWall || !run.running) st.clockText = fmtClock(down ? Math.max(0, cap - metconElapsed()) : metconElapsed());
+      else if (down) st.clockTo = run.startWall + run.pausedMs + cap;
+      else st.clockFrom = run.startWall + run.pausedMs;
+      return st;
+    }
+    st.title = run.custom ? run.freestyleName : ((run.t && run.t.name) || "Workout") + (run.res && run.res.label ? " · " + dayTitle(run.res.label) : "");
+    var step = run.queue[run.i];
+    if (run.restUntil && run.restUntil > Date.now()) {
+      var a = run.restAfter || {};
+      st.phase = "rest"; st.restEnd = run.restUntil; st.restTotal = run.restTotal;
+      st.headline = (a.warm ? "Warm-up done · " : "Set saved · ") + (a.name || "");
+      st.detail = (a.weight != null ? fmt(a.weight) + " " + U() + " " : "") + "× " + (a.reps || 0);
+      st.nextName = step ? step.name : "Your next exercise";
+      st.nextDetail = step ? stepLine(step) : "Pick it when you're ready";
+    } else if (step) {
+      st.phase = "set"; st.headline = step.name; st.detail = stepLine(step);
+    } else {
+      st.headline = run.custom ? "Pick your next exercise" : "Lifts done";
+      st.detail = run.custom ? "Or finish the workout" : "Finisher, or wrap up";
+    }
+    return st;
   }
   function restoreRun() {
     var snap;
@@ -5506,11 +5549,15 @@
     var ring = document.getElementById("rs-ring");
     if (ring) ring.style.strokeDashoffset = (339.3 * (1 - left / (run.restTotal * 1000))).toFixed(1);
   }
+  // "Set 3 of 5 · 100 kg × 5" for a step in the queue
+  function stepLine(step) {
+    return step.kind === "warm" ? "Warm-up " + warmPos(step).n + " of " + warmPos(step).of + " · " + fmt(step.weight) + " " + U() + " × " + step.reps
+      : step.assist ? "Set " + step.setNo + " of " + step.setCount + " · " + repRange(step.target, step.repHigh) + " reps"
+      : "Set " + step.setNo + " of " + step.setCount + " · " + fmt(step.weight) + " " + U() + " × " + repRange(step.reps, step.repHigh);
+  }
   function renderRest(next) {
     var a = run.restAfter || {};
-    var nextLine = !next ? "Pick it when you're ready" : next.kind === "warm" ? "Warm-up " + warmPos(next).n + " of " + warmPos(next).of + " · " + fmt(next.weight) + " " + U() + " × " + next.reps
-      : next.assist ? "Set " + next.setNo + " of " + next.setCount + " · " + repRange(next.target, next.repHigh) + " reps"
-      : "Set " + next.setNo + " of " + next.setCount + " · " + fmt(next.weight) + " " + U() + " × " + repRange(next.reps, next.repHigh);
+    var nextLine = next ? stepLine(next) : "Pick it when you're ready";
     document.getElementById("pl-body").innerHTML =
       '<div class="rs-saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' +
         (a.warm ? 'Warm-up done · ' : 'Set saved · ') + esc(a.name || "") + (a.weight != null ? ' ' + fmt(a.weight) + ' ' + U() : '') + ' × ' + (a.reps || 0) + '</div>' +
@@ -8593,6 +8640,7 @@
   /* ============================================================ BOOT */
   go("home");
   restoreRun();
+  liveSync();   // clears a card left over from a workout that didn't come back
 });
 </script>
 
