@@ -1,12 +1,14 @@
 import ActivityKit
 import Capacitor
 import Foundation
+import UserNotifications
 
-/// The workout Live Activity, driven from the web app: liveSync() in index.html
-/// sends the card's whole state whenever the workout changes, and ends it when
-/// the workout is finished or discarded. The clocks on the card tick on their own.
+/// The workout Live Activity and the "Rest over" notification, driven from the
+/// web app: liveSync() in index.html sends the card's whole state whenever the
+/// workout changes, and ends it when the workout is finished or discarded. The
+/// clocks on the card tick on their own.
 @objc(RepStarLivePlugin)
-public class RepStarLivePlugin: CAPPlugin, CAPBridgedPlugin {
+public class RepStarLivePlugin: CAPPlugin, CAPBridgedPlugin, NotificationHandlerProtocol {
     public let identifier = "RepStarLivePlugin"
     public let jsName = "RepStarLive"
     public let pluginMethods: [CAPPluginMethod] = [
@@ -14,15 +16,19 @@ public class RepStarLivePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "end", returnType: CAPPluginReturnPromise)
     ]
 
+    override public func load() {
+        bridge?.notificationRouter.localNotificationHandler = self
+    }
+
     @objc func update(_ call: CAPPluginCall) {
-        guard #available(iOS 16.2, *), ActivityAuthorizationInfo().areActivitiesEnabled else {
-            call.resolve(["supported": false]); return
-        }
+        guard #available(iOS 16.2, *) else { call.resolve(["supported": false]); return }
         guard let id = call.getString("id"), let raw = call.getObject("state"),
               let data = try? JSONSerialization.data(withJSONObject: raw),
               let state = try? JSONDecoder().decode(WorkoutAttributes.ContentState.self, from: data) else {
             call.reject("bad state"); return
         }
+        RestAlarm.sync(state)
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { call.resolve(["supported": false]); return }
         // past the end of a rest the card switches itself to "rest over"
         let stale = state.phase == "rest" ? state.restEnd?.msDate : nil
         let content = ActivityContent(state: state, staleDate: stale)
@@ -41,10 +47,18 @@ public class RepStarLivePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func end(_ call: CAPPluginCall) {
+        RestAlarm.cancel()
         guard #available(iOS 16.2, *) else { call.resolve(); return }
         LiveCards.serially {
             for a in Activity<WorkoutAttributes>.activities { await a.end(nil, dismissalPolicy: .immediate) }
             call.resolve()
         }
     }
+
+    // with the app open the workout screen chimes by itself, so no banner on top
+    public func willPresent(notification: UNNotification) -> UNNotificationPresentationOptions {
+        notification.request.identifier == RestAlarm.id ? [] : [.banner, .sound]
+    }
+
+    public func didReceive(response: UNNotificationResponse) {}
 }
