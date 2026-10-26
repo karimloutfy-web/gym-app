@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Rep Star</title>
 <meta name="description" content="Hybrid training for everyday athletes: build your program, lift, sweat and track your progress.">
 <meta name="theme-color" content="#0f8a7c" media="(prefers-color-scheme: light)">
@@ -153,7 +153,8 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { -webkit-text-size-adjust: 100%; }
+  /* an app, not a page: no double-tap or pinch zoom (the iOS app honours user-scalable=no; Safari needs touch-action) */
+  html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
   body {
     background: var(--bg); color: var(--text);
     font-family: var(--font-body);
