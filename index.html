@@ -4776,9 +4776,9 @@
   }
   // the lock-screen card (iOS Live Activity) mirrors the workout on every change;
   // the clocks on it tick by themselves, so nothing needs to run while the phone is locked
-  var liveSent = null;
+  var liveSent = null, liveHold = false;
   function liveSync() {
-    if (!window.RC.Live) return;
+    if (!window.RC.Live || liveHold) return;
     try {
       var st = run && !run.past ? liveState() : null, key = st ? JSON.stringify(st) : "";
       if (key === liveSent) return;
@@ -4803,6 +4803,7 @@
     if (run.restUntil && run.restUntil > Date.now()) {
       var a = run.restAfter || {};
       st.phase = "rest"; st.restEnd = run.restUntil; st.restTotal = run.restTotal;
+      st.restLen = run.restLen || run.restTotal; st.restGroup = a.exId + ":" + (a.warm ? "warm" : "work");
       st.headline = (a.warm ? "Warm-up done · " : "Set saved · ") + (a.name || "");
       st.detail = (a.weight != null ? fmt(a.weight) + " " + U() + " " : "") + "× " + (a.reps || 0);
       st.nextName = step ? step.name : "Your next exercise";
@@ -4813,7 +4814,67 @@
       st.headline = run.custom ? "Pick your next exercise" : "Lifts done";
       st.detail = run.custom ? "Or finish the workout" : "Finisher, or wrap up";
     }
+    // the next few sets, so the lock-screen buttons can log them as planned (ios/App/Shared/WorkoutIntents.swift)
+    st.endHeadline = run.custom ? "Pick your next exercise" : "Lifts done";
+    st.endDetail = run.custom ? "Or finish the workout" : "Finisher, or wrap up";
+    st.steps = [];
+    for (var j = run.i; j < run.queue.length && st.steps.length < 6; j++) {
+      var q = run.queue[j], reps = planReps(q, j === run.i), secs = restSecondsFor(q);
+      st.steps.push({ key: liveStepKey(q, j), group: q.exId + ":" + restKind(q), name: q.name, detail: stepLine(q),
+        saved: (q.kind === "warm" ? "Warm-up done · " : "Set saved · ") + q.name,
+        savedDetail: (q.assist ? "" : fmt(q.weight) + " " + U() + " ") + "× " + reps,
+        // the same rule recordSet() uses
+        rest: (q.kind === "warm" || q.kind === "work") && reps > 0 && secs > 0 && (j + 1 < run.queue.length || (run.custom && q.kind === "work")) ? secs : 0 });
+    }
     return st;
+  }
+  function liveStepKey(step, i) { return i + ":" + step.exId + ":" + step.kind + ":" + (step.setNo || 0); }
+  // what "Set done" logs for a step
+  function planReps(step, current) {
+    if (!isRangeSet(step)) return step.repHigh || step.reps;
+    if (current) return pendingReps(step);
+    var last = lastSetReps(step.exId, step.setNo);
+    return last != null ? Math.min(step.repHigh, Math.max(step.reps, last)) : step.reps;
+  }
+
+  // Log set / Skip rest / +0:30 on the lock screen (iOS 17+) move the card while the app
+  // sleeps; when it wakes, replay those taps into the workout, at the times they happened
+  function liveTakeActions() {
+    if (!window.RC.Live) return;
+    liveHold = true;
+    window.RC.Live.takeActions().then(function (r) {
+      var acts = (r && r.actions) || [];
+      if (acts.length && run && !run.past && run.kind !== "metcon") {
+        for (var k = 0; k < acts.length && applyLiveAction(acts[k]); k++) {}
+        if (run.restUntil && run.restUntil <= Date.now()) run.restUntil = null;
+        cancelRestChime();
+        if (run.restUntil) scheduleRestChime((run.restUntil - Date.now()) / 1000);
+      }
+      liveHold = false; liveSent = null;
+      if (run) renderPlayer(); else liveSync();
+    }, function () { liveHold = false; liveSync(); });
+  }
+  // false = the workout moved on differently; stop replaying
+  function applyLiveAction(act) {
+    if (act.type === "log") {
+      var step = run.queue[run.i];
+      if (!step || liveStepKey(step, run.i) !== act.key) return false;
+      run.restUntil = null;
+      recordSet(step, step.weight, planReps(step, true), true);
+      if (run.restUntil) run.restUntil = act.at + run.restTotal * 1000;
+    } else if (act.type === "skip") {
+      run.restUntil = null;
+    } else if (act.type === "plus" && run.restUntil) {
+      bumpRestLen(30);
+      run.restUntil += 30000;
+      run.restTotal += 30;
+    }
+    return true;
+  }
+  if (window.RC.Live) {
+    window.RC.Live.addListener("action", liveTakeActions);
+    // registered before the player's own visibility handler, so the rest clock waits for the replay
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) liveTakeActions(); });
   }
   function restoreRun() {
     var snap;
@@ -5517,12 +5578,17 @@
     } catch (e) {}
   }
   function cancelRestChime() { if (run && run.restOsc) { try { run.restOsc.stop(); } catch (e) {} run.restOsc = null; } }
-  function adjustRest(deltaSec) {
+  // ±0:30 also changes the rest this exercise gets from now on
+  function bumpRestLen(deltaSec) {
     var a = run.restAfter || {};
     var len = Math.round(((run.restLen || run.restTotal) + deltaSec) / 15) * 15;
     run.restLen = len;
     // a rest cut to nothing is a one-off skip, not "never rest after this exercise"
     if (a.exId && len >= 15) rememberRest(a.exId, a.warm ? "warm" : "work", len);
+    return len;
+  }
+  function adjustRest(deltaSec) {
+    var len = bumpRestLen(deltaSec);
     var left = Math.max(0, run.restUntil - Date.now()) / 1000 + deltaSec;
     if (left <= 0) { endRest(); return; }
     run.restUntil = Date.now() + left * 1000;
@@ -5536,7 +5602,7 @@
     renderPlayer();
   }
   function restTick() {
-    if (!run || !run.restUntil) return;
+    if (!run || !run.restUntil || liveHold) return;   // lock-screen taps may have moved the rest; wait for them
     var left = run.restUntil - Date.now();
     if (left <= 0) {
       navigator.vibrate && navigator.vibrate([220, 120, 220]);
@@ -8639,8 +8705,9 @@
 
   /* ============================================================ BOOT */
   go("home");
+  if (window.RC.Live) liveHold = true;   // taps made on the lock screen while the app was closed come first
   restoreRun();
-  liveSync();   // clears a card left over from a workout that didn't come back
+  liveTakeActions();   // then the card: it also clears one left from a workout that didn't come back
 });
 </script>
 

@@ -17,9 +17,25 @@ struct WorkoutAttributes: ActivityAttributes {
         var startedAt: Double      // total workout time counts up from here
         var restEnd: Double?
         var restTotal: Double?     // seconds, for the progress bar
+        var restLen: Double?       // the rest this exercise is set to; +0:30 changes it for its later sets too
+        var restGroup: String?     // which exercise and kind of set that rest belongs to
         var clockFrom: Double?     // conditioning clock counting up from here
         var clockTo: Double?       // ...or down to here
         var clockText: String?     // frozen clock while paused or not started
+        var steps: [Step]?         // the next few planned sets, for the lock-screen buttons
+        var endHeadline: String?   // what the card says once the plan runs out
+        var endDetail: String?
+    }
+
+    /// a planned set, and what logging it as planned looks like
+    struct Step: Codable, Hashable {
+        var key: String            // the app checks it before replaying a tap
+        var group: String          // exercise + warm-up or work set, as the app remembers rest times
+        var name: String
+        var detail: String         // "Set 2 of 3 · 20 kg × 8"
+        var saved: String          // "Set saved · Bench Press"
+        var savedDetail: String    // "20 kg × 8"
+        var rest: Double           // seconds of rest after it, 0 for none
     }
 
     var workoutId: String
