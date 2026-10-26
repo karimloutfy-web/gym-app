@@ -2087,32 +2087,37 @@
   var db;
   try { db = JSON.parse(localStorage.getItem(KEY)) || defaults(); }
   catch (e) { db = defaults(); }
-  db.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir", restWarm: 60, restWork: 180, restByEx: {} }, db.settings || {});
-  if (!db.settings.restByEx || typeof db.settings.restByEx !== "object") db.settings.restByEx = {};
-  // profile basics for the body-fat calculator; kept on this device, never sent to the feed
-  if (db.settings.sex == null && db.settings.bfSex) db.settings.sex = db.settings.bfSex;
-  if (db.settings.birthYear == null && db.settings.bfBirthYear) db.settings.birthYear = db.settings.bfBirthYear;
-  // calorie planner inputs; weights in kg so a unit switch doesn't skew them
-  db.settings.nutrition = Object.assign({ activity: "moderate", delta: -500, goalKg: null, weightKg: null, weightAt: 0 },
-    (db.settings.nutrition && typeof db.settings.nutrition === "object") ? db.settings.nutrition : {});
-  db.equipment = Object.assign({ bar: 20, smallestPlate: 1.25, step: 2.5, hasDumbbells: false }, db.equipment || {});
-  db.customPlans = Array.isArray(db.customPlans) ? db.customPlans : [];
-  db.customWorkouts = Array.isArray(db.customWorkouts) ? db.customWorkouts : [];
-  if (!db.badges || typeof db.badges !== "object") db.badges = { earned: {}, seen: {} };
-  db.badges.earned = db.badges.earned || {};
-  db.badges.seen = db.badges.seen || {};
-  if (!db.version || db.version < 2) db.version = 2;
-  db.sessions = db.sessions || [];
-  db.body = Array.isArray(db.body) ? db.body : [];
-  if (db.account && !db.account.userId) db.account = null;
-  db.pendingPush = Array.isArray(db.pendingPush) ? db.pendingPush : [];
-  db.backfilledFor = (db.backfilledFor && typeof db.backfilledFor === "object") ? db.backfilledFor : {};
-  // exercises you've created live alongside the built-in list
-  db.customExercises = Array.isArray(db.customExercises) ? db.customExercises : [];
-  db.hiddenPosts = Array.isArray(db.hiddenPosts) ? db.hiddenPosts : [];   // feed posts you reported stay out of your feed
-  db.customExercises.forEach(function (x) { EX[x.id] = { name: x.name, bar: !!x.bar, bw: !!x.bw, grp: x.grp || "Other", custom: true }; });
-  db.knownProfiles = (db.knownProfiles && typeof db.knownProfiles === "object") ? db.knownProfiles : {};
-  if (db.account && db.account.displayName) db.knownProfiles[db.account.userId] = { displayName: db.account.displayName, avatarUrl: db.account.avatarUrl || null };
+  db = normalizeDb(db);
+  // fill in anything an older version (or another phone, or a backup) didn't have
+  function normalizeDb(d) {
+    d.settings = Object.assign({ unit: "kg", lengthUnit: "cm", theme: "system", effortScale: "rir", restWarm: 60, restWork: 180, restByEx: {} }, d.settings || {});
+    if (!d.settings.restByEx || typeof d.settings.restByEx !== "object") d.settings.restByEx = {};
+    // profile basics for the body-fat calculator; never sent to the feed
+    if (d.settings.sex == null && d.settings.bfSex) d.settings.sex = d.settings.bfSex;
+    if (d.settings.birthYear == null && d.settings.bfBirthYear) d.settings.birthYear = d.settings.bfBirthYear;
+    // calorie planner inputs; weights in kg so a unit switch doesn't skew them
+    d.settings.nutrition = Object.assign({ activity: "moderate", delta: -500, goalKg: null, weightKg: null, weightAt: 0 },
+      (d.settings.nutrition && typeof d.settings.nutrition === "object") ? d.settings.nutrition : {});
+    d.equipment = Object.assign({ bar: 20, smallestPlate: 1.25, step: 2.5, hasDumbbells: false }, d.equipment || {});
+    d.customPlans = Array.isArray(d.customPlans) ? d.customPlans : [];
+    d.customWorkouts = Array.isArray(d.customWorkouts) ? d.customWorkouts : [];
+    if (!d.badges || typeof d.badges !== "object") d.badges = { earned: {}, seen: {} };
+    d.badges.earned = d.badges.earned || {};
+    d.badges.seen = d.badges.seen || {};
+    if (!d.version || d.version < 2) d.version = 2;
+    d.sessions = d.sessions || [];
+    d.body = Array.isArray(d.body) ? d.body : [];
+    if (d.account && !d.account.userId) d.account = null;
+    d.pendingPush = Array.isArray(d.pendingPush) ? d.pendingPush : [];
+    d.backfilledFor = (d.backfilledFor && typeof d.backfilledFor === "object") ? d.backfilledFor : {};
+    // exercises you've created live alongside the built-in list
+    d.customExercises = Array.isArray(d.customExercises) ? d.customExercises : [];
+    d.hiddenPosts = Array.isArray(d.hiddenPosts) ? d.hiddenPosts : [];   // feed posts you reported stay out of your feed
+    d.customExercises.forEach(function (x) { EX[x.id] = { name: x.name, bar: !!x.bar, bw: !!x.bw, grp: x.grp || "Other", custom: true }; });
+    d.knownProfiles = (d.knownProfiles && typeof d.knownProfiles === "object") ? d.knownProfiles : {};
+    if (d.account && d.account.displayName) d.knownProfiles[d.account.userId] = { displayName: d.account.displayName, avatarUrl: d.account.avatarUrl || null };
+    return d;
+  }
 
   var warnedSave = false;
   var saveT = null;
@@ -2121,6 +2126,7 @@
     saveT = setTimeout(function () {
       try { localStorage.setItem(KEY, JSON.stringify(db)); }
       catch (e) { if (!warnedSave) { warnedSave = true; toast("Can't save on this device — use Export in Settings for backups"); } }
+      syncNoteSave();
     }, 160);
   }
   function eq() { return db.equipment; }
@@ -7364,7 +7370,7 @@
       opts.map(function (v) { return '<option value="' + v + '"' + (v === cur ? ' selected' : '') + '>' + restLabel(v) + '</option>'; }).join("") + '</select>';
   }
   function openSettings() {
-    var hasData = db.sessions.length > 0 || db.active;
+    var hasData = !isEmptyDb(db);
     openSheet(
       '<h2>Settings</h2><p class="sh-lead">Rep Star</p>' +
       '<div class="day-block">' +
@@ -7392,7 +7398,7 @@
         '<div class="toggle-line"><div class="tl-k">Birth year</div>' +
           '<input class="num-in mono" id="st-by" inputmode="numeric" maxlength="4" value="' + (db.settings.birthYear || "") + '" placeholder="YYYY" style="width:96px;padding:7px 10px;text-align:center"></div>' +
       '</div>' +
-      '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat and calorie calculators. Kept on this device — not shared to the feed.</p>' +
+      '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat and calorie calculators. Not shared to the feed.</p>' +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
       (db.account
         ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' + avatarHtml(db.account.avatarUrl, db.account.displayName, 40) +
@@ -7400,10 +7406,13 @@
           '<div class="btn-row"><button class="btn btn-ghost" id="st-editprofile">Edit profile</button><button class="btn btn-ghost" id="st-signout">Sign out</button></div>' +
           '<div class="btn-row"><button class="btn btn-ghost" id="st-blocked">Blocked people</button><button class="btn btn-ghost" id="st-delacct" style="color:var(--miss)">Delete account</button></div>' +
           (supportLine() ? '<p class="nu-note" style="margin-top:8px">' + supportLine() + '</p>' : '')
-        : '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Sign in to share your workouts and see what everyone else is lifting.</p>' +
+        : '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Sign in to back up your data, share your workouts and see what everyone else is lifting.</p>' +
           '<div class="btn-row"><button class="btn btn-ghost" id="st-signin">Sign in</button></div>') +
       '<div class="eyebrow" style="margin:18px 0 8px">Your data</div>' +
-      '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Saved on this device only — nothing is sent anywhere, and it works offline. It won\'t sync to another phone, and ' + (window.RC.native ? 'deleting the app' : 'clearing this site\'s data') + ' erases it, so export a backup every few weeks and keep the file somewhere safe.</p>' +
+      (db.account
+        ? '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:4px">Saved on this ' + (window.RC.native ? 'phone' : 'device') + ' and backed up to your account, so signing in on a new phone — or after ' + (window.RC.native ? 'deleting the app' : 'clearing this site\'s data') + ' — brings it all back. It works offline and catches up when you\'re back online.</p>' +
+          '<p class="nu-note" id="st-sync" style="margin-bottom:10px">' + esc(syncLine()) + '</p>'
+        : '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">Saved on this device only, and it works offline. ' + (window.RC.native ? 'Deleting the app' : 'Clearing this site\'s data') + ' erases it — sign in to back it up to your account, or export a backup every few weeks and keep the file somewhere safe.</p>') +
       '<div class="btn-row"><button class="btn btn-ghost" id="st-export">Export backup</button><button class="btn btn-ghost" id="st-import">Restore</button></div>' +
       (window.RC.native ? '' : '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:10px">To keep it on your home screen: Share → Add to Home Screen.</p>') +
       (hasData ? '<div class="btn-row" style="margin-top:16px"><button class="btn btn-danger" id="st-wipe">Erase everything</button></div>' : '') +
@@ -7462,12 +7471,34 @@
     document.getElementById("st-import").onclick = openImport;
     var w = document.getElementById("st-wipe");
     if (w) w.onclick = function () {
-      openSheet('<h2>Erase everything?</h2><p class="sh-lead">Your program, all sessions and progress will be permanently deleted from this device.</p>' +
-        '<div class="btn-row"><button class="btn btn-ghost" id="er-no">Cancel</button><button class="btn btn-danger" id="er-yes">Erase</button></div>');
+      var online = syncPaired();
+      openSheet('<h2>Erase everything?</h2><p class="sh-lead">' + (online
+          ? 'Erase this phone only and sign out — your account keeps its backup, and signing in brings it back. Or erase the backup in your account too, which can\'t be undone. Other phones signed in to your account keep their copy.'
+          : 'Your program, all sessions and progress will be permanently deleted from this device.') + '</p>' +
+        '<div class="btn-row"><button class="btn btn-ghost" id="er-no">Cancel</button><button class="btn btn-danger" id="er-yes">' + (online ? 'Erase this phone' : 'Erase') + '</button></div>' +
+        (online ? '<div class="btn-row"><button class="btn btn-danger" id="er-all">Erase here and online</button></div>' : ''));
+      var wipe = function () {
+        db = defaults(); try { localStorage.removeItem(KEY); } catch (e) {}
+        syncReset();
+        applyTheme(); closeSheet(); go("choose");
+      };
       document.getElementById("er-no").onclick = openSettings;
       document.getElementById("er-yes").onclick = function () {
-        db = defaults(); try { localStorage.removeItem(KEY); } catch (e) {}
-        applyTheme(); closeSheet(); go("choose"); toast("Erased");
+        if (online && sb()) sb().auth.signOut();   // else the next sign-in check would restore it straight back
+        wipe(); renderTabs(); toast("Erased");
+      };
+      var all = document.getElementById("er-all");
+      if (all) all.onclick = function () {
+        var uid = db.account.userId;
+        all.disabled = true; all.textContent = "Erasing…";
+        sb().from("user_data").delete().eq("user_id", uid).then(function (r) {
+          if (r.error) throw r.error;
+          var mine = { account: db.account, pendingPush: [], backfilledFor: db.backfilledFor, knownProfiles: db.knownProfiles };
+          db = normalizeDb(Object.assign(defaults(), mine));
+          try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+          syncReset(uid);   // still signed in: what you log next starts a new backup
+          applyTheme(); closeSheet(); go("choose"); toast("Erased here and online");
+        }).catch(function () { all.disabled = false; all.textContent = "Erase here and online"; toast("Couldn't reach your account — nothing was erased"); });
       };
     };
   }
@@ -7492,7 +7523,7 @@
   }
 
   function openImport() {
-    openSheet('<h2>Restore backup</h2><p class="sh-lead">Paste an exported Rep Star backup (Rack Coach backups work too). This replaces everything on this device.</p>' +
+    openSheet('<h2>Restore backup</h2><p class="sh-lead">Paste an exported Rep Star backup (Rack Coach backups work too). This replaces everything on this device' + (syncPaired() ? ' and in your account' : '') + '.</p>' +
       '<textarea class="num-in" id="imp" style="height:160px;font-size: var(--fs-xs);padding:10px;width:100%" placeholder="Paste backup JSON…"></textarea>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="imp-cancel">Cancel</button><button class="btn btn-primary" id="imp-do">Restore</button></div>');
     document.getElementById("imp-cancel").onclick = openSettings;
@@ -7500,9 +7531,9 @@
       var raw = document.getElementById("imp").value.trim();
       var obj; try { obj = JSON.parse(raw); } catch (e) { toast("Not valid backup text"); return; }
       if (!obj || !obj.equipment || !Array.isArray(obj.sessions)) { toast("Not a Rep Star backup"); return; }
-      db = Object.assign(defaults(), obj);
-      db.settings = Object.assign(defaults().settings, obj.settings || {});
-      try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+      var mine = { account: db.account, pendingPush: db.pendingPush, backfilledFor: db.backfilledFor, knownProfiles: db.knownProfiles };
+      db = normalizeDb(Object.assign(defaults(), obj, mine));
+      save();   // a change like any other: when signed in, the backup becomes what's online
       applyTheme(); closeSheet();
       go("home");
       toast("Backup restored");
@@ -7650,6 +7681,200 @@
     if (m.sessions) m.sessions.sort(function (a, b) { return (a.date || 0) - (b.date || 0); });
     return m;
   }
+  function sameHashes(a, b) {
+    var ka = Object.keys(a), kb = Object.keys(b);
+    return ka.length === kb.length && ka.every(function (k) { return a[k] === b[k]; });
+  }
+
+  /* ---- the sync itself ---- */
+  // this phone's side of the sync, in its own key so exports and restores never carry it
+  var SYNC_KEY = KEY + ".sync";
+  var SYNC_DEBOUNCE = 8000;
+  var SYNC_MAX_CHARS = 4.5 * 1024 * 1024;   // the table refuses 5 MB
+  function freshSyncMeta(deviceId) {
+    // userId: the account this phone last synced with (kept after sign-out); rev: the online version we last saw;
+    // base: syncBase() of that version; seen/stamps: stampChanges(); dirty: changes not online yet
+    return { userId: null, rev: 0, base: null, seen: null, stamps: {}, dirty: false, lastSyncAt: 0, deviceId: deviceId || uid() };
+  }
+  var syncMeta;
+  try { syncMeta = JSON.parse(localStorage.getItem(SYNC_KEY)); } catch (e) { syncMeta = null; }
+  if (!syncMeta || typeof syncMeta !== "object") syncMeta = freshSyncMeta();
+  // the very first run only records where we start from; after that, catch anything saved without us noticing
+  if (stampChanges(syncMeta, db, Date.now())) { syncMeta.dirty = true; saveSyncMeta(); }
+  var syncState = "";   // "" | "busy" | "offline" | "toobig"
+  var syncT = null, syncBusy = false, syncEdits = 0;
+
+  function saveSyncMeta() { try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncMeta)); } catch (e) {} }
+  function syncPaired() { return !!(db.account && sb() && syncMeta.userId === db.account.userId); }
+  function workoutRunning() { return !!(window.RC.workoutActive && window.RC.workoutActive()); }
+  // forget the account pairing (Erase, Delete account): the next sign-in starts over as a fresh install
+  function syncReset(userId) {
+    clearTimeout(syncT);
+    syncMeta = freshSyncMeta(syncMeta.deviceId);
+    syncMeta.userId = userId || null;
+    stampChanges(syncMeta, db, Date.now());
+    saveSyncMeta(); setSyncState("");
+  }
+
+  // after every save(): note what changed and push it soon
+  function syncNoteSave() {
+    if (!stampChanges(syncMeta, db, Date.now())) return;
+    syncEdits++; syncMeta.dirty = true; saveSyncMeta();
+    syncSoon();
+  }
+  function syncSoon() {
+    clearTimeout(syncT);
+    if (syncPaired()) syncT = setTimeout(function () { syncNow(); }, SYNC_DEBOUNCE);
+  }
+
+  function syncFetch(uid) {
+    return sb().from("user_data").select("data, rev").eq("user_id", uid).maybeSingle().then(function (r) {
+      if (r.error) throw r.error;
+      return r.data ? { rev: +r.data.rev, doc: r.data.data || {} } : null;
+    });
+  }
+  // swap in a merged or restored db, keeping this phone's own parts
+  function syncAdopt(m) {
+    var before = syncHashes(db);
+    ["account", "pendingPush", "backfilledFor", "knownProfiles"].forEach(function (k) { m[k] = db[k]; });
+    db = normalizeDb(m);
+    syncMeta.seen = syncHashes(db);   // not an edit of ours, so don't stamp it
+    try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+    // repaint the main tabs; a sheet or an editor keeps what it's showing until you leave it
+    if (!sameHashes(before, syncMeta.seen)) { applyTheme(); if (!sheetRoot.innerHTML && !(DEPTH[cur] || 0)) go(cur); }
+  }
+  // fold another phone's changes in; db then holds everything online, so that becomes the base
+  function syncMergeIn(row) {
+    var remote = row.doc.db || {}, rStamps = row.doc.stamps || {};
+    syncAdopt(mergeDb(db, remote, syncMeta.base, syncMeta.stamps, rStamps));
+    syncMeta.rev = row.rev; syncMeta.base = syncBase(remote);
+    syncMeta.stamps = mergeStamps(syncMeta.stamps, rStamps);
+    syncMeta.dirty = !sameHashes(syncHashes(db), syncHashes(remote));
+  }
+  // take what's online as it is (a fresh install, or "replace" when the phone held another account's data)
+  function syncTakeRemote(row) {
+    var remote = row.doc.db || {};
+    syncAdopt(JSON.parse(JSON.stringify(remote)));
+    syncMeta.rev = row.rev; syncMeta.base = syncBase(remote);
+    syncMeta.stamps = Object.assign({}, row.doc.stamps || {});
+    syncMeta.dirty = !sameHashes(syncHashes(db), syncHashes(remote));
+  }
+  // resolves to the new rev, or null when another phone saved first
+  function syncPush() {
+    var doc = syncDoc(db, syncMeta.stamps), edits = syncEdits;
+    if (JSON.stringify(doc).length > SYNC_MAX_CHARS) return Promise.reject("toobig");
+    return sb().rpc("put_user_data", { p_data: doc, p_base_rev: syncMeta.rev || 0, p_device: syncMeta.deviceId }).then(function (r) {
+      if (r.error) throw r.error;
+      if (r.data == null) return null;
+      syncMeta.rev = +r.data; syncMeta.base = syncBase(doc.db);
+      if (syncEdits === edits) syncMeta.dirty = false; else syncSoon();   // edited while it was on its way
+      return syncMeta.rev;
+    });
+  }
+
+  // pull what's online, merge it in if another phone changed it, push if this one has changes
+  function syncNow(tries) {
+    tries = tries || 0;
+    if (!syncPaired() || syncBusy) return;
+    clearTimeout(syncT);
+    // never swap data out from under a running workout; it syncs once you finish
+    if (workoutRunning()) { syncT = setTimeout(function () { syncNow(); }, 30000); return; }
+    var uid = db.account.userId;
+    syncBusy = true; setSyncState("busy");
+    syncFetch(uid).then(function (row) {
+      if (!syncPaired() || db.account.userId !== uid) return "";
+      if (row && row.rev !== syncMeta.rev) syncMergeIn(row);
+      // the online copy was erased from another phone: this phone's data starts a new one
+      if (!row && syncMeta.rev) { syncMeta.rev = 0; syncMeta.base = null; syncMeta.dirty = true; }
+      if (row && !syncMeta.dirty) return "";
+      return syncPush().then(function (rev) { return rev == null ? "conflict" : ""; });
+    }).then(function (state) {
+      syncBusy = false;
+      if (state === "conflict" && tries < 2) { syncNow(tries + 1); return; }
+      if (!state) syncMeta.lastSyncAt = Date.now();
+      saveSyncMeta(); setSyncState(state ? "offline" : "");
+    }, function (err) {
+      syncBusy = false; saveSyncMeta();
+      setSyncState(err === "toobig" ? "toobig" : "offline");
+    });
+  }
+
+  // on every sign-in or launch while signed in. The first time an account meets this
+  // phone: nothing online → upload; empty phone → restore; the phone last synced with a
+  // different account → ask; otherwise merge both.
+  function syncStart() {
+    if (!db.account || !sb()) return;
+    var uid = db.account.userId;
+    if (syncMeta.userId === uid) { syncNow(); return; }
+    if (syncBusy) return;
+    syncBusy = true; setSyncState("busy");
+    syncFetch(uid).then(function (row) {
+      syncBusy = false;
+      if (!db.account || db.account.userId !== uid) return;
+      var other = syncMeta.userId;
+      var pair = function () { syncMeta.userId = uid; syncMeta.rev = 0; syncMeta.base = null; };
+      if (row && isEmptyDb(db)) { syncRestore(row, uid); return; }
+      if (other && other !== uid && !isEmptyDb(db)) { setSyncState(""); syncAskOtherAccount(row, uid); return; }
+      pair();
+      if (!row) { syncMeta.dirty = true; syncNow(); return; }
+      syncMergeIn(row); syncNow();
+      toast("Synced with your account");
+    }, function () { syncBusy = false; setSyncState("offline"); });
+  }
+  function syncRestore(row, uid) {
+    syncMeta.userId = uid;
+    syncTakeRemote(row);
+    db.backfilledFor[uid] = true;   // these workouts are already in the feed
+    try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+    syncMeta.lastSyncAt = Date.now(); saveSyncMeta(); setSyncState("");
+    if (syncMeta.dirty) syncNow();
+    var n = db.sessions.length;
+    if (!isEmptyDb(db)) { if (!sheetRoot.innerHTML) go("home"); toast(n ? "Restored " + n + " workout" + (n === 1 ? "" : "s") : "Restored your data"); }
+  }
+  // row is null when this account has nothing online yet
+  function syncAskOtherAccount(row, uid) {
+    var name = db.account.displayName || "this account";
+    openSheet('<h2>Add this phone\'s data?</h2><p class="sh-lead">The workouts on this phone were backed up to a different account. ' +
+      'Add them to <b>' + esc(name) + '</b>, or replace them with what <b>' + esc(name) + '</b> already has? Either way they stay in the other account.</p>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="sy-replace">Replace</button><button class="btn btn-primary" id="sy-add">Add them</button></div>');
+    document.getElementById("sy-add").onclick = function () {
+      if (!db.account || db.account.userId !== uid) { closeSheet(); return; }
+      syncMeta.userId = uid; syncMeta.rev = 0; syncMeta.base = null;
+      if (row) syncMergeIn(row); else syncMeta.dirty = true;
+      closeSheet(); go(cur); syncNow();
+      toast("Added to your account");
+    };
+    document.getElementById("sy-replace").onclick = function () {
+      if (!db.account || db.account.userId !== uid) { closeSheet(); return; }
+      closeSheet(); syncRestore(row || { rev: 0, doc: { db: defaults() } }, uid);
+      if (isEmptyDb(db)) go(cur);
+    };
+  }
+
+  // the line under Your data in Settings
+  function syncLine() {
+    if (!db.account) return "";
+    if (syncState === "toobig") return "Too much data to back up online — export a backup instead.";
+    if (syncState === "busy") return "Syncing…";
+    if (syncMeta.userId !== db.account.userId) return syncState === "offline" ? "Not synced yet — waiting for a connection." : "Not synced yet.";
+    if (syncState === "offline" || syncMeta.dirty) return "Changes waiting to sync" + (syncState === "offline" ? " — they're safe on this phone." : "…");
+    if (!syncMeta.lastSyncAt) return "Not synced yet.";
+    var mins = Math.floor((Date.now() - syncMeta.lastSyncAt) / 60000);
+    return "Synced " + (mins < 1 ? "just now" : mins < 60 ? mins + " min ago" : mins < 1440 ? Math.floor(mins / 60) + " h ago" :
+      new Date(syncMeta.lastSyncAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })) + ".";
+  }
+  function setSyncState(s) {
+    syncState = s;
+    var el = document.getElementById("st-sync");
+    if (el) el.textContent = syncLine();
+  }
+
+  // push before the app is put away, catch up when it comes back
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) { if (syncMeta.dirty) syncNow(); }
+    else if (Date.now() - (syncMeta.lastSyncAt || 0) > 60000) syncNow();
+  });
+  window.addEventListener("online", function () { syncNow(); });
 
   /* ============================================================ SOCIAL / FEED
      A thin layer over Supabase: email-OTP sign-in, one shared profile per
@@ -7689,7 +7914,7 @@
         if (already && evt !== "INITIAL_SESSION" && evt !== "USER_UPDATED") return;
         hydrateAccount(session.user, evt === "SIGNED_IN" && !already);
       } else {
-        db.account = null; save();
+        db.account = null; save(); setSyncState("");
         feed = { items: [], loading: false, done: false, error: null, loaded: false, scope: "everyone" }; followingIds = null;
         renderTabs();
         if (cur === "feed") renderers.feed();
@@ -7719,6 +7944,7 @@
         renderTabs();
         flushPendingPush();
         backfillHistory();
+        syncStart();
         if (navigate) { closeSheet(); toast("Signed in"); go("feed"); }
         else if (cur === "feed") renderers.feed();
       } else {
@@ -7758,7 +7984,7 @@
   var APPLE_SIGNIN = false;
   function openSignIn() {
     if (!sb()) { toast("No connection yet — try again in a moment"); return; }
-    openSheet('<h2>Sign in</h2><p class="sh-lead">Sign in to share your workouts to the feed. Nothing is posted without you finishing a session.</p>' +
+    openSheet('<h2>Sign in</h2><p class="sh-lead">Signing in backs up your program and workouts to your account, so a new phone — or this one after reinstalling — gets them back. Workouts post to the feed only when you finish a session.</p>' +
       (APPLE_SIGNIN ? '<div class="btn-row"><button class="btn btn-apple" id="si-apple">Continue with Apple</button></div>' : '') +
       '<div class="btn-row"><button class="btn ' + (APPLE_SIGNIN ? 'btn-ghost' : 'btn-primary') + '" id="si-google">Continue with Google</button></div>');
     var start = function (btn, provider, label) {
@@ -7805,7 +8031,7 @@
         if (r.error) { toast("Couldn't save that name"); btn.disabled = false; return; }
         db.account = { userId: user.id, displayName: name, avatarUrl: avatar };
         db.knownProfiles[user.id] = { displayName: name, avatarUrl: avatar };
-        save(); closeSheet(); renderTabs(); flushPendingPush(); backfillHistory();
+        save(); closeSheet(); renderTabs(); flushPendingPush(); backfillHistory(); syncStart();
         toast("You're in");
         go("feed");
       });
@@ -7903,7 +8129,7 @@
   // deletes the online account and everything it published; workouts on this device stay
   function openDeleteAccount() {
     openSheet('<h2>Delete your account?</h2>' +
-      '<p class="sh-lead">This permanently deletes your Rep Star account: your profile, picture, everything you posted to the feed, follows and kudos. It can\'t be undone.</p>' +
+      '<p class="sh-lead">This permanently deletes your Rep Star account: your profile, picture, everything you posted to the feed, follows and kudos, and the backup of your data. It can\'t be undone.</p>' +
       '<p class="sh-lead">Your program and workout history on this phone stay — erase those separately under Your data.</p>' +
       '<div class="field"><label>Type DELETE to confirm</label><input class="ed-name" id="da-confirm" autocomplete="off" autocapitalize="characters"></div>' +
       '<div class="btn-row"><button class="btn btn-ghost" id="da-no">Cancel</button><button class="btn btn-danger" id="da-yes" disabled style="opacity:.5">Delete account</button></div>');
@@ -7924,7 +8150,7 @@
       }).then(function (r) {
         if (r && r.error) { fail(); return; }
         sb().auth.signOut();
-        db.account = null; save();
+        db.account = null; save(); syncReset();
         feed = { items: [], loading: false, done: false, error: null, loaded: false, scope: "everyone" }; followingIds = null;
         closeSheet(); renderTabs(); go("home");
         toast("Account deleted");
@@ -7932,9 +8158,10 @@
     };
   }
 
+  // this phone's data stays, and so does syncMeta.userId: signing back in carries on, another account gets asked
   function rcSignOut() {
     if (sb()) sb().auth.signOut();
-    db.account = null; save();
+    db.account = null; save(); setSyncState("");
     feed = { items: [], loading: false, done: false, error: null, loaded: false, scope: "everyone" }; followingIds = null;
     closeSheet(); renderTabs();
     go("home");
