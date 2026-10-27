@@ -43,11 +43,15 @@ enum LiveActions {
     static let posted = Notification.Name("RepStarLiveAction")
     private static let lastLogKey = "RepStarLive.lastLog"
 
-    /// the taps the web app hasn't replayed yet, oldest first; reading them clears the queue
-    static func take() -> [[String: Any]] {
-        let list = UserDefaults.standard.array(forKey: key) as? [[String: Any]] ?? []
-        UserDefaults.standard.removeObject(forKey: key)
-        return list
+    /// the taps the web app hasn't replayed yet, oldest first. They stay queued until it
+    /// says it's done with them (drop): iOS can pause the web app between handing them
+    /// over and applying them, and a tap mustn't get lost there.
+    static func pending() -> [[String: Any]] {
+        UserDefaults.standard.array(forKey: key) as? [[String: Any]] ?? []
+    }
+
+    static func drop(_ count: Int) {
+        UserDefaults.standard.set(Array(pending().dropFirst(count)), forKey: key)
     }
 
     /// in line with the app's own card updates (LiveCards), so a tap never races one
@@ -58,7 +62,7 @@ enum LiveActions {
 
     @available(iOS 17.0, *)
     private static func apply(_ type: String) async {
-        guard let activity = Activity<WorkoutAttributes>.activities.first(where: { $0.activityState == .active }) else { return }
+        guard let activity = Activity<WorkoutAttributes>.onScreen.first else { return }
         var s = activity.content.state
         let now = Date().timeIntervalSince1970 * 1000
         let resting = s.phase == "rest" && (s.restEnd ?? 0) > now

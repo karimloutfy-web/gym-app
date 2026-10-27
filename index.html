@@ -4839,9 +4839,16 @@
 
   // Log set / Skip rest / +0:30 on the lock screen (iOS 17+) move the card while the app
   // sleeps; when it wakes, replay those taps into the workout, at the times they happened
+  // one replay at a time (launch and coming back can both ask); a request made during one runs after it
+  var liveTaking = false, liveTakeAgain = false;
   function liveTakeActions() {
     if (!window.RC.Live) return;
-    liveHold = true;
+    if (liveTaking) { liveTakeAgain = true; return; }
+    liveTaking = true; liveHold = true;
+    var finish = function () {
+      liveTaking = false;
+      if (liveTakeAgain) { liveTakeAgain = false; liveTakeActions(); }
+    };
     window.RC.Live.takeActions().then(function (r) {
       var acts = (r && r.actions) || [];
       if (acts.length && run && !run.past && run.kind !== "metcon") {
@@ -4851,8 +4858,11 @@
         if (run.restUntil) scheduleRestChime((run.restUntil - Date.now()) / 1000);
       }
       liveHold = false; liveSent = null;
-      if (run) renderPlayer(); else liveSync();
-    }, function () { liveHold = false; liveSync(); });
+      if (run) renderPlayer(); else liveSync();   // renderPlayer saves the workout (persistRun)
+      // only now can the queue let go of them; ones that no longer fit are dropped too
+      if (acts.length) window.RC.Live.doneActions({ count: acts.length }).then(finish, finish);
+      else finish();
+    }, function () { liveHold = false; liveSync(); finish(); });
   }
   // false = the workout moved on differently; stop replaying
   function applyLiveAction(act) {
