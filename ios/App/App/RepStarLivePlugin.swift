@@ -27,7 +27,7 @@ public class RepStarLivePlugin: CAPPlugin, CAPBridgedPlugin {
         let stale = state.phase == "rest" ? state.restEnd?.msDate : nil
         let content = ActivityContent(state: state, staleDate: stale)
         LiveCards.serially {
-            let live = Activity<WorkoutAttributes>.activities.filter { $0.activityState == .active }
+            let live = Activity<WorkoutAttributes>.onScreen
             let card = live.first(where: { $0.attributes.workoutId == id })
             if let card = card {
                 await card.update(content)

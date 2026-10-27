@@ -42,6 +42,15 @@ enum LiveCards {
     }
 }
 
+@available(iOS 16.2, *)
+extension Activity where Attributes == WorkoutAttributes {
+    /// cards still on screen: active, or stale — past the end of a rest, showing "rest over".
+    /// Missing the stale ones made a second card, and left taps on the first doing nothing.
+    static var onScreen: [Activity<WorkoutAttributes>] {
+        activities.filter { $0.activityState == .active || $0.activityState == .stale }
+    }
+}
+
 extension Double {
     var msDate: Date { Date(timeIntervalSince1970: self / 1000) }
 }
