@@ -13,7 +13,7 @@ struct LogSetIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Log set"
     static var isDiscoverable = false
     func perform() async throws -> some IntentResult {
-        await LiveActions.apply("log")
+        await LiveActions.run("log")
         return .result()
     }
 }
@@ -23,7 +23,7 @@ struct SkipRestIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Skip rest"
     static var isDiscoverable = false
     func perform() async throws -> some IntentResult {
-        await LiveActions.apply("skip")
+        await LiveActions.run("skip")
         return .result()
     }
 }
@@ -33,7 +33,7 @@ struct AddRestIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Add 30 seconds of rest"
     static var isDiscoverable = false
     func perform() async throws -> some IntentResult {
-        await LiveActions.apply("plus")
+        await LiveActions.run("plus")
         return .result()
     }
 }
@@ -41,6 +41,7 @@ struct AddRestIntent: LiveActivityIntent {
 enum LiveActions {
     static let key = "RepStarLive.actions"
     static let posted = Notification.Name("RepStarLiveAction")
+    private static let lastLogKey = "RepStarLive.lastLog"
 
     /// the taps the web app hasn't replayed yet, oldest first; reading them clears the queue
     static func take() -> [[String: Any]] {
@@ -49,8 +50,14 @@ enum LiveActions {
         return list
     }
 
+    /// in line with the app's own card updates (LiveCards), so a tap never races one
     @available(iOS 17.0, *)
-    static func apply(_ type: String) async {
+    static func run(_ type: String) async {
+        await LiveCards.serially { await apply(type) }.value
+    }
+
+    @available(iOS 17.0, *)
+    private static func apply(_ type: String) async {
         guard let activity = Activity<WorkoutAttributes>.activities.first(where: { $0.activityState == .active }) else { return }
         var s = activity.content.state
         let now = Date().timeIntervalSince1970 * 1000
@@ -60,6 +67,11 @@ enum LiveActions {
         case "log":
             // the set to do now: the current one, or the next one once a rest is over
             guard !resting, s.phase == "set" || s.phase == "rest", let steps = s.steps, let step = steps.first else { return }
+            // iOS can take a few seconds to wake the app after a tap, so a second tap is easy;
+            // it shouldn't log another set
+            let lastLog = UserDefaults.standard.double(forKey: lastLogKey)
+            guard now - lastLog > 3000 else { return }
+            UserDefaults.standard.set(now, forKey: lastLogKey)
             action["key"] = step.key
             let rest = Array(steps.dropFirst())
             s.steps = rest
@@ -76,13 +88,15 @@ enum LiveActions {
             } else {
                 showNext(&s)
             }
+        // iOS only switches the card to "rest over" a while after the rest ends, so these
+        // still show at 0:00: Skip then goes on to the set, +0:30 gives 30 s from now
         case "skip":
-            guard resting else { return }
+            guard s.phase == "rest" else { return }
             showNext(&s)
         case "plus":
-            guard resting, let end = s.restEnd else { return }
-            s.restEnd = end + 30_000
-            s.restTotal = (s.restTotal ?? 0) + 30
+            guard s.phase == "rest", let end = s.restEnd else { return }
+            s.restEnd = max(end, now) + 30_000
+            s.restTotal = resting ? (s.restTotal ?? 0) + 30 : 30
             // like the app's +0:30: this exercise rests that long from now on (bumpRestLen() in index.html)
             let len = ((((s.restLen ?? s.restTotal ?? 0) + 30) / 15).rounded()) * 15
             s.restLen = len

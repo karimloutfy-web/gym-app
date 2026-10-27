@@ -4865,9 +4865,10 @@
     } else if (act.type === "skip") {
       run.restUntil = null;
     } else if (act.type === "plus" && run.restUntil) {
+      // as on the card: 30 s more, or 30 s from the tap if the rest had already run out
       bumpRestLen(30);
-      run.restUntil += 30000;
-      run.restTotal += 30;
+      run.restTotal = run.restUntil > act.at ? run.restTotal + 30 : 30;
+      run.restUntil = Math.max(run.restUntil, act.at) + 30000;
     }
     return true;
   }
