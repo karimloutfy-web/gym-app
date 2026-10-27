@@ -25,6 +25,23 @@ struct WorkoutAttributes: ActivityAttributes {
     var workoutId: String
 }
 
+/// Changes to the card, one at a time and in order. Two updates sent a moment
+/// apart (a workout starting renders twice) would otherwise both find no card
+/// and each start one, leaving a second card that never updates again.
+enum LiveCards {
+    private static let lock = NSLock()
+    private static var last: Task<Void, Never>?
+
+    @discardableResult
+    static func serially(_ work: @escaping () async -> Void) -> Task<Void, Never> {
+        lock.lock(); defer { lock.unlock() }
+        let previous = last
+        let next = Task { await previous?.value; await work() }
+        last = next
+        return next
+    }
+}
+
 extension Double {
     var msDate: Date { Date(timeIntervalSince1970: self / 1000) }
 }

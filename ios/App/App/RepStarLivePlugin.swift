@@ -26,22 +26,23 @@ public class RepStarLivePlugin: CAPPlugin, CAPBridgedPlugin {
         // past the end of a rest the card switches itself to "rest over"
         let stale = state.phase == "rest" ? state.restEnd?.msDate : nil
         let content = ActivityContent(state: state, staleDate: stale)
-        Task {
+        LiveCards.serially {
             let live = Activity<WorkoutAttributes>.activities.filter { $0.activityState == .active }
-            // one card, for this workout: anything left from an earlier one goes
-            for a in live where a.attributes.workoutId != id { await a.end(nil, dismissalPolicy: .immediate) }
-            if let a = live.first(where: { $0.attributes.workoutId == id }) {
-                await a.update(content)
+            let card = live.first(where: { $0.attributes.workoutId == id })
+            if let card = card {
+                await card.update(content)
             } else {
                 _ = try? Activity.request(attributes: WorkoutAttributes(workoutId: id), content: content, pushType: nil)
             }
+            // one card: anything left from an earlier workout goes, and so does any duplicate of this one
+            for a in live where a.id != card?.id { await a.end(nil, dismissalPolicy: .immediate) }
             call.resolve(["supported": true])
         }
     }
 
     @objc func end(_ call: CAPPluginCall) {
         guard #available(iOS 16.2, *) else { call.resolve(); return }
-        Task {
+        LiveCards.serially {
             for a in Activity<WorkoutAttributes>.activities { await a.end(nil, dismissalPolicy: .immediate) }
             call.resolve()
         }
