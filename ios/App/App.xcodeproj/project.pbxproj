@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B10C0DE0000000000000000B /* RepStarLiveBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000002 /* RepStarLiveBundle.swift */; };
+		B10C0DE0000000000000000C /* WorkoutLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000003 /* WorkoutLiveActivity.swift */; };
+		B10C0DE0000000000000000D /* WorkoutActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000005 /* WorkoutActivity.swift */; };
+		B10C0DE0000000000000000E /* WorkoutActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000005 /* WorkoutActivity.swift */; };
+		B10C0DE0000000000000000F /* RepStarLivePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000006 /* RepStarLivePlugin.swift */; };
+		B10C0DE00000000000000010 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000007 /* MainViewController.swift */; };
+		B10C0DE00000000000000011 /* RepStarLive.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000001 /* RepStarLive.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -19,7 +26,38 @@
 		A1B2C3D4E5F60718293A4B02 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B01 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B10C0DE00000000000000029 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B10C0DE0000000000000002B;
+			remoteInfo = RepStarLive;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B10C0DE00000000000000022 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B10C0DE00000000000000011 /* RepStarLive.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		B10C0DE00000000000000001 /* RepStarLive.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RepStarLive.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10C0DE00000000000000002 /* RepStarLiveBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepStarLiveBundle.swift; sourceTree = "<group>"; };
+		B10C0DE00000000000000003 /* WorkoutLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivity.swift; sourceTree = "<group>"; };
+		B10C0DE00000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B10C0DE00000000000000005 /* WorkoutActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutActivity.swift; sourceTree = "<group>"; };
+		B10C0DE00000000000000006 /* RepStarLivePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepStarLivePlugin.swift; sourceTree = "<group>"; };
+		B10C0DE00000000000000007 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -35,6 +73,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B10C0DE00000000000000020 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		504EC3011FED79650016851F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -51,6 +96,8 @@
 			children = (
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
+				B10C0DE00000000000000015 /* RepStarLive */,
+				B10C0DE00000000000000016 /* Shared */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -59,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				B10C0DE00000000000000001 /* RepStarLive.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -67,6 +115,8 @@
 			isa = PBXGroup;
 			children = (
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
+				B10C0DE00000000000000007 /* MainViewController.swift */,
+				B10C0DE00000000000000006 /* RepStarLivePlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -80,6 +130,24 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		B10C0DE00000000000000015 /* RepStarLive */ = {
+			isa = PBXGroup;
+			children = (
+				B10C0DE00000000000000002 /* RepStarLiveBundle.swift */,
+				B10C0DE00000000000000003 /* WorkoutLiveActivity.swift */,
+				B10C0DE00000000000000004 /* Info.plist */,
+			);
+			path = RepStarLive;
+			sourceTree = "<group>";
+		};
+		B10C0DE00000000000000016 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				B10C0DE00000000000000005 /* WorkoutActivity.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -90,10 +158,12 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				B10C0DE00000000000000022 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B10C0DE0000000000000002A /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -102,6 +172,23 @@
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B10C0DE0000000000000002B /* RepStarLive */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B10C0DE0000000000000002C /* Build configuration list for PBXNativeTarget "RepStarLive" */;
+			buildPhases = (
+				B10C0DE0000000000000001F /* Sources */,
+				B10C0DE00000000000000020 /* Frameworks */,
+				B10C0DE00000000000000021 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RepStarLive;
+			productName = RepStarLive;
+			productReference = B10C0DE00000000000000001 /* RepStarLive.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -115,6 +202,10 @@
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
+						ProvisioningStyle = Automatic;
+					};
+					B10C0DE0000000000000002B = {
+						CreatedOnToolsVersion = 16.0;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -136,11 +227,19 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				B10C0DE0000000000000002B /* RepStarLive */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B10C0DE00000000000000021 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		504EC3021FED79650016851F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -164,10 +263,31 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				B10C0DE0000000000000000E /* WorkoutActivity.swift in Sources */,
+				B10C0DE0000000000000000F /* RepStarLivePlugin.swift in Sources */,
+				B10C0DE00000000000000010 /* MainViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B10C0DE0000000000000001F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10C0DE0000000000000000B /* RepStarLiveBundle.swift in Sources */,
+				B10C0DE0000000000000000C /* WorkoutLiveActivity.swift in Sources */,
+				B10C0DE0000000000000000D /* WorkoutActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B10C0DE0000000000000002A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B10C0DE0000000000000002B /* RepStarLive */;
+			targetProxy = B10C0DE00000000000000029 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
@@ -344,6 +464,55 @@
 			};
 			name = Release;
 		};
+		B10C0DE0000000000000002D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7499YVL75M;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RepStarLive/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Rep Star";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "app.rep-star.ios.RepStarLive";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B10C0DE0000000000000002E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7499YVL75M;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RepStarLive/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Rep Star";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "app.rep-star.ios.RepStarLive";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -361,6 +530,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B10C0DE0000000000000002C /* Build configuration list for PBXNativeTarget "RepStarLive" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B10C0DE0000000000000002D /* Debug */,
+				B10C0DE0000000000000002E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
