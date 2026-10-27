@@ -13,11 +13,32 @@ public class RepStarLivePlugin: CAPPlugin, CAPBridgedPlugin, NotificationHandler
     public let jsName = "RepStarLive"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "update", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "end", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "end", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "takeActions", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "doneActions", returnType: CAPPluginReturnPromise)
     ]
 
     override public func load() {
         bridge?.notificationRouter.localNotificationHandler = self
+        // a lock-screen button was tapped while the web app is awake: tell it to replay
+        NotificationCenter.default.addObserver(forName: LiveActions.posted, object: nil, queue: .main) { [weak self] _ in
+            self?.notifyListeners("action", data: [:])
+        }
+    }
+
+    /// lock-screen button taps the web app hasn't replayed yet (see WorkoutIntents.swift)
+    @objc func takeActions(_ call: CAPPluginCall) {
+        call.resolve(["actions": LiveActions.pending()])
+    }
+
+    /// the web app has replayed the first `count` of them and saved the workout
+    @objc func doneActions(_ call: CAPPluginCall) {
+        let count = call.getInt("count") ?? 0
+        // in line with the buttons, which add to the same queue
+        LiveCards.serially {
+            LiveActions.drop(count)
+            call.resolve()
+        }
     }
 
     @objc func update(_ call: CAPPluginCall) {

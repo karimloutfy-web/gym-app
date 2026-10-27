@@ -25,7 +25,10 @@ struct WorkoutLiveActivity: Widget {
                     ElapsedText(state: s).font(.caption.weight(.semibold)).foregroundColor(faint)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    CardBody(state: s, stale: stale)
+                    VStack(spacing: 10) {
+                        CardBody(state: s, stale: stale)
+                        if #available(iOS 17.0, *) { CardButtons(state: s, stale: stale) }
+                    }
                 }
             } compactLeading: {
                 Image(systemName: "star.fill").foregroundColor(lime)
@@ -54,6 +57,7 @@ private struct LockScreenCard: View {
             }
             .foregroundColor(faint)
             CardBody(state: state, stale: stale)
+            if #available(iOS 17.0, *) { CardButtons(state: state, stale: stale) }
         }
         .padding(16)
     }
@@ -112,6 +116,35 @@ private struct CardBody: View {
                     .tint(lime)
             }
         }
+    }
+}
+
+/// Skip rest / +0:30 while resting, Log set otherwise (iOS 17+; see WorkoutIntents.swift)
+@available(iOS 17.0, *)
+private struct CardButtons: View {
+    let state: WorkoutAttributes.ContentState
+    let stale: Bool
+
+    var body: some View {
+        let resting = state.phase == "rest" && !stale && (state.restEnd ?? 0).msDate > Date()
+        let canLog = (state.phase == "set" || state.phase == "rest") && !(state.steps ?? []).isEmpty
+        if resting {
+            HStack(spacing: 8) {
+                Button(intent: AddRestIntent()) { pill("+0:30", filled: false) }.buttonStyle(.plain)
+                Button(intent: SkipRestIntent()) { pill("Skip rest", filled: true) }.buttonStyle(.plain)
+            }
+        } else if canLog {
+            Button(intent: LogSetIntent()) { pill("Log set", filled: true) }.buttonStyle(.plain)
+        }
+    }
+
+    private func pill(_ title: String, filled: Bool) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.heavy))
+            .foregroundColor(filled ? .black : .white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(Capsule().fill(filled ? lime : Color.white.opacity(0.14)))
     }
 }
 
