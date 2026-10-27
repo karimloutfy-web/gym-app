@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B10C0DE00000000000000012 /* RestAlarm.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000008 /* RestAlarm.swift */; };
+		B10C0DE00000000000000013 /* RestAlarm.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000008 /* RestAlarm.swift */; };
 		B10C0DE0000000000000000B /* RepStarLiveBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000002 /* RepStarLiveBundle.swift */; };
 		B10C0DE0000000000000000C /* WorkoutLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000003 /* WorkoutLiveActivity.swift */; };
 		B10C0DE0000000000000000D /* WorkoutActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE00000000000000005 /* WorkoutActivity.swift */; };
@@ -51,6 +53,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B10C0DE00000000000000008 /* RestAlarm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestAlarm.swift; sourceTree = "<group>"; };
+		B10C0DE00000000000000009 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		B10C0DE00000000000000001 /* RepStarLive.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RepStarLive.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10C0DE00000000000000002 /* RepStarLiveBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepStarLiveBundle.swift; sourceTree = "<group>"; };
 		B10C0DE00000000000000003 /* WorkoutLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivity.swift; sourceTree = "<group>"; };
@@ -123,6 +127,7 @@
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
+				B10C0DE00000000000000009 /* App.entitlements */,
 				A1B2C3D4E5F60718293A4B01 /* PrivacyInfo.xcprivacy */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
@@ -144,6 +149,7 @@
 			isa = PBXGroup;
 			children = (
 				B10C0DE00000000000000005 /* WorkoutActivity.swift */,
+				B10C0DE00000000000000008 /* RestAlarm.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -264,6 +270,7 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 				B10C0DE0000000000000000E /* WorkoutActivity.swift in Sources */,
+				B10C0DE00000000000000012 /* RestAlarm.swift in Sources */,
 				B10C0DE0000000000000000F /* RepStarLivePlugin.swift in Sources */,
 				B10C0DE00000000000000010 /* MainViewController.swift in Sources */,
 			);
@@ -276,6 +283,7 @@
 				B10C0DE0000000000000000B /* RepStarLiveBundle.swift in Sources */,
 				B10C0DE0000000000000000C /* WorkoutLiveActivity.swift in Sources */,
 				B10C0DE0000000000000000D /* WorkoutActivity.swift in Sources */,
+				B10C0DE00000000000000013 /* RestAlarm.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
