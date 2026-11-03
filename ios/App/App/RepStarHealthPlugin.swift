@@ -2,9 +2,10 @@ import Capacitor
 import Foundation
 import HealthKit
 
-/// Reads the day's recovery and activity from Apple Health — where Garmin Connect,
-/// an Apple Watch or the iPhone itself put it — for the Today card on Home
-/// (healthSync() in index.html). Read-only: Rep Star never writes to Health.
+/// Reads the day's recovery and activity, and recent cardio workouts, from Apple Health —
+/// where Garmin Connect, an Apple Watch or the iPhone itself put them — for the Today card
+/// on Home and the Cardio list on Progress (healthSync() in index.html). Read-only:
+/// Rep Star never writes to Health.
 @objc(RepStarHealthPlugin)
 public class RepStarHealthPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "RepStarHealthPlugin"
@@ -12,14 +13,16 @@ public class RepStarHealthPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "available", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "connect", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "today", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "today", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "workouts", returnType: CAPPluginReturnPromise)
     ]
 
     private let store = HKHealthStore()
 
     private var readTypes: Set<HKObjectType> {
-        var s: Set<HKObjectType> = [HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!]
-        for id in [HKQuantityTypeIdentifier.restingHeartRate, .stepCount, .activeEnergyBurned] {
+        var s: Set<HKObjectType> = [HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!, HKObjectType.workoutType()]
+        for id in [HKQuantityTypeIdentifier.restingHeartRate, .stepCount, .activeEnergyBurned, .heartRate,
+                   .distanceWalkingRunning, .distanceCycling, .distanceSwimming] {
             s.insert(HKObjectType.quantityType(forIdentifier: id)!)
         }
         return s
@@ -52,6 +55,48 @@ public class RepStarHealthPlugin: CAPPlugin, CAPBridgedPlugin {
             if let s = await statistic(.stepCount, unit: .count(), options: .cumulativeSum, from: midnight, to: now) { out["steps"] = s }
             if let k = await statistic(.activeEnergyBurned, unit: .kilocalorie(), options: .cumulativeSum, from: midnight, to: now) { out["activeKcal"] = k }
             call.resolve(out)
+        }
+    }
+
+    /// cardio workouts from the last `days` days (default 90), newest first. Strength and
+    /// other gym sessions are left out: those are logged in Rep Star itself.
+    @objc func workouts(_ call: CAPPluginCall) {
+        guard HKHealthStore.isHealthDataAvailable() else { call.resolve(["workouts": []]); return }
+        let days = call.getInt("days") ?? 90, now = Date()
+        let from = Calendar.current.date(byAdding: .day, value: -days, to: now)!
+        Task {
+            var out: [[String: Any]] = []
+            for case let w as HKWorkout in await samples(HKObjectType.workoutType(), from: from, to: now, newestFirst: true) {
+                guard let kind = Self.cardioKind(w.workoutActivityType) else { continue }
+                var row: [String: Any] = [
+                    "id": w.uuid.uuidString, "kind": kind,
+                    "start": w.startDate.timeIntervalSince1970 * 1000, "durationSec": w.duration.rounded(),
+                    "source": w.sourceRevision.source.name
+                ]
+                if let d = w.totalDistance?.doubleValue(for: .meter()), d > 0 { row["distanceM"] = d.rounded() }
+                if let k = w.totalEnergyBurned?.doubleValue(for: .kilocalorie()), k > 0 { row["kcal"] = k.rounded() }
+                if let hr = await statistic(.heartRate, unit: .count().unitDivided(by: .minute()), options: .discreteAverage,
+                                            from: w.startDate, to: w.endDate) { row["avgHr"] = hr }
+                out.append(row)
+            }
+            call.resolve(["workouts": out])
+        }
+    }
+
+    private static func cardioKind(_ t: HKWorkoutActivityType) -> String? {
+        switch t {
+        case .running: return "run"
+        case .walking: return "walk"
+        case .hiking: return "hike"
+        case .cycling, .handCycling: return "ride"
+        case .swimming: return "swim"
+        case .rowing: return "row"
+        case .elliptical: return "elliptical"
+        case .stairClimbing, .stairs: return "stairs"
+        case .crossCountrySkiing, .downhillSkiing, .snowboarding: return "ski"
+        case .paddleSports, .surfingSports: return "paddle"
+        case .mixedCardio, .jumpRope, .skatingSports: return "cardio"
+        default: return nil
         }
     }
 

@@ -76,7 +76,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Rep Star shows your sleep, resting heart rate, steps and active calories on Home, including what Garmin Connect or your watch saves to Health.</string>
+	<string>Rep Star shows your sleep, resting heart rate, steps and active calories on Home, and your runs, rides and other cardio on Progress, including what Garmin Connect or your watch saves to Health.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
