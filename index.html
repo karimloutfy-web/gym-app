@@ -321,6 +321,8 @@
   .sk-c { width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center; font-size: var(--fs-sm); font-weight: 700; color: var(--text-faint); background: var(--surface-2); }
   .sk-c svg { width: 17px; height: 17px; }
   .sk-c.done { background: var(--accent); color: var(--accent-text); }
+  .sk-c.cardio { color: var(--accent-line); }
+  .sk-c.cardio svg { width: 19px; height: 19px; }
   .sk-c.today { background: transparent; border: 2px solid var(--accent-line); color: var(--text); }
   .sk-c.planned { background: transparent; border: 1.5px dashed var(--line-strong); color: var(--text-muted); }
   /* last workout, feed style */
@@ -371,6 +373,9 @@
   .rec-row .rr-day { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-sm); min-width: 30px; max-width: 82px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
   .rec-row .rr-sum { flex: 1; color: var(--text-muted); font-family: var(--font-num); font-size: var(--fs-sm); }
   .rec-row .rr-date { color: var(--text-faint); font-size: var(--fs-xs); }
+  .cardio-row .rr-day { min-width: 64px; }
+  .cardio-row .rr-sum b { display: block; color: var(--text); font-weight: 700; }
+  .cardio-row .rr-sum small { display: block; color: var(--text-muted); font-size: var(--fs-xs); margin-top: 2px; }
 
   /* home screen */
   .home-quote { border-left: 2px solid var(--accent-line); padding: 2px 0 2px 12px; margin: 6px 0 4px; }
@@ -2079,6 +2084,15 @@
     A(hkT[3].v.indexOf("0") === 0, "health: 0 active kcal still shows (it's a real reading)");
     A(healthTiles({ restingHr: 60 })[0].d === "" && healthTiles({ restingHr: 60, restingHrAvg: 60.2 })[0].d === "as usual", "health: no average → no comparison; equal → says so");
     A(healthTiles({ sleepMin: 0, steps: 120 }).length === 1, "health: no sleep logged → tile left out");
+
+    // --- cardio from Health ---
+    A(clockText(59) === "0:59" && clockText(1694) === "28:14" && clockText(3909) === "1:05:09", "cardio: clock text");
+    A(cardioLine({ kind: "run", distanceM: 5200, durationSec: 1694, avgHr: 148.4 }, false) === "5.2 km · 28:14 · 5:26 /km · 148 bpm",
+      "cardio: run → distance, time, pace, HR → got " + cardioLine({ kind: "run", distanceM: 5200, durationSec: 1694, avgHr: 148.4 }, false));
+    A(cardioLine({ kind: "run", distanceM: 8046.72, durationSec: 2400 }, true) === "5 mi · 40:00 · 8:00 /mi", "cardio: lb users get miles");
+    A(cardioLine({ kind: "ride", distanceM: 30000, durationSec: 3600 }, false) === "30 km · 1:00:00 · 30 km/h", "cardio: ride → speed, not pace");
+    A(cardioLine({ kind: "swim", distanceM: 1500, durationSec: 1800 }, false) === "1,500 m · 30:00 · 2:00 /100 m", "cardio: swim → metres and /100 m");
+    A(cardioLine({ kind: "row", durationSec: 600 }, false) === "10:00", "cardio: no distance → just the time");
 
     var el = document.createElement("div");
     el.className = "selftest";
@@ -4364,11 +4378,12 @@
     return U() === "kg" && v >= 10000 ? fmt(Math.round(v / 100) / 10) + " t" : Math.round(v).toLocaleString() + " " + U();
   }
   var DUMBBELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M2.5 10v4M6 7v10M18 7v10M21.5 10v4M6 12h12"/></svg>';
+  var SHOE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17h17a1.5 1.5 0 0 0 1.5-1.5c0-1.2-.9-2.2-2.1-2.4L15 12.5 12 8H9.5L8 10.5 5.5 7H3z"/><path d="M3 20h18M11 10.5l1.5 1.5M9.5 12.5L11 14"/></svg>';
   var BOLT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>';
   /* Today card: sleep, resting heart rate, steps and active calories read from Apple Health
      (Garmin Connect, a watch or the phone put them there). Kept on this phone only, outside
      `db`, so it never syncs or lands in a backup: Health already holds it. */
-  var HEALTH_KEY = KEY + ".health";
+  var HEALTH_KEY = KEY + ".health", HEALTH_V = 2;   // 2: also reads workouts
   var health = (function () { try { return JSON.parse(localStorage.getItem(HEALTH_KEY)) || {}; } catch (e) { return {}; } })();
   function saveHealth() { try { localStorage.setItem(HEALTH_KEY, JSON.stringify(health)); } catch (e) {} }
   // the tiles, from what today() returned; anything Health didn't have is left out
@@ -4407,14 +4422,22 @@
     if (!window.RC.Health) return;
     window.RC.Health.connect().then(function (r) {
       if (!r || !r.connected) return;
-      health.on = true; health.hidden = false; saveHealth();
+      health.on = true; health.hidden = false; health.v = HEALTH_V; saveHealth();
       healthSync(true);
     }).catch(function () {});
   }
   // fetch today's numbers and repaint the card in place
   function healthSync(force) {
     if (!window.RC.Health || !health.on) return;
+    // connected before Rep Star read workouts: iOS asks once more, for the new kinds only
+    if ((health.v || 1) < HEALTH_V) { health.v = HEALTH_V; saveHealth(); healthConnect(); return; }
     if (!force && health.at && Date.now() - health.at < 60000) return;
+    health.at = Date.now();
+    window.RC.Health.workouts({ days: 90 }).then(function (r) {
+      var list = (r && r.workouts) || [], was = JSON.stringify(health.workouts || []);
+      health.workouts = list; saveHealth();
+      if (JSON.stringify(list) !== was && (cur === "home" || cur === "progress") && !sheetRoot.innerHTML) renderers[cur]();
+    }).catch(function () {});
     window.RC.Health.today().then(function (t) {
       health.today = t || {}; health.at = Date.now(); saveHealth();
       var c = screens.home, old = c && c.querySelector("#hk-card");
@@ -4426,6 +4449,44 @@
   }
   document.addEventListener("visibilitychange", function () { if (!document.hidden) healthSync(); });
 
+  // cardio from Health (runs, rides, swims…) — shown on Progress and the week strip, kept apart
+  // from Rep Star's own sessions: no badges, streak weeks, training time or progression
+  var CARDIO_NAME = { run: "Run", walk: "Walk", hike: "Hike", ride: "Ride", swim: "Swim", row: "Row", elliptical: "Elliptical",
+    stairs: "Stairs", ski: "Ski", paddle: "Paddle", cardio: "Cardio" };
+  function healthWorkouts() { return window.RC.Health && health.on && !health.hidden ? (health.workouts || []) : []; }
+  // { main: distance and time, sub: pace or speed and heart rate }
+  function cardioBits(w, lb) {
+    var bits = [], sub = [], km = (w.distanceM || 0) / 1000, mi = km / 1.609344;
+    var dist = lb ? mi : km, du = lb ? "mi" : "km";
+    if (w.kind === "swim" && w.distanceM) bits.push(Math.round(w.distanceM).toLocaleString() + " m");
+    else if (dist >= 0.05) bits.push(fmt(Math.round(dist * 100) / 100) + " " + du);
+    if (w.durationSec) bits.push(clockText(w.durationSec));
+    if (w.durationSec && dist >= 0.2) {
+      if (w.kind === "run" || w.kind === "walk" || w.kind === "hike") sub.push(clockText(w.durationSec / dist) + " /" + du);
+      else if (w.kind === "ride") sub.push(Math.round(dist / (w.durationSec / 3600) * 10) / 10 + " " + (lb ? "mph" : "km/h"));
+    }
+    if (w.kind === "swim" && w.durationSec && w.distanceM >= 50) sub.push(clockText(w.durationSec / (w.distanceM / 100)) + " /100 m");
+    if (w.avgHr) sub.push(Math.round(w.avgHr) + " bpm");
+    return { main: bits, sub: sub };
+  }
+  function cardioLine(w, lb) { var b = cardioBits(w, lb); return b.main.concat(b.sub).join(" · "); }
+  // 1:05:09, 28:14, 5:26
+  function clockText(sec) {
+    sec = Math.round(sec);
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), x = sec % 60;
+    return (h ? h + ":" + pad2(m) : m) + ":" + pad2(x);
+  }
+  function cardioHistoryHtml() {
+    var ws = healthWorkouts();
+    if (!ws.length) return "";
+    return '<div class="eyebrow" style="margin-top:22px">Cardio · Apple Health</div>' + ws.slice(0, 12).map(function (w) {
+      var b = cardioBits(w, U() === "lb");
+      return '<div class="rec-row cardio-row"><span class="rr-day">' + esc(CARDIO_NAME[w.kind] || "Cardio") + '</span>' +
+        '<span class="rr-sum"><b>' + esc(b.main.join(" · ")) + '</b>' + (b.sub.length ? '<small>' + esc(b.sub.join(" · ")) + '</small>' : '') + '</span>' +
+        '<span class="rr-date">' + relDate(w.start) + '</span></div>';
+    }).join("");
+  }
+
   function streakCardHtml() {
     var n = weekStreak();
     var start = weekKey(Date.now()), today = dayKey(Date.now());
@@ -4436,14 +4497,18 @@
       if (k < start) return;
       byDay[k] = byDay[k] === "lift" ? "lift" : (s.kind === "metcon" ? "metcon" : "lift");
     });
+    healthWorkouts().forEach(function (w) {
+      var k = dayKey(w.start);
+      if (k >= start && !byDay[k]) byDay[k] = "cardio";
+    });
     var days = "";
     for (var i = 0; i < 7; i++) {
       var d = new Date(start); d.setDate(d.getDate() + i);
       var k = dayKey(d.getTime()), kind = byDay[k];
-      var cls = kind ? "done" : k === today ? "today" : (k > today && td.indexOf(d.getDay()) >= 0) ? "planned" : "";
-      var label = DAY_SHORT[d.getDay()] + " " + d.getDate() + (kind ? (kind === "metcon" ? ", conditioning done" : ", lifting done") : cls === "today" ? ", today" : cls === "planned" ? ", training day" : "");
+      var cls = kind === "cardio" ? "cardio" : kind ? "done" : k === today ? "today" : (k > today && td.indexOf(d.getDay()) >= 0) ? "planned" : "";
+      var label = DAY_SHORT[d.getDay()] + " " + d.getDate() + (kind ? (kind === "cardio" ? ", cardio done" : kind === "metcon" ? ", conditioning done" : ", lifting done") : cls === "today" ? ", today" : cls === "planned" ? ", training day" : "");
       days += '<li aria-label="' + esc(label) + '"><span class="sk-d" aria-hidden="true">' + DAY_ABBR[d.getDay()] + '</span>' +
-        '<span class="sk-c ' + cls + '" aria-hidden="true">' + (kind ? (kind === "metcon" ? BOLT_SVG : DUMBBELL_SVG) : d.getDate()) + '</span></li>';
+        '<span class="sk-c ' + cls + '" aria-hidden="true">' + (kind ? (kind === "cardio" ? SHOE_SVG : kind === "metcon" ? BOLT_SVG : DUMBBELL_SVG) : d.getDate()) + '</span></li>';
     }
     return '<section class="streak-card">' +
       '<div class="sk-head"><h3>Your streak</h3><span>Week of ' + esc(shortDate(start)) + '</span></div>' +
@@ -6543,7 +6608,7 @@
   renderers.progress = function () {
     var c = screens.progress;
     if (!db.active) {
-      if (!db.sessions.length) {
+      if (!db.sessions.length && !healthWorkouts().length) {
         c.innerHTML = '<h2 class="title">Progress</h2>' +
           '<div class="empty"><div class="em-ic">📈</div><h3>No workouts yet</h3>' +
           '<p>Record a workout to see your progress — lifts, PRs and trends show up here.</p>' +
@@ -6553,7 +6618,7 @@
       }
       var html0 = '<h2 class="title">History</h2>' +
         '<p class="lead">' + db.sessions.length + ' workout' + (db.sessions.length === 1 ? '' : 's') + ' logged · no active program</p>' +
-        metconHistoryHtml() +
+        metconHistoryHtml() + cardioHistoryHtml() +
         '<div class="eyebrow" style="margin-top:22px">Body</div>' + bodyChartsHtml();
       c.innerHTML = html0;
       wireHistory(c);
@@ -6606,7 +6671,7 @@
       if (rows) html += '<div class="eyebrow" style="margin-top:18px">Lifts</div><section class="lift-list">' + rows + '</section>';
       else if (!liftSessions.length) html += '<p class="chart-note" style="margin-top:14px">Finish your first workout and your lifts start charting here.</p>';
     }
-    if (pf !== "lifting") html += metconHistoryHtml();
+    if (pf !== "lifting") html += metconHistoryHtml() + cardioHistoryHtml();
     if (pf !== "conditioning" && liftSessions.length) {
       html += '<div class="eyebrow" style="margin-top:22px">Recent sessions</div>';
       liftSessions.slice(-6).reverse().forEach(function (s) {
