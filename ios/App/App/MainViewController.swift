@@ -5,5 +5,6 @@ import Capacitor
 class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(RepStarLivePlugin())
+        bridge?.registerPluginInstance(RepStarHealthPlugin())
     }
 }

@@ -414,6 +414,20 @@
   .home-stat .hs-v small { font-size: var(--fs-sm); color: var(--text-muted); font-weight: 500; }
   .home-stat .hs-sub { display: block; font-size: var(--fs-xs); color: var(--text-faint); font-variant-numeric: tabular-nums; margin-top: 4px; }
 
+  /* Today: Apple Health on Home */
+  .hk-card { background: var(--surface); border-radius: var(--radius); padding: 16px 18px 18px; margin-bottom: 14px; }
+  .hk-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .hk-head h3 { font-size: var(--fs-lg); }
+  .hk-head span { font-size: var(--fs-sm); color: var(--text-faint); }
+  .hk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .hk-grid > div { min-width: 0; white-space: nowrap; }
+  .hk-grid .k { font-size: var(--fs-xs); color: var(--text-faint); font-weight: 700; }
+  .hk-grid .v { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-lg); line-height: 1; margin-top: 5px; font-variant-numeric: tabular-nums; }
+  .hk-grid .v small { font-size: var(--fs-xs); color: var(--text-muted); font-weight: 600; margin-left: 1px; }
+  .hk-grid .v small + b { margin-left: 4px; }
+  .hk-grid .d { font-size: var(--fs-xs); color: var(--text-muted); margin-top: 4px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; }
+  .hk-card p { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.45; margin: 0 0 12px; }
+  .hk-card .btn-row { margin: 0; }
   .grit-card { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid transparent; border-radius: var(--radius); padding: 16px 18px; margin: 0 0 16px; }
   .grit-ring { width: 56px; height: 56px; flex: none; }
   .grit-ring .grit-num { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-lg); fill: var(--text); }
@@ -917,6 +931,7 @@
     RC.App = cap.registerPlugin("App");
     RC.StatusBar = cap.registerPlugin("StatusBar");
     RC.Live = cap.registerPlugin("RepStarLive");   // ios/App/App/RepStarLivePlugin.swift
+    RC.Health = cap.registerPlugin("RepStarHealth");   // ios/App/App/RepStarHealthPlugin.swift
     var mirrored = function (k) { return /^(rackcoach\.|sb-)/.test(k); };
     var set = Storage.prototype.setItem, remove = Storage.prototype.removeItem;
     Storage.prototype.setItem = function (k, v) {
@@ -2055,6 +2070,15 @@
     A(stampChanges(syMeta, { settings: { unit: "lb" }, body: [] }, 200) && syMeta.stamps.settings === 200 && !syMeta.stamps.body, "a change stamps only the part that changed");
     A(!stampChanges(syMeta, { settings: { unit: "lb" }, body: [], account: { userId: "z" } }, 300), "device-only parts never count as changes");
     A(mergeStamps({ a: 1, b: 5 }, { a: 3, c: 2 }).a === 3 && mergeStamps({ a: 1, b: 5 }, { a: 3, c: 2 }).b === 5, "stamps merge to the latest per part");
+
+    // --- Today card (Apple Health) ---
+    A(healthTiles(null).length === 0 && healthTiles({}).length === 0, "health: nothing from Health → no tiles");
+    var hkT = healthTiles({ sleepMin: 445, restingHr: 52, restingHrAvg: 55.4, steps: 8412, activeKcal: 0 });
+    A(hkT.length === 4 && hkT[0].v === "7<small>h</small><b>25</b><small>m</small>", "health: sleep 445 min → 7h 25m → got " + (hkT[0] && hkT[0].v));
+    A(hkT[1].d === "−3 vs usual", "health: resting HR against the 7-day average → got " + (hkT[1] && hkT[1].d));
+    A(hkT[3].v.indexOf("0") === 0, "health: 0 active kcal still shows (it's a real reading)");
+    A(healthTiles({ restingHr: 60 })[0].d === "" && healthTiles({ restingHr: 60, restingHrAvg: 60.2 })[0].d === "as usual", "health: no average → no comparison; equal → says so");
+    A(healthTiles({ sleepMin: 0, steps: 120 }).length === 1, "health: no sleep logged → tile left out");
 
     var el = document.createElement("div");
     el.className = "selftest";
@@ -4341,6 +4365,67 @@
   }
   var DUMBBELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M2.5 10v4M6 7v10M18 7v10M21.5 10v4M6 12h12"/></svg>';
   var BOLT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>';
+  /* Today card: sleep, resting heart rate, steps and active calories read from Apple Health
+     (Garmin Connect, a watch or the phone put them there). Kept on this phone only, outside
+     `db`, so it never syncs or lands in a backup: Health already holds it. */
+  var HEALTH_KEY = KEY + ".health";
+  var health = (function () { try { return JSON.parse(localStorage.getItem(HEALTH_KEY)) || {}; } catch (e) { return {}; } })();
+  function saveHealth() { try { localStorage.setItem(HEALTH_KEY, JSON.stringify(health)); } catch (e) {} }
+  // the tiles, from what today() returned; anything Health didn't have is left out
+  function healthTiles(t) {
+    var out = [];
+    if (!t) return out;
+    if (t.sleepMin > 0) out.push({ k: "Sleep", v: Math.floor(t.sleepMin / 60) + '<small>h</small><b>' + pad2(Math.round(t.sleepMin % 60)) + '</b><small>m</small>', d: "last night" });
+    if (t.restingHr > 0) {
+      var diff = t.restingHrAvg > 0 ? Math.round(t.restingHr - t.restingHrAvg) : null;
+      out.push({ k: "Resting HR", v: Math.round(t.restingHr) + '<small>bpm</small>',
+        d: diff == null ? "" : diff === 0 ? "as usual" : (diff > 0 ? "+" : "−") + Math.abs(diff) + " vs usual" });
+    }
+    if (t.steps != null) out.push({ k: "Steps", v: Math.round(t.steps).toLocaleString(), d: "today" });
+    if (t.activeKcal != null) out.push({ k: "Active", v: Math.round(t.activeKcal).toLocaleString(), d: "kcal today" });
+    return out;
+  }
+  function healthCardHtml() {
+    if (!window.RC.Health || health.hidden) return "";
+    var html = '<section class="hk-card" id="hk-card">';
+    if (!health.on) return html + '<div class="hk-head"><h3>Today</h3></div>' +
+      '<p>See your sleep, resting heart rate and steps here. Rep Star reads them from Apple Health, including what Garmin Connect saves there.</p>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="hk-connect">Connect Apple Health</button><button class="btn btn-ghost" id="hk-hide">Not now</button></div></section>';
+    var tiles = healthTiles(health.today);
+    html += '<div class="hk-head"><h3>Today</h3><span>Apple Health</span></div>';
+    if (!tiles.length) return html + '<p style="margin:0">Nothing from Health yet. If you use Garmin, turn on Garmin Connect → Settings → Connected Apps → Apple Health.</p></section>';
+    return html + '<div class="hk-grid">' + tiles.map(function (x) {
+      return '<div><div class="k">' + esc(x.k) + '</div><div class="v">' + x.v + '</div><div class="d">' + esc(x.d) + '</div></div>';
+    }).join("") + '</div></section>';
+  }
+  function wireHealthCard(c) {
+    var cn = c.querySelector("#hk-connect"), hd = c.querySelector("#hk-hide");
+    if (cn) cn.onclick = healthConnect;
+    if (hd) hd.onclick = function () { health.hidden = true; saveHealth(); var el = c.querySelector("#hk-card"); if (el) el.remove(); };
+  }
+  function healthConnect() {
+    if (!window.RC.Health) return;
+    window.RC.Health.connect().then(function (r) {
+      if (!r || !r.connected) return;
+      health.on = true; health.hidden = false; saveHealth();
+      healthSync(true);
+    }).catch(function () {});
+  }
+  // fetch today's numbers and repaint the card in place
+  function healthSync(force) {
+    if (!window.RC.Health || !health.on) return;
+    if (!force && health.at && Date.now() - health.at < 60000) return;
+    window.RC.Health.today().then(function (t) {
+      health.today = t || {}; health.at = Date.now(); saveHealth();
+      var c = screens.home, old = c && c.querySelector("#hk-card");
+      if (cur === "home" && old) {
+        var tmp = document.createElement("div"); tmp.innerHTML = healthCardHtml();
+        if (tmp.firstChild) { old.replaceWith(tmp.firstChild); wireHealthCard(c); }
+      }
+    }).catch(function () {});
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) healthSync(); });
+
   function streakCardHtml() {
     var n = weekStreak();
     var start = weekKey(Date.now()), today = dayKey(Date.now());
@@ -4397,7 +4482,7 @@
         '<div class="h-eyebrow">' + (db.sessions.length ? "Welcome back" : "Welcome") + '</div>' +
         '<h2 class="title">Ready when you are</h2>' +
         '<p class="lead">Log a workout as you go, or pick a program that plans every session for you.</p>' +
-        gritCardHtml() +
+        gritCardHtml() + healthCardHtml() +
         '<div class="btn-row"><button class="btn btn-primary btn-lg" id="h-empty">Start a workout</button></div>' +
         '<div class="btn-row"><button class="btn btn-ghost btn-lg" id="h-setup">Set up a program</button></div>' +
         '<div class="home-alt"><button id="h-past">Log a past workout</button>' +
@@ -4405,6 +4490,7 @@
         savedWorkoutsHtml() +
       '</div>';
       document.getElementById("h-empty").onclick = function () { startEmptyWorkout(null); };
+      wireHealthCard(c); healthSync();
       document.getElementById("h-setup").onclick = function () { go("choose"); };
       document.getElementById("h-past").onclick = openPastSheet;
       var hr = document.getElementById("h-roll");
@@ -4425,7 +4511,7 @@
         '<span class="h-week">Week ' + programWeek() + '</span></div>' +
       '<div class="home-primary">';
 
-    html += streakCardHtml();
+    html += streakCardHtml() + healthCardHtml();
 
     // next workout: what's on, with the start button right on the card
     var ntl = nextTrainingLabel();
@@ -4460,6 +4546,7 @@
     var ncOpen = document.getElementById("nc-open");
     if (ncOpen) ncOpen.onclick = function () { go("schedule"); };
     c.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
+    wireHealthCard(c); healthSync();
   };
 
   /* ============================================================ ONE-OFFS */
@@ -7524,6 +7611,15 @@
           '<input class="num-in mono" id="st-by" inputmode="numeric" maxlength="4" value="' + (db.settings.birthYear || "") + '" placeholder="YYYY" style="width:96px;padding:7px 10px;text-align:center"></div>' +
       '</div>' +
       '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:6px">Used for the body-fat and calorie calculators. Not shared to the feed.</p>' +
+      (window.RC.Health
+        ? '<div class="eyebrow" style="margin:18px 0 8px">Apple Health</div>' +
+          '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">' + (health.on
+            ? 'Home shows your sleep, resting heart rate, steps and active calories from Health. To change what Rep Star can read: Settings app → Health → Data Access &amp; Devices → Rep Star.'
+            : 'Show your sleep, resting heart rate, steps and active calories on Home, including what Garmin Connect saves to Health.') + '</p>' +
+          '<div class="btn-row">' + (health.on
+            ? '<button class="btn btn-ghost" id="st-hk-off">' + (health.hidden ? 'Show on Home' : 'Hide from Home') + '</button>'
+            : '<button class="btn btn-ghost" id="st-hk">Connect Apple Health</button>') + '</div>'
+        : '') +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
       (db.account
         ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' + avatarHtml(db.account.avatarUrl, db.account.displayName, 40) +
@@ -7590,6 +7686,10 @@
     var epBtn = document.getElementById("st-editprofile");
     if (epBtn) epBtn.onclick = openEditProfile;
     document.getElementById("st-export").onclick = exportData;
+    var hkBtn = document.getElementById("st-hk");
+    if (hkBtn) hkBtn.onclick = function () { closeSheet(); healthConnect(); };
+    var hkOff = document.getElementById("st-hk-off");
+    if (hkOff) hkOff.onclick = function () { health.hidden = !health.hidden; saveHealth(); closeSheet(); if (cur === "home") go("home"); };
     if (window.RC.native) document.getElementById("st-privacy").onclick = function (e) {
       e.preventDefault(); window.RC.Browser.open({ url: PRIVACY_URL, presentationStyle: "popover" });
     };
