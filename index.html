@@ -415,15 +415,17 @@
   .home-stat .hs-sub { display: block; font-size: var(--fs-xs); color: var(--text-faint); font-variant-numeric: tabular-nums; margin-top: 4px; }
 
   /* Today: Apple Health on Home */
-  .hk-card { background: var(--surface); border-radius: var(--radius); padding: 14px 16px 16px; margin-bottom: 14px; }
-  .hk-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-  .hk-head h3 { font-size: var(--fs-md); }
-  .hk-head span { font-size: var(--fs-xs); color: var(--text-faint); }
-  .hk-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .hk-card { background: var(--surface); border-radius: var(--radius); padding: 16px 18px 18px; margin-bottom: 14px; }
+  .hk-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .hk-head h3 { font-size: var(--fs-lg); }
+  .hk-head span { font-size: var(--fs-sm); color: var(--text-faint); }
+  .hk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .hk-grid > div { min-width: 0; white-space: nowrap; }
   .hk-grid .k { font-size: var(--fs-xs); color: var(--text-faint); font-weight: 700; }
-  .hk-grid .v { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-lg); line-height: 1; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .hk-grid .v small { font-size: var(--fs-xs); color: var(--text-muted); font-weight: 500; }
-  .hk-grid .d { font-size: var(--fs-xs); color: var(--text-muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .hk-grid .v { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-lg); line-height: 1; margin-top: 5px; font-variant-numeric: tabular-nums; }
+  .hk-grid .v small { font-size: var(--fs-xs); color: var(--text-muted); font-weight: 600; margin-left: 1px; }
+  .hk-grid .v small + b { margin-left: 4px; }
+  .hk-grid .d { font-size: var(--fs-xs); color: var(--text-muted); margin-top: 4px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; }
   .hk-card p { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.45; margin: 0 0 12px; }
   .hk-card .btn-row { margin: 0; }
   .grit-card { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid transparent; border-radius: var(--radius); padding: 16px 18px; margin: 0 0 16px; }
@@ -2072,7 +2074,7 @@
     // --- Today card (Apple Health) ---
     A(healthTiles(null).length === 0 && healthTiles({}).length === 0, "health: nothing from Health → no tiles");
     var hkT = healthTiles({ sleepMin: 445, restingHr: 52, restingHrAvg: 55.4, steps: 8412, activeKcal: 0 });
-    A(hkT.length === 4 && hkT[0].v.indexOf("7<small>h</small> 25") === 0, "health: sleep 445 min → 7h 25m → got " + (hkT[0] && hkT[0].v));
+    A(hkT.length === 4 && hkT[0].v === "7<small>h</small><b>25</b><small>m</small>", "health: sleep 445 min → 7h 25m → got " + (hkT[0] && hkT[0].v));
     A(hkT[1].d === "−3 vs usual", "health: resting HR against the 7-day average → got " + (hkT[1] && hkT[1].d));
     A(hkT[3].v.indexOf("0") === 0, "health: 0 active kcal still shows (it's a real reading)");
     A(healthTiles({ restingHr: 60 })[0].d === "" && healthTiles({ restingHr: 60, restingHrAvg: 60.2 })[0].d === "as usual", "health: no average → no comparison; equal → says so");
@@ -4373,14 +4375,14 @@
   function healthTiles(t) {
     var out = [];
     if (!t) return out;
-    if (t.sleepMin > 0) out.push({ k: "Sleep", v: Math.floor(t.sleepMin / 60) + '<small>h</small> ' + pad2(Math.round(t.sleepMin % 60)) + '<small>m</small>', d: "last night" });
+    if (t.sleepMin > 0) out.push({ k: "Sleep", v: Math.floor(t.sleepMin / 60) + '<small>h</small><b>' + pad2(Math.round(t.sleepMin % 60)) + '</b><small>m</small>', d: "last night" });
     if (t.restingHr > 0) {
       var diff = t.restingHrAvg > 0 ? Math.round(t.restingHr - t.restingHrAvg) : null;
       out.push({ k: "Resting HR", v: Math.round(t.restingHr) + '<small>bpm</small>',
         d: diff == null ? "" : diff === 0 ? "as usual" : (diff > 0 ? "+" : "−") + Math.abs(diff) + " vs usual" });
     }
     if (t.steps != null) out.push({ k: "Steps", v: Math.round(t.steps).toLocaleString(), d: "today" });
-    if (t.activeKcal != null) out.push({ k: "Active", v: Math.round(t.activeKcal).toLocaleString() + '<small>kcal</small>', d: "today" });
+    if (t.activeKcal != null) out.push({ k: "Active", v: Math.round(t.activeKcal).toLocaleString(), d: "kcal today" });
     return out;
   }
   function healthCardHtml() {
