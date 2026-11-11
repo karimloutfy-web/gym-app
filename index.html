@@ -2094,6 +2094,12 @@
     A(cardioLine({ kind: "swim", distanceM: 1500, durationSec: 1800 }, false) === "1,500 m · 30:00 · 2:00 /100 m", "cardio: swim → metres and /100 m");
     A(cardioLine({ kind: "row", durationSec: 600 }, false) === "10:00", "cardio: no distance → just the time");
 
+    // --- feed filter (App Store 1.2) ---
+    A(hasBadWords("Big Shitty Squat") && hasBadWords("FUCK legs") && !hasBadWords("Karim L") && !hasBadWords("Scunthorpe grapes cumulative"), "filter: flags whole words, case-insensitive, not inside other words");
+    A(hasBadWords("x") === false && hasBadWords("x") === false && hasBadWords("bitch") && hasBadWords("bitch"), "filter: repeat calls give the same answer (regex lastIndex reset)");
+    A(maskBadWords("Shit day") === "S*** day" && maskBadWords(null) === null && maskBadWords("Push A") === "Push A", "filter: masks to first letter + stars → got " + maskBadWords("Shit day"));
+    A(JSON.parse(maskBadWords(JSON.stringify({ ex: [{ n: "fuck press" }] }))).ex[0].n === "f*** press", "filter: masking inside JSON keeps it valid");
+
     var el = document.createElement("div");
     el.className = "selftest";
     el.innerHTML = "REP STAR — SELF TEST\n" + (ok ? "<span class='pass'>ALL PASSED</span>" : "<span class='fail'>FAILURES ABOVE</span>") + "\n\n" +
@@ -2178,6 +2184,22 @@
     if (n == null || isNaN(n)) return "0";
     var r = Math.round(n * 100) / 100;
     return Number.isInteger(r) ? r.toString() : r.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  }
+  // Feed filter (App Store 1.2): names with these words are refused; posted text has them starred out
+  var badWordRx = null;
+  function badWords() {
+    if (!badWordRx) badWordRx = new RegExp("\\b(" + [
+      "fuck\\w*", "motherfuck\\w*", "shit\\w*", "bullshit", "cunts?", "bitch\\w*", "bastards?", "dicks?", "dickhead", "cocks?", "cocksucker",
+      "puss(?:y|ies)", "assholes?", "arsehole", "whores?", "sluts?", "fags?", "faggots?", "nigg(?:er|a)s?", "retards?", "rap(?:e|ist|ists)",
+      "nazis?", "porn\\w*", "kikes?", "spics?", "chinks?", "twats?", "wank\\w*", "dykes?", "trann(?:y|ies)", "cum", "jizz"
+    ].join("|") + ")\\b", "gi");
+    badWordRx.lastIndex = 0;
+    return badWordRx;
+  }
+  function hasBadWords(s) { return s != null && badWords().test(String(s)); }
+  function maskBadWords(s) {
+    if (s == null) return s;
+    return String(s).replace(badWords(), function (w) { return w.charAt(0) + new Array(w.length).join("*"); });
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function shortDate(t) { return new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" }); }
@@ -7702,7 +7724,7 @@
       '<div class="btn-row"><button class="btn btn-ghost" id="st-export">Export backup</button><button class="btn btn-ghost" id="st-import">Restore</button></div>' +
       (window.RC.native ? '' : '<p style="font-size: var(--fs-xs);color:var(--text-faint);line-height:1.5;margin-top:10px">To keep it on your home screen: Share → Add to Home Screen.</p>') +
       (hasData ? '<div class="btn-row" style="margin-top:16px"><button class="btn btn-danger" id="st-wipe">Erase everything</button></div>' : '') +
-      '<p class="nu-note" style="margin-top:18px"><a href="' + (window.RC.native ? PRIVACY_URL : 'privacy.html') + '" target="_blank" rel="noopener" id="st-privacy">Privacy policy</a>' +
+      '<p class="nu-note" style="margin-top:18px">' + docLink("privacy.html", "Privacy policy") + ' · ' + docLink("terms.html", "Terms of use") +
         (SUPPORT_EMAIL ? ' · <a href="mailto:' + esc(SUPPORT_EMAIL) + '">Contact support</a>' : '') + '</p>'
     );
     // flip the toggle in place — re-opening the sheet replays its slide-in and jumps back to the top
@@ -7755,9 +7777,6 @@
     if (hkBtn) hkBtn.onclick = function () { closeSheet(); healthConnect(); };
     var hkOff = document.getElementById("st-hk-off");
     if (hkOff) hkOff.onclick = function () { health.hidden = !health.hidden; saveHealth(); closeSheet(); if (cur === "home") go("home"); };
-    if (window.RC.native) document.getElementById("st-privacy").onclick = function (e) {
-      e.preventDefault(); window.RC.Browser.open({ url: PRIVACY_URL, presentationStyle: "popover" });
-    };
     document.getElementById("st-import").onclick = openImport;
     var w = document.getElementById("st-wipe");
     if (w) w.onclick = function () {
@@ -8237,6 +8256,7 @@
         syncStart();
         if (navigate) { closeSheet(); toast("Signed in"); go("feed"); }
         else if (cur === "feed") renderers.feed();
+        if (!termsOk()) openTermsAgree();
       } else {
         promptDisplayName(user);
       }
@@ -8310,17 +8330,21 @@
     var avatar = googleAvatar(user);
     openSheet('<h2>Pick a name</h2><p class="sh-lead">This is how you show up in the feed. You can change it later in Settings.</p>' +
       '<input class="num-in" id="dn-in" maxlength="30" autocomplete="off" placeholder="e.g. Karim L" value="' + esc(suggested) + '" style="width:100%;padding:12px;font-size: var(--fs-md)">' +
+      termsCheckHtml() +
       '<div class="btn-row"><button class="btn btn-primary" id="dn-ok">Continue</button></div>');
     var i = document.getElementById("dn-in");
     i.focus(); i.select();
+    wireTermsCheck(document.getElementById("dn-ok"));
     document.getElementById("dn-ok").onclick = function () {
       var name = (i.value || "").trim();
       if (name.length < 2) { toast("A little longer, please"); return; }
+      if (hasBadWords(name)) { toast("Please pick a different name"); return; }
       var btn = this; btn.disabled = true;
       sb().from("profiles").upsert({ id: user.id, display_name: name, avatar_url: avatar }).then(function (r) {
         if (r.error) { toast("Couldn't save that name"); btn.disabled = false; return; }
         db.account = { userId: user.id, displayName: name, avatarUrl: avatar };
         db.knownProfiles[user.id] = { displayName: name, avatarUrl: avatar };
+        db.settings.termsAt = Date.now();
         save(); closeSheet(); renderTabs(); flushPendingPush(); backfillHistory(); syncStart();
         toast("You're in");
         go("feed");
@@ -8332,7 +8356,42 @@
   // where people reach a human about the feed; shown in Settings and after a report. Fill before release.
   var SUPPORT_EMAIL = "support@rep-star.app";
   // public copy of privacy.html (also the App Store privacy-policy URL)
-  var PRIVACY_URL = "https://karimloutfy-web.github.io/gym-app/privacy.html";
+  var SITE_URL = "https://karimloutfy-web.github.io/gym-app/";
+  var PRIVACY_URL = SITE_URL + "privacy.html";
+  // privacy.html / terms.html: next to the app on the web; in the native app, the public copy in an in-app browser
+  function docHref(file) { return window.RC.native ? SITE_URL + file : file; }
+  function docLink(file, label) { return '<a href="' + docHref(file) + '" target="_blank" rel="noopener" data-doc="' + file + '">' + label + '</a>'; }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[data-doc]");
+    if (!a || !window.RC.native) return;
+    e.preventDefault(); window.RC.Browser.open({ url: SITE_URL + a.dataset.doc, presentationStyle: "popover" });
+  });
+
+  /* ---- terms of use (App Store 1.2): nothing is posted until the account has agreed ---- */
+  function termsOk() { return !!db.settings.termsAt; }
+  function termsCheckHtml() {
+    return '<label class="mc-cap" style="align-items:flex-start;margin:14px 0 4px;line-height:1.45"><input type="checkbox" id="tm-ok" style="margin-top:3px">' +
+      '<span>I agree to the ' + docLink("terms.html", "Terms of use") + '. No abusive, hateful or sexual content — posts that break them are removed, and so is the account.</span></label>';
+  }
+  function wireTermsCheck(btn) {
+    var c = document.getElementById("tm-ok");
+    btn.disabled = true; btn.style.opacity = ".5";
+    c.onchange = function () { btn.disabled = !c.checked; btn.style.opacity = c.checked ? "" : ".5"; };
+  }
+  function acceptTerms() {
+    db.settings.termsAt = Date.now(); save();
+    flushPendingPush(); backfillHistory();
+  }
+  // accounts made before the terms existed: agree once, or sign out
+  function openTermsAgree() {
+    openSheet('<h2>Feed rules</h2><p class="sh-lead">Your finished workouts, name and picture are shown to other people in the Feed. Please agree to the community rules to keep posting.</p>' +
+      termsCheckHtml() +
+      '<div class="btn-row"><button class="btn btn-ghost" id="tm-out">Sign out</button><button class="btn btn-primary" id="tm-yes">Agree</button></div>');
+    var yes = document.getElementById("tm-yes");
+    wireTermsCheck(yes);
+    yes.onclick = function () { acceptTerms(); closeSheet(); toast("Thanks — you're all set"); };
+    document.getElementById("tm-out").onclick = rcSignOut;
+  }
   function supportLine() {
     return SUPPORT_EMAIL ? 'Questions or a problem with someone in the feed? Email <a href="mailto:' + esc(SUPPORT_EMAIL) + '">' + esc(SUPPORT_EMAIL) + '</a>.' : '';
   }
@@ -8528,6 +8587,7 @@
     document.getElementById("ep-save").onclick = function () {
       var name = (document.getElementById("ep-name").value || "").trim();
       if (name.length < 2) { toast("A little longer, please"); return; }
+      if (hasBadWords(name)) { toast("Please pick a different name"); return; }
       var btn = this; btn.disabled = true;
       sb().from("profiles").update({ display_name: name }).eq("id", db.account.userId).then(function (r) {
         if (r.error) { toast("Couldn't save"); btn.disabled = false; return; }
@@ -8637,10 +8697,11 @@
       user_id: db.account.userId,
       client_id: sess.id,
       completed_at: new Date(sess.date || Date.now()).toISOString(),
-      program_name: sessProgramName(sess),
-      day_label: sess.dayLabel || sess.wodName || null,
+      program_name: maskBadWords(sessProgramName(sess)),
+      day_label: maskBadWords(sess.dayLabel || sess.wodName || null),
       duration_sec: sess.durationSec || null,
-      summary: compactSummary(sess)
+      // custom exercise names ride in here; masking keeps the JSON valid (letters → *)
+      summary: JSON.parse(maskBadWords(JSON.stringify(compactSummary(sess))))
     };
   }
 
@@ -8656,7 +8717,7 @@
 
   function rcPublishWorkout(sess) {
     if (!sess) return;
-    if (!db.account || !sb()) { queuePush(sess.id); return; }
+    if (!db.account || !sb() || !termsOk()) { queuePush(sess.id); return; }
     sb().from("workouts").upsert(workoutRow(sess), { onConflict: "user_id,client_id" }).then(function (r) {
       if (r.error) queuePush(sess.id);
       else { unqueuePush(sess.id); if (cur === "feed") loadFeed(true); }
@@ -8673,7 +8734,7 @@
 
   // one-time-per-account: push existing local history to the feed with its real timestamps
   function backfillHistory() {
-    if (!db.account || !sb() || db.backfilledFor[db.account.userId]) return;
+    if (!db.account || !sb() || !termsOk() || db.backfilledFor[db.account.userId]) return;
     var sessions = db.sessions || [];
     if (!sessions.length) { db.backfilledFor[db.account.userId] = true; save(); return; }
     var rows = sessions.map(workoutRow);

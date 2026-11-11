@@ -1,10 +1,12 @@
 /* Rep Star service worker — app-shell caching for offline use.
    Bump CACHE when you change index.html or icons so clients pick it up. */
-var CACHE = "rackcoach-v62";
+var CACHE = "rackcoach-v63";
 var SHELL = [
   "./",
   "./index.html",
   "./privacy.html",
+  "./terms.html",
+  "./support.html",
   "./data-programs.js",
   "./data-wods.js",
   "./data-badges.js",
