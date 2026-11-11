@@ -9,3 +9,6 @@ Thumbs.db
 # capacitor build output (ios/ has its own .gitignore)
 node_modules/
 www/
+
+# wrangler local state (alerts/)
+.wrangler/

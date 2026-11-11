@@ -1,0 +1,11 @@
+# Rep Star report alerts: Supabase (supabase-migration-5.sql) POSTs here on every new
+# report; the Worker emails it through Cloudflare Email Routing.
+# Deploy: cd alerts && npx wrangler deploy
+# Secrets (once): npx wrangler secret put ALERT_SECRET / ALERT_TO
+#   ALERT_TO must be a verified destination address in Email Routing (your Gmail).
+name = "rep-star-alerts"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+workers_dev = false
+routes = [{ pattern = "alerts.rep-star.app", custom_domain = true }]
+send_email = [{ name = "MAIL" }]
