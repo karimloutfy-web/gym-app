@@ -8290,8 +8290,8 @@
   }
 
   // App Store guideline 4.8: an app that offers Google sign-in must offer Sign in with Apple too.
-  // Flip on once the Apple provider is configured in Supabase (Authentication → Providers → Apple).
-  var APPLE_SIGNIN = false;
+  // On since the Supabase Apple provider was set up (Services ID app.rep-star.signin; secret from scripts/apple-secret.js).
+  var APPLE_SIGNIN = true;
   function openSignIn() {
     if (!sb()) { toast("No connection yet — try again in a moment"); return; }
     openSheet('<h2>Sign in</h2><p class="sh-lead">Signing in backs up your program and workouts to your account, so a new phone — or this one after reinstalling — gets them back. Workouts post to the feed only when you finish a session.</p>' +
