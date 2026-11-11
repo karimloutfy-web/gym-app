@@ -7,7 +7,7 @@ const root = path.join(__dirname, "..");
 const out = path.join(root, "www");
 const files = [
   "index.html", "data-programs.js", "data-wods.js", "data-badges.js",
-  "privacy.html", "manifest.webmanifest", "icon.svg", "favicon-32.png",
+  "privacy.html", "terms.html", "support.html", "manifest.webmanifest", "icon.svg", "favicon-32.png",
   "icon-192.png", "icon-512.png", "apple-touch-icon.png"
 ];
 
