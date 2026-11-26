@@ -4427,7 +4427,7 @@
     var html = '<section class="hk-card" id="hk-card">';
     if (!health.on) return html + '<div class="hk-head"><h3>Today</h3></div>' +
       '<p>See your sleep, resting heart rate and steps here. Rep Star reads them from Apple Health, including what Garmin Connect saves there.</p>' +
-      '<div class="btn-row"><button class="btn btn-ghost" id="hk-connect">Connect Apple Health</button><button class="btn btn-ghost" id="hk-hide">Not now</button></div></section>';
+      '<div class="btn-row"><button class="btn btn-ghost" id="hk-connect">Connect Apple Health</button></div></section>';
     var tiles = healthTiles(health.today);
     html += '<div class="hk-head"><h3>Today</h3><span>Apple Health</span></div>';
     if (!tiles.length) return html + '<p style="margin:0">Nothing from Health yet. If you use Garmin, turn on Garmin Connect → Settings → Connected Apps → Apple Health.</p></section>';
@@ -4436,9 +4436,10 @@
     }).join("") + '</div></section>';
   }
   function wireHealthCard(c) {
-    var cn = c.querySelector("#hk-connect"), hd = c.querySelector("#hk-hide");
+    // App Store 5.1.1(iv): a message shown before the Health permission prompt may only lead to the prompt,
+    // so the card has no "Not now". Hiding it lives in Settings → Apple Health.
+    var cn = c.querySelector("#hk-connect");
     if (cn) cn.onclick = healthConnect;
-    if (hd) hd.onclick = function () { health.hidden = true; saveHealth(); var el = c.querySelector("#hk-card"); if (el) el.remove(); };
   }
   function healthConnect() {
     if (!window.RC.Health) return;
@@ -7703,9 +7704,8 @@
           '<p style="font-size: var(--fs-sm);color:var(--text-muted);line-height:1.55;margin-bottom:10px">' + (health.on
             ? 'Home shows your sleep, resting heart rate, steps and active calories from Health. To change what Rep Star can read: Settings app → Health → Data Access &amp; Devices → Rep Star.'
             : 'Show your sleep, resting heart rate, steps and active calories on Home, including what Garmin Connect saves to Health.') + '</p>' +
-          '<div class="btn-row">' + (health.on
-            ? '<button class="btn btn-ghost" id="st-hk-off">' + (health.hidden ? 'Show on Home' : 'Hide from Home') + '</button>'
-            : '<button class="btn btn-ghost" id="st-hk">Connect Apple Health</button>') + '</div>'
+          (health.on ? '' : '<div class="btn-row"><button class="btn btn-ghost" id="st-hk">Connect Apple Health</button></div>') +
+          '<p class="nu-note" style="margin-top:10px">Today card on Home: <a href="#" id="st-hk-off">' + (health.hidden ? 'show it' : 'hide it') + '</a></p>'
         : '') +
       '<div class="eyebrow" style="margin:18px 0 8px">Feed</div>' +
       (db.account
@@ -7776,7 +7776,7 @@
     var hkBtn = document.getElementById("st-hk");
     if (hkBtn) hkBtn.onclick = function () { closeSheet(); healthConnect(); };
     var hkOff = document.getElementById("st-hk-off");
-    if (hkOff) hkOff.onclick = function () { health.hidden = !health.hidden; saveHealth(); closeSheet(); if (cur === "home") go("home"); };
+    if (hkOff) hkOff.onclick = function (e) { e.preventDefault(); health.hidden = !health.hidden; saveHealth(); closeSheet(); if (cur === "home") go("home"); };
     document.getElementById("st-import").onclick = openImport;
     var w = document.getElementById("st-wipe");
     if (w) w.onclick = function () {
